@@ -125,8 +125,8 @@
           <p>“${d.context}”</p>
         </div>
 
-        ${isRepro(d) ? `<a class="ds-explore" href="#explorer" onclick="window.__selectExplorer && window.__selectExplorer('${d.key}')">
-            View recovered graph in the explorer
+        ${isRepro(d) ? `<a class="ds-explore" href="#pipeline" onclick="window.__pipelineSelect && window.__pipelineSelect('${d.key}')">
+            View recovered graph in the pipeline
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>` : ""}
 

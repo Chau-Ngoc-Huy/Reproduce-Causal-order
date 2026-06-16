@@ -207,12 +207,14 @@ Then open `ui/index.html` in any browser (offline, no server). The generated
 `traces_report.js` (`window.TRACE_REPORT`) is the dashboard's **single data
 source** — every section (explorer, metrics, charts, comparison, the dataset
 catalog's "reproduced" badges and the hero/footer blurbs) reflects exactly the
-runs found in `data/`. The *Pipeline* ("How the method works") walkthrough is
-selectable per run and replays the **actual** trace: the subgroup flow
-(Decompose · Ask · Vote · Causal order) for triplet/quadruplet runs, and the
-pairwise flow (Enumerate pairs · Ask A/B/C · Assemble graph · Causal order) for
-pairwise runs. (`ui/js/core.js` falls back to a baseline `window.REPORT_DATA`
-only if no trace file is loaded.)
+runs found in `data/`. The *Pipeline* ("How the method works") walkthrough has a
+Dataset + Method selector and replays the **actual** trace over five stages: the
+subgroup flow (Decompose · Ask · Vote · Graph · Causal order) for
+triplet/quadruplet runs, and the pairwise flow (Enumerate pairs · Ask A/B/C ·
+Assemble graph · Graph · Causal order) for pairwise runs. Stage 4 ("Graph") is
+the interactive predicted-vs-ground-truth explorer with the layout toggle.
+(`ui/js/core.js` falls back to a baseline `window.REPORT_DATA` only if no trace
+file is loaded.)
 
 This is the path for showing the result of another dataset: run the pipeline on a
 new graph, drop its `*.trace.json` into `data/`, re-run `build_ui_traces`, and

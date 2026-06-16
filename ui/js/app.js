@@ -1,6 +1,6 @@
 /* ============================================================
-   app.js — wiring: nav scroll-spy, graph explorer, metrics,
-   comparison claims, charts
+   app.js — wiring: nav scroll-spy, metrics table,
+   comparison claims, charts, data-driven copy
    ============================================================ */
 (function () {
   const C = window.CORE;
@@ -22,95 +22,8 @@
     Object.keys(map).forEach((id) => { const s = document.getElementById(id); if (s) obs.observe(s); });
   }
 
-  // ---------------- graph explorer ----------------
-  function initExplorer() {
-    const state = { graph: C.GRAPHS[0], kind: "triplet", layout: "hier" };
-    const gSeg = document.getElementById("g-graph-seg");
-    const mSeg = document.getElementById("g-method-seg");
-    const lSeg = document.getElementById("g-layout-seg");
-    let netA = null, netB = null;
-
-    function methodsAvailable(graph) {
-      return C.resultsFor(graph).map((r) => r._kind);
-    }
-
-    function buildMethodSeg() {
-      const kinds = methodsAvailable(state.graph);
-      mSeg.innerHTML = "";
-      if (!kinds.includes(state.kind)) state.kind = kinds[kinds.length - 1];
-      kinds.forEach((k) => {
-        const b = document.createElement("button");
-        b.textContent = C.methodLabel(k);
-        b.classList.toggle("on", k === state.kind);
-        b.addEventListener("click", () => { state.kind = k; buildMethodSeg(); draw(); });
-        mSeg.appendChild(b);
-      });
-    }
-
-    function buildGraphSeg() {
-      gSeg.innerHTML = "";
-      C.GRAPHS.forEach((g) => {
-        const b = document.createElement("button");
-        b.textContent = (C.GRAPH_META[g] || {}).label || g;
-        b.classList.toggle("on", g === state.graph);
-        b.addEventListener("click", () => { state.graph = g; buildMethodSeg(); draw(); });
-        gSeg.appendChild(b);
-      });
-    }
-    lSeg.querySelectorAll("button").forEach((b) => {
-      b.addEventListener("click", () => {
-        state.layout = b.dataset.layout;
-        lSeg.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
-        draw();
-      });
-    });
-
-    function draw() {
-      const r = C.getResult(state.graph, state.kind);
-      if (!r) return;
-      const m = r.raw.metrics;
-      // headings
-      document.getElementById("gv-pred-tag").textContent = `${r._kindLabel} · SHD ${m.shd}`;
-      document.getElementById("gv-truth-tag").textContent = `${r.nodes.length} nodes · ${r.ground_truth_edges.length} edges`;
-      // meta line
-      document.getElementById("gv-meta").innerHTML =
-        `<b>${(C.GRAPH_META[state.graph] || {}).label || state.graph}</b> · ${(C.GRAPH_META[state.graph] || {}).blurb || ""}`;
-
-      const cPred = document.getElementById("gv-pred");
-      const cTruth = document.getElementById("gv-truth");
-      if (netA) netA.destroy();
-      if (netB) netB.destroy();
-      netA = window.GRAPHVIZ.render(cPred, r, "predicted", state.layout);
-      netB = window.GRAPHVIZ.render(cTruth, r, "truth", state.layout);
-
-      // stat readout under graphs
-      const stats = document.getElementById("gv-stats");
-      const cells = [
-        ["Topological divergence", m.topo_divergence, m.topo_divergence === 0],
-        ["SHD", m.shd, m.shd === 0],
-        ["Precision", C.fmt(m.precision, 2), m.precision === 1],
-        ["Recall", C.fmt(m.recall, 2), m.recall === 1],
-        ["F1", C.fmt(m.f1, 2), m.f1 === 1],
-        ["Cycles", m.cycles, m.cycles === 0],
-      ];
-      stats.innerHTML = cells.map(([l, v, good]) =>
-        `<div class="stat"><div class="n" style="${good ? "color:var(--c-correct)" : ""}">${v}</div><div class="l">${l}</div></div>`
-      ).join("");
-    }
-
-    buildGraphSeg(); buildMethodSeg(); draw();
-    document.getElementById("gv-fit").addEventListener("click", () => {
-      if (netA) netA.fit({ animation: { duration: 350 } });
-      if (netB) netB.fit({ animation: { duration: 350 } });
-    });
-
-    // hook used by the Datasets section "view in explorer" links
-    window.__selectExplorer = function (graphKey) {
-      if (!C.GRAPHS.includes(graphKey)) return;
-      state.graph = graphKey;
-      buildGraphSeg(); buildMethodSeg(); draw();
-    };
-  }
+  // The graph explorer now lives inside the Pipeline as its "Graph" stage
+  // (see pipeline.js renderGraph); there is no separate explorer section.
 
   // ---------------- metrics table ----------------
   function initTable() {
@@ -373,7 +286,6 @@
   function boot() {
     augmentGraphMeta();
     initNav();
-    initExplorer();
     initTable();
     initComparePair();
     initCharts();
