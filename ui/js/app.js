@@ -161,6 +161,132 @@
     return `<span class="dpill"><span class="dpill-l">${sub}</span>
       <span class="dpill-v"><b class="dpill-paper">${paperVal === null || paperVal === undefined ? "—" : paperVal}</b>→<b class="dpill-ours">${ourVal === null || ourVal === undefined ? "—" : ourVal}</b></span></span>`;
   }
+
+  // ---------------- every published table, with ours beside ----------------
+  // Faithful transcription of every experimental table in the paper. For the
+  // LLM causal-order tables we place OUR reproduced GPT-4o value beside the
+  // paper's number wherever (dataset, method, metric) matches a loaded run;
+  // everything we have not reproduced is left blank.
+  function initPublishedTables() {
+    const host = document.getElementById("all-paper-tables");
+    if (!host || !PR.publishedTables) return;
+
+    const metricHead = (mk, inPlain) =>
+      ({ dtop: "D<sub>top</sub>", shd: "SHD", cycles: "Cycles", in: inPlain ? "IN" : "IN/TN" }[mk] || mk);
+
+    // our reproduced value for a (graph, method, metric), or null
+    function oursMetric(graphKey, kind, mk) {
+      if (!graphKey || !kind) return null;
+      const r = C.getResult(graphKey, kind);
+      if (!r) return null;
+      const m = r.raw.metrics;
+      if (mk === "dtop") return { disp: String(m.topo_divergence), num: m.topo_divergence };
+      if (mk === "shd") return { disp: String(m.shd), num: m.shd };
+      if (mk === "cycles") return { disp: String(m.cycles), num: m.cycles };
+      if (mk === "in") { const n = (r.nodes || []).length; return { disp: m.isolated + "/" + n, num: m.isolated }; }
+      return null;
+    }
+
+    // parse a paper cell to a comparable number (lower is better)
+    function paperNum(s, mk) {
+      if (s === null || s === undefined) return null;
+      s = String(s).trim();
+      if (s === "" || s === "-" || s === "–" || s === "N/A") return null;
+      let t = s;
+      if (mk === "in") t = t.split("/")[0];
+      if (/»|>>/.test(t)) return Infinity; // cycle explosion (»3k, >>1000…)
+      const v = parseFloat(t.replace(/[^0-9.\-]/g, ""));
+      return isNaN(v) ? null : v;
+    }
+    function cmpCls(paperStr, ours, mk) {
+      if (!ours) return null;
+      const p = paperNum(paperStr, mk), o = ours.num;
+      if (p === null) return "diverge";              // paper had no value, we produced one
+      if (p === Infinity) return o < Infinity ? "better" : "match";
+      if (o < p) return "better";
+      if (o > p) return "worse";
+      return "match";
+    }
+    function valCell(paperStr, ours, mk) {
+      const disp = (paperStr === "" || paperStr == null) ? "·" : paperStr;
+      let html = `<span class="pv">${disp}</span>`;
+      if (ours) html += `<span class="ov cmp-${cmpCls(paperStr, ours, mk) || "match"}" title="our GPT-4o run">${ours.disp}</span>`;
+      return html;
+    }
+
+    function renderByMethod(t) {
+      let thead = `<tr><th class="lft">Dataset</th><th class="lft">Metric</th>`;
+      t.methods.forEach((m) => { thead += `<th>${m.label}${m.kind ? ` <span class="ours-flag">+ ours</span>` : ""}</th>`; });
+      thead += `</tr>`;
+      let body = "";
+      t.rows.forEach((row) => {
+        t.metrics.forEach((mk, mi) => {
+          body += `<tr>`;
+          if (mi === 0) body += `<td class="lft ds" rowspan="${t.metrics.length}">${row.dataset}</td>`;
+          body += `<td class="lft met">${metricHead(mk, t.inPlain)}</td>`;
+          t.methods.forEach((m) => {
+            const paperStr = (row.vals[m.label] || {})[mk];
+            const ours = m.kind ? oursMetric(row.key, m.kind, mk) : null;
+            body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
+          });
+          body += `</tr>`;
+        });
+      });
+      return `<table class="pubtbl"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderByMetric(t) {
+      const ncol = t.metrics.length + 1;
+      let thead = `<tr><th class="lft">Dataset</th>`;
+      t.metrics.forEach((mk) => (thead += `<th>${metricHead(mk, t.inPlain)}</th>`));
+      thead += `</tr>`;
+      let body = "";
+      t.blocks.forEach((b) => {
+        body += `<tr class="blk"><td class="lft" colspan="${ncol}">${b.label}${b.kind ? ` <span class="ours-flag">+ ours (GPT-4o)</span>` : ""}</td></tr>`;
+        b.rows.forEach((row) => {
+          body += `<tr><td class="lft ds">${row.dataset}</td>`;
+          t.metrics.forEach((mk) => {
+            const paperStr = (row.vals || {})[mk];
+            const ours = b.kind ? oursMetric(row.key, b.kind, mk) : null;
+            body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
+          });
+          body += `</tr>`;
+        });
+      });
+      return `<table class="pubtbl"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderMatrix(t) {
+      let thead = "";
+      if (t.groupHeader) thead += `<tr>` + t.groupHeader.map((g) => `<th class="grp" colspan="${g.span}">${g.label}</th>`).join("") + `</tr>`;
+      thead += `<tr>` + t.columns.map((c, i) => `<th class="${i === 0 ? "lft" : ""}">${c}</th>`).join("") + `</tr>`;
+      const drawRows = (rows) =>
+        rows.map((r) => `<tr>` + r.map((c, i) => `<td class="${i === 0 ? "lft ds" : "num"}">${c}</td>`).join("") + `</tr>`).join("");
+      let body = "";
+      if (t.groups) t.groups.forEach((g) => { body += `<tr class="blk"><td class="lft" colspan="${t.columns.length}">${g.label}</td></tr>` + drawRows(g.rows); });
+      else body += drawRows(t.rows);
+      return `<table class="pubtbl matrix"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+    }
+
+    function tableCard(t) {
+      const tag = t.reproduced
+        ? `<span class="rep-tag rep-yes">reproduced · GPT-4o beside</span>`
+        : `<span class="rep-tag rep-no">not yet reproduced · paper only</span>`;
+      const inner = t.layout === "byMethod" ? renderByMethod(t)
+        : t.layout === "byMetric" ? renderByMetric(t) : renderMatrix(t);
+      return `<section class="pub-card${t.reproduced ? " is-repro" : ""}">
+        <header class="pub-head">
+          <div class="pub-head-l"><span class="pub-num">${t.num}</span><h4>${t.title}</h4>
+            <p class="pub-exp">${t.expert}</p></div>
+          ${tag}
+        </header>
+        <div class="pub-scroll">${inner}</div>
+        <p class="pub-cap">${t.caption}</p>
+      </section>`;
+    }
+
+    host.innerHTML = PR.publishedTables.map(tableCard).join("");
+  }
   function initCharts() {
     if (!window.Chart) return;
     Chart.defaults.font.family = "Hanken Grotesk";
@@ -288,6 +414,7 @@
     initNav();
     initTable();
     initComparePair();
+    initPublishedTables();
     initCharts();
     initPipeline();
     initCopy();
