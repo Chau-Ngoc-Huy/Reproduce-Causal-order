@@ -1,0 +1,92 @@
+============================================================
+  RUN ALL TRACES | 20260616_213143
+============================================================
+Datasets       : earthquake
+Pairwise       : model=gpt-4o prompt=cot  (enabled=1)
+Triplet (k=3)  : subgraph=gpt-4o-mini expert=gpt-4o  (enabled=1)
+Delay          : 1s   Output: data/   Log: logs/run_all_traces_20260616_213143.log
+Skip existing  : 1
+------------------------------------------------------------
+dataset         pairs triplets
+earthquake         10       10
+------------------------------------------------------------
+Approx LLM calls: 20  (+ tie-breakers)   ~20s of delay alone
+============================================================
+
+============================================================
+  PAIRWISE | earthquake | gpt-4o
+  -> data/earthquake_pairwise.trace.json
+============================================================
+
+============================================================
+Graph: earthquake (5 nodes, 4 GT edges)
+Model: gpt-4o
+Prompt type: cot
+============================================================
+
+Total pairs: 10
+Querying pairs:   0%|          | 0/10 [00:00<?, ?it/s]Querying pairs:  10%|█         | 1/10 [00:05<00:47,  5.28s/it]Querying pairs:  20%|██        | 2/10 [00:08<00:32,  4.01s/it]Querying pairs:  30%|███       | 3/10 [00:12<00:26,  3.83s/it]Querying pairs:  40%|████      | 4/10 [00:15<00:21,  3.54s/it]Querying pairs:  50%|█████     | 5/10 [00:19<00:19,  3.83s/it]Querying pairs:  60%|██████    | 6/10 [00:23<00:15,  3.86s/it]Querying pairs:  70%|███████   | 7/10 [00:26<00:10,  3.59s/it]Querying pairs:  80%|████████  | 8/10 [00:29<00:07,  3.54s/it]Querying pairs:  90%|█████████ | 9/10 [00:32<00:03,  3.31s/it]Querying pairs: 100%|██████████| 10/10 [00:35<00:00,  3.25s/it]Querying pairs: 100%|██████████| 10/10 [00:35<00:00,  3.58s/it]
+
+--- Pairwise Results ---
+Predicted edges: 7
+SHD: 5
+Connected nodes: 5, Isolated: 0
+Cycles: 0
+Topological Divergence: 0
+Saved result bundle to data/earthquake_pairwise.json
+Saved pipeline trace to data/earthquake_pairwise.trace.json
+
+============================================================
+Done.
+OK: PAIRWISE | earthquake | gpt-4o  (36s)
+
+============================================================
+  TRIPLET | earthquake | gpt-4o-mini/gpt-4o
+  -> data/earthquake_subgroup.trace.json
+============================================================
+
+============================================================
+Graph: earthquake (5 nodes, 4 GT edges)
+Subgraph model (weak learner): gpt-4o-mini
+Expert model (tie-breaker):    gpt-4o
+============================================================
+
+Total triplets: 10
+Querying triplets:   0%|          | 0/10 [00:00<?, ?it/s]Querying triplets:  10%|█         | 1/10 [00:05<00:48,  5.38s/it]Querying triplets:  20%|██        | 2/10 [00:11<00:46,  5.81s/it]Querying triplets:  30%|███       | 3/10 [00:17<00:41,  5.92s/it]Querying triplets:  40%|████      | 4/10 [00:22<00:33,  5.51s/it]Querying triplets:  50%|█████     | 5/10 [00:27<00:27,  5.47s/it]Querying triplets:  60%|██████    | 6/10 [00:33<00:21,  5.40s/it]Querying triplets:  70%|███████   | 7/10 [00:38<00:16,  5.39s/it]Querying triplets:  80%|████████  | 8/10 [00:44<00:10,  5.44s/it]Querying triplets:  90%|█████████ | 9/10 [00:49<00:05,  5.59s/it]Querying triplets: 100%|██████████| 10/10 [00:55<00:00,  5.46s/it]Querying triplets: 100%|██████████| 10/10 [00:55<00:00,  5.51s/it]
+Warning: no answer for triplet ('Burglary', 'Earthquake', 'JohnCalls')
+Warning: no answer for triplet ('Burglary', 'Earthquake', 'Marycalls')
+Warning: no answer for triplet ('Burglary', 'JohnCalls', 'Marycalls')
+Warning: no answer for triplet ('Earthquake', 'Alarm', 'JohnCalls')
+Warning: no answer for triplet ('Earthquake', 'JohnCalls', 'Marycalls')
+Merging (outer):   0%|          | 0/5 [00:00<?, ?it/s]
+Merging (inner):   0%|          | 0/4 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/3 [00:00<?, ?it/s][A
+Merging (inner):  67%|██████▋   | 2/3 [00:03<00:01,  1.60s/it][A
+                                                              [AMerging (outer):  40%|████      | 2/5 [00:03<00:04,  1.60s/it]
+Merging (inner):   0%|          | 0/2 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/1 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner): 0it [00:00, ?it/s][A
+                                   [AMerging (outer): 100%|██████████| 5/5 [00:03<00:00,  1.56it/s]
+
+--- Raw Triplet Merge Results ---
+Predicted edges: 4
+SHD: 2
+Connected nodes: 5, Isolated: 0
+Cycles: 0
+
+Edgewise distribution entries: 9
+Saved edgewise distribution to data/earthquake_triplet_edgewise.pkl
+Topological Divergence: 0
+Saved pipeline trace to data/earthquake_subgroup.trace.json
+
+============================================================
+Done.
+OK: TRIPLET | earthquake | gpt-4o-mini/gpt-4o  (59s)
+
+============================================================
+  ALL RUNS COMPLETED OK
+  Traces in: data/    Log: logs/run_all_traces_20260616_213143.log
+============================================================

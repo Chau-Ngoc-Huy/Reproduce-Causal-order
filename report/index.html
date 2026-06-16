@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Causal Order — Results Report</title>
+<script src="vendor/vis-network.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+  :root {
+    /* edge categories — kept matplotlib-consistent with the paper figures */
+    --correct:#2ca02c; --reversed:#ff7f0e; --extra:#d62728;
+    --missing:#9e9e9e; --uncertain:#9467bd;
+    /* academic light theme */
+    --paper:#f7f6f2; --card:#ffffff; --ink:#1b2230; --muted:#5c6678;
+    --faint:#8a93a6; --line:#e7e6df; --line-soft:#f0efe9;
+    --accent:#3a567d; --accent-soft:#eef1f7; --accent-ink:#2b425f;
+    --good:#1f7a34; --bad:#c0392b;
+    --shadow:0 1px 2px rgba(27,34,48,.05), 0 1px 8px rgba(27,34,48,.03);
+    --serif:'Iowan Old Style','Palatino Linotype','Palatino','Georgia',
+            'Times New Roman','Liberation Serif','Noto Serif',serif;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans',
+           'Liberation Sans',sans-serif;
+    --mono:'SF Mono','JetBrains Mono','Fira Code',ui-monospace,
+           'DejaVu Sans Mono',monospace;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; font-family:var(--sans); font-size:15px; line-height:1.55;
+    background:var(--paper); color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  code, .mono { font-family:var(--mono); font-size:.86em; }
+
+  /* ---------- header ---------- */
+  header {
+    background:var(--card); border-bottom:1px solid var(--line);
+    padding:18px 28px 0;
+  }
+  .head-top { display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap;
+    max-width:1440px; margin:0 auto; }
+  .brand { display:flex; gap:13px; align-items:flex-start; }
+  .brand svg { flex:none; margin-top:3px; color:var(--accent); }
+  h1 { font-family:var(--serif); font-size:23px; font-weight:600;
+    margin:0; letter-spacing:.1px; }
+  .subtitle { color:var(--muted); font-size:13.5px; margin:3px 0 0;
+    max-width:62ch; }
+  .head-side { margin-left:auto; text-align:right; display:flex;
+    flex-direction:column; align-items:flex-end; gap:6px; }
+  .meta { color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
+  .meta b { color:var(--muted); font-weight:600; }
+  .paper-link { font-size:12.5px; display:inline-flex; align-items:center; gap:5px; }
+
+  /* ---------- tab nav ---------- */
+  nav.tabs { max-width:1440px; margin:14px auto 0; display:flex; gap:2px; }
+  .tab {
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-family:var(--sans); font-size:14px; color:var(--muted);
+    padding:9px 16px 12px; border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  .tab:hover { color:var(--ink); }
+  .tab.active { color:var(--accent-ink); border-bottom-color:var(--accent); font-weight:600; }
+  .tab:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; border-radius:4px; }
+
+  /* ---------- layout ---------- */
+  main { padding:26px 28px 60px; max-width:1440px; margin:0 auto; }
+  .card {
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:22px 24px; margin-bottom:22px; box-shadow:var(--shadow);
+  }
+  .card > h2 { font-family:var(--serif); font-size:18px; font-weight:600;
+    margin:0 0 4px; }
+  .card .lead { color:var(--muted); font-size:13px; margin:0 0 16px; max-width:78ch; }
+  .card .lead.tight { margin-bottom:10px; }
+  .section-eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--faint); font-weight:600; margin:0 0 6px; }
+
+  /* ---------- controls ---------- */
+  .controls { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    margin-bottom:18px; font-size:13px; }
+  .field { display:flex; align-items:center; gap:7px; }
+  .field label { color:var(--muted); font-weight:500; }
+  select {
+    font-family:var(--sans); font-size:13.5px; color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:7px 30px 7px 11px;
+    background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c6678' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+    -webkit-appearance:none; appearance:none; cursor:pointer;
+  }
+  select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+
+  /* ---------- legend ---------- */
+  .legend { display:flex; gap:20px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); }
+  .legend span { display:inline-flex; align-items:center; gap:7px; }
+  .swatch { width:24px; height:0; border-top:3px solid; display:inline-block; border-radius:2px; }
+  .swatch.dash { border-top-style:dashed; }
+
+  /* ---------- per-variable colour legend / chips ---------- */
+  .var-legend { display:flex; flex-wrap:wrap; gap:7px; align-items:center; margin-bottom:16px; }
+  .var-legend-lab { font-size:10.5px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--faint); font-weight:600; margin-right:4px; }
+  .var-chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px;
+    padding:3px 10px 3px 8px; border-radius:20px; border:1px solid; font-weight:500; }
+  .var-dot { width:9px; height:9px; border-radius:50%; flex:none; display:inline-block; }
+  .var-table .vname-wrap { display:inline-flex; align-items:center; gap:7px; }
+  .vi-pair .var-dot { margin-right:5px; vertical-align:middle; }
+  .v-ref { white-space:nowrap; font-weight:500; }
+  .v-ref .var-dot { width:8px; height:8px; margin-right:4px; vertical-align:middle; }
+  .gi-ar { color:var(--faint); margin:0 5px; }
+
+  /* ---------- summary stat strip ---------- */
+  .stat-strip { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+  .stat {
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:14px 18px; min-width:150px; flex:1 1 150px; box-shadow:var(--shadow);
+  }
+  .stat .k { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--faint); font-weight:600; }
+  .stat .v { font-family:var(--serif); font-size:26px; font-weight:600;
+    margin-top:4px; font-variant-numeric:tabular-nums; }
+  .stat .v small { font-family:var(--sans); font-size:13px; font-weight:500; color:var(--muted); }
+
+  /* ---------- table ---------- */
+  .table-wrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:13px;
+    font-variant-numeric:tabular-nums; }
+  th, td { padding:9px 12px; border-bottom:1px solid var(--line-soft); text-align:right;
+    white-space:nowrap; }
+  th:first-child, td:first-child, th.lcol, td.lcol { text-align:left; }
+  thead th { color:var(--muted); font-weight:600; cursor:pointer; user-select:none;
+    border-bottom:1.5px solid var(--line); position:sticky; top:0; background:var(--card); }
+  thead th:hover { color:var(--accent-ink); }
+  thead th .arr { color:var(--accent); margin-left:3px; }
+  tbody tr:hover { background:var(--accent-soft); }
+  td.method { font-weight:500; color:var(--ink); }
+  .good { color:var(--good); font-weight:600; }
+  .bad  { color:var(--bad); font-weight:600; }
+  .dim { color:var(--faint); }
+  .tag { display:inline-block; font-size:10.5px; padding:1px 6px; border-radius:5px;
+    background:var(--accent-soft); color:var(--accent-ink); margin-left:6px;
+    vertical-align:middle; font-variant-numeric:normal; }
+
+  /* ---------- graph panels ---------- */
+  .panels { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px,1fr)); gap:16px; }
+  .panel { border:1px solid var(--line); border-radius:11px; overflow:hidden; background:var(--card); }
+  .panel .phead {
+    padding:10px 13px; background:var(--line-soft); border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:42px;
+  }
+  .panel.gt .phead { background:#eef4ee; }
+  .ptitle { font-weight:600; font-size:13px; }
+  .ptitle .ptag { font-weight:500; color:var(--faint); font-size:11.5px; }
+  .pcounts { display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:20px; font-size:10.5px;
+    color:#fff; font-variant-numeric:tabular-nums; }
+  .net { height:330px; background:
+    radial-gradient(circle at 1px 1px, #eceae3 1px, transparent 0) 0 0/22px 22px, #fff; }
+
+  /* ---------- chart ---------- */
+  .chart-box { position:relative; height:340px; }
+
+  /* ---------- heatmap ---------- */
+  details.heat-block { border-top:1px solid var(--line-soft); padding-top:10px; margin-top:10px; }
+  details.heat-block:first-of-type { border-top:none; }
+  summary { cursor:pointer; font-size:13.5px; color:var(--accent-ink); font-weight:500;
+    padding:4px 0; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:'▸'; color:var(--accent); margin-right:8px;
+    display:inline-block; transition:transform .15s; }
+  details[open] > summary::before { transform:rotate(90deg); }
+  .heat-scroll { overflow-x:auto; padding:8px 0 4px; }
+  table.heat { border-collapse:collapse; font-size:10px; font-variant-numeric:tabular-nums; }
+  .heat td, .heat th { border:1px solid #eef1f7; padding:3px; text-align:center; min-width:28px; height:24px; }
+  .heat th { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; color:var(--ink); font-weight:500; }
+  .heat td.rowlab { writing-mode:horizontal-tb; text-align:right; white-space:nowrap;
+    background:var(--line-soft); font-weight:600; padding:3px 8px; }
+  .heat-legend { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted);
+    margin:8px 0 2px; }
+  .heat-bar { width:140px; height:11px; border-radius:3px;
+    background:linear-gradient(90deg,#440154,#3b528b,#21918c,#5ec962,#fde725); }
+
+  /* ---------- causal order view ---------- */
+  .order-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:16px; }
+  .order-panel { border:1px solid var(--line); border-radius:11px; overflow:hidden; background:var(--card); }
+  .order-panel.gt { border-color:#cfe0cf; }
+  .order-head { padding:11px 14px; border-bottom:1px solid var(--line); }
+  .order-head .otitle { font-weight:600; font-size:13.5px; }
+  .order-stats { display:flex; gap:16px; margin-top:7px; flex-wrap:wrap; }
+  .ostat { font-size:11.5px; color:var(--muted); }
+  .ostat b { display:block; font-family:var(--serif); font-size:17px; color:var(--ink);
+    font-weight:600; font-variant-numeric:tabular-nums; margin-top:1px; }
+  .ostat b.ok { color:var(--good); }
+  .ostat b.warn { color:var(--bad); }
+  .order-net { height:300px; background:
+    radial-gradient(circle at 1px 1px, #eceae3 1px, transparent 0) 0 0/22px 22px, #fff; }
+  .order-note { padding:12px 14px; font-size:12.5px; color:var(--muted); }
+  .callout { margin:12px 14px; padding:10px 13px; border-radius:9px; font-size:12.5px;
+    background:#fdf3f1; border:1px solid #f3d6d1; color:#8a3024; }
+  .callout.info { background:var(--accent-soft); border-color:#d8e0ee; color:var(--accent-ink); }
+  .violations { padding:2px 14px 12px; }
+  .violations .vlab { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--faint); font-weight:600; margin:4px 0; }
+  .vedge { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-family:var(--mono);
+    background:#fdf3f1; border:1px solid #f3d6d1; color:#8a3024; padding:2px 8px;
+    border-radius:6px; margin:0 6px 6px 0; }
+  .order-legend { display:flex; gap:18px; font-size:12px; color:var(--muted); margin-bottom:14px; flex-wrap:wrap; }
+  .order-legend .swatch { width:20px; }
+
+  .empty { color:var(--muted); padding:60px 20px; text-align:center; font-size:14px; }
+  .hidden { display:none !important; }
+
+  /* ---------- pipeline / flow animation ---------- */
+  .pl-bar { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .pl-controls { display:flex; align-items:center; gap:6px; }
+  .pl-btn { appearance:none; border:1px solid var(--line); background:var(--card); cursor:pointer;
+    height:36px; min-width:36px; padding:0 9px; border-radius:9px; display:inline-flex; align-items:center;
+    justify-content:center; gap:6px; color:var(--accent-ink); font-family:var(--sans); font-size:13.5px;
+    transition:background .15s, border-color .15s; }
+  .pl-btn:hover { background:var(--accent-soft); border-color:#d3ddee; }
+  .pl-btn:disabled { opacity:.4; cursor:default; }
+  .pl-btn.play { padding:0 16px; font-weight:600; background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pl-btn.play:hover { background:#324a6c; }
+  .pl-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .pl-btn svg { display:block; }
+  .pl-progress { font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; margin-left:auto; }
+  .pl-timeline { display:flex; gap:0; margin-bottom:18px; }
+  .pl-stage { flex:1; text-align:center; font-size:11px; color:var(--faint); cursor:pointer;
+    padding:8px 4px 0; border-top:3px solid var(--line); transition:color .15s, border-color .15s; }
+  .pl-stage:hover { color:var(--muted); }
+  .pl-stage.active { color:var(--accent-ink); border-top-color:var(--accent); font-weight:600; }
+  .pl-stage.done { border-top-color:#bcd0b9; color:var(--muted); }
+  .pl-grid { display:grid; grid-template-columns:1.32fr 1fr; gap:16px; }
+  .pl-graph-wrap, .pl-side { border:1px solid var(--line); border-radius:11px; background:#fff; }
+  .pl-graph-wrap { overflow:hidden; position:relative; }
+  .pl-graph { height:440px; background:
+    radial-gradient(circle at 1px 1px, #eceae3 1px, transparent 0) 0 0/22px 22px, #fff; }
+  .pl-stagebadge { position:absolute; top:10px; left:12px; font-size:10.5px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--faint); font-weight:600; background:rgba(255,255,255,.88);
+    padding:4px 9px; border-radius:6px; pointer-events:none; }
+  .pl-side { padding:16px 18px; min-height:440px; overflow:auto; }
+  .pl-side .pl-h { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint);
+    font-weight:600; margin:0 0 12px; }
+  .pl-caption { margin-top:16px; padding:15px 20px; border-radius:11px; background:var(--accent-soft);
+    border:1px solid #dde4ef; color:var(--accent-ink); font-size:14.5px; line-height:1.6; }
+  .pl-caption b { color:var(--ink); }
+  .pl-caption .em { color:var(--accent-ink); font-weight:600; }
+  .pl-pop { animation:plPop .32s ease; }
+  @keyframes plPop { from { opacity:.35; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .chip { display:inline-block; font-size:12px; padding:3px 9px; border-radius:7px; background:var(--line-soft);
+    border:1px solid var(--line); margin:0 6px 6px 0; }
+  .chip.grp { font-family:var(--mono); font-size:11.5px; }
+  .chip.hot { background:var(--accent-soft); border-color:#cdd9ec; color:var(--accent-ink); font-weight:600; }
+  .order-chips .rk { color:var(--faint); font-size:10px; margin-right:5px; font-variant-numeric:tabular-nums; }
+  .prompt-card { border:1px solid var(--line); border-radius:9px; overflow:hidden; margin-bottom:12px; }
+  .prompt-role { background:var(--line-soft); padding:5px 11px; font-size:10px; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--faint); font-weight:600; }
+  .prompt-body { padding:10px 11px; font-family:var(--mono); font-size:11.5px; line-height:1.55; color:#3a4655;
+    white-space:pre-wrap; max-height:182px; overflow:auto; }
+  .answer-tag { display:inline-block; font-family:var(--mono); font-weight:600; padding:2px 9px; border-radius:6px;
+    background:#eef4ee; border:1px solid #cfe0cf; color:#1f7a34; }
+  .answer-tag.b { background:#fdf2e8; border-color:#f3ddc4; color:#b5630e; }
+  .answer-tag.c { background:var(--line-soft); border-color:var(--line); color:var(--muted); }
+  .vote-row { display:flex; align-items:center; gap:10px; margin:10px 0; font-size:12.5px; }
+  .vote-lab { width:118px; flex:none; font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .vote-row.win .vote-lab { color:var(--ink); font-weight:700; }
+  .vote-track { flex:1; height:18px; background:var(--line-soft); border-radius:6px; overflow:hidden; }
+  .vote-fill { height:100%; border-radius:6px; transition:width .55s cubic-bezier(.2,.7,.2,1); }
+  .vote-n { width:20px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink); }
+  .expert-note { margin-top:12px; padding:9px 12px; border-radius:8px; background:#fff7ed;
+    border:1px solid #f3e2c7; color:#8a5a12; font-size:12px; }
+  .pl-metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pl-metric { border:1px solid var(--line); border-radius:9px; padding:11px 13px; }
+  .pl-metric .k { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--faint); font-weight:600; }
+  .pl-metric .v { font-family:var(--serif); font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; margin-top:2px; }
+  .pl-note { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5; }
+  .pl-kv { font-size:12.5px; line-height:1.7; }
+  .pl-kv b { font-variant-numeric:tabular-nums; }
+  .pl-hint { font-size:11.5px; color:var(--faint); margin:0 0 10px; line-height:1.5; }
+
+  /* full-width (no-graph) steps */
+  .pl-grid.full { grid-template-columns:1fr; }
+  .pl-grid.full .pl-graph-wrap { display:none; }
+  .pl-grid.full .pl-side { min-height:0; }
+
+  /* step 1 — variables + descriptions */
+  .var-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .var-table th { text-align:left; color:var(--faint); font-weight:600; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:.06em; padding:0 10px 8px; border-bottom:1px solid var(--line); }
+  .var-table td { padding:9px 10px; border-bottom:1px solid var(--line-soft); vertical-align:top; text-align:left; }
+  .var-table tr:last-child td { border-bottom:none; }
+  .var-table .vname { font-family:var(--mono); font-size:12px; color:var(--accent-ink);
+    font-weight:600; white-space:nowrap; }
+  .var-table .vdesc { color:var(--ink); line-height:1.5; }
+
+  /* step 2 — subgroup / pair chips grid */
+  .chip-wrap { display:flex; flex-wrap:wrap; max-height:330px; overflow:auto; padding:2px; }
+
+  /* shared colour-coded chips for long variable names */
+  .vchip { display:inline-flex; align-items:center; gap:5px; font-size:11px; line-height:1.3;
+    padding:2px 9px; border-radius:7px; border:1px solid; max-width:100%; }
+  .vchip > span { overflow-wrap:anywhere; }
+  .vchip .var-dot { width:8px; height:8px; flex:none; }
+  .edge-chip { display:inline-flex; align-items:baseline; gap:5px; font-size:11px; line-height:1.35;
+    padding:3px 9px; border-radius:7px; background:var(--line-soft); border:1px solid var(--line);
+    max-width:100%; }
+  .edge-chip .ar { color:var(--faint); flex:none; font-weight:700; }
+  .edge-chip.none { color:var(--faint); }
+
+  /* step 3 — per-group input → output (two-column cards) */
+  .grp-io-list { max-height:380px; overflow:auto; border:1px solid var(--line-soft);
+    border-radius:10px; }
+  .grp-io { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); gap:16px;
+    padding:11px 14px; border-bottom:1px solid var(--line-soft); align-items:start; }
+  .grp-io:last-child { border-bottom:none; }
+  .grp-io:nth-child(even) { background:#fbfbf8; }
+  .gi-col { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .gi-lab { font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--faint); font-weight:600; }
+  .gi-chips { display:flex; flex-wrap:wrap; gap:5px; }
+
+  /* step 4 — interactive vote list (vertical cards) */
+  .vote-controls { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-bottom:12px; }
+  .vc-group { display:flex; align-items:center; gap:7px; }
+  .vc-lab { font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); font-weight:600; }
+  .vc-group select { padding:5px 26px 5px 9px; font-size:12.5px; max-width:240px; }
+  .vote-list { display:flex; flex-direction:column; gap:8px; max-height:560px; overflow:auto; padding:2px; }
+  .vote-item { display:block; text-align:left; appearance:none; width:100%; border:1px solid var(--line);
+    background:var(--card); border-radius:10px; padding:11px 13px; cursor:pointer; font-family:var(--sans);
+    transition:border-color .15s, background .15s, box-shadow .15s; }
+  .vote-item:hover { border-color:#cdd9ec; background:var(--accent-soft); }
+  .vote-item.active { border-color:var(--accent); background:var(--accent-soft);
+    box-shadow:0 0 0 1px var(--accent) inset; }
+  .vi-node { display:flex; align-items:flex-start; gap:7px; font-size:12.5px; font-weight:600;
+    color:var(--ink); line-height:1.35; }
+  .vi-node .var-dot { width:9px; height:9px; margin-top:4px; flex:none; }
+  .vi-node > span { overflow-wrap:anywhere; }
+  .vi-mid { display:flex; align-items:center; gap:8px; padding:3px 0 3px 1px; }
+  .vi-arrow { font-size:14px; font-weight:700; width:14px; text-align:center; line-height:1; }
+  .vi-arrow.ab { color:var(--accent); } .vi-arrow.ba { color:#c77c1e; }
+  .vi-arrow.none, .vi-arrow.tie { color:var(--faint); }
+  .vi-tag { font-size:10.5px; font-family:var(--mono); color:var(--muted); }
+  .vi-tag.tie { color:#b5630e; font-weight:600; }
+  .vi-bar { display:flex; height:9px; border-radius:5px; overflow:hidden; background:var(--line-soft); margin-top:10px; }
+  .vi-seg { height:100%; transition:width .4s cubic-bezier(.2,.7,.2,1); }
+  .vi-counts { display:flex; flex-wrap:wrap; gap:12px; font-size:10.5px; color:var(--muted);
+    font-variant-numeric:tabular-nums; margin-top:6px; }
+  .vi-cc { display:inline-flex; align-items:center; gap:4px; }
+  .vi-cc i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .pl-grid.wide-side { grid-template-columns:1fr 1.05fr; }
+  @media (max-width:900px){ .pl-grid{ grid-template-columns:1fr; } .pl-side{ min-height:0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition:none !important; animation:none !important; }
+  }
+  @media (max-width:640px) {
+    main, header { padding-left:16px; padding-right:16px; }
+    .head-side { margin-left:0; text-align:left; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="head-top">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/>
+        <circle cx="12" cy="18" r="2.4"/>
+        <path d="M7.6 7.7 11 15.4M16.4 7.7 13 15.4M8.4 6h7.2"/>
+      </svg>
+      <div>
+        <h1>Causal Order — Results Report</h1>
+        <p class="subtitle">Leveraging imperfect experts for causal inference: comparing
+          causal-graph predictions and their inferred causal order against ground truth.</p>
+      </div>
+    </div>
+    <div class="head-side">
+      <span class="meta" id="metaInfo"></span>
+      <a class="paper-link" href="https://openreview.net/pdf?id=9juyeCqL0u" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>
+        </svg>Read the paper</a>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Report views">
+    <button class="tab active" role="tab" data-view="overview">Overview</button>
+    <button class="tab" role="tab" data-view="graphs">Graphs</button>
+    <button class="tab" role="tab" data-view="order">Causal order</button>
+    <button class="tab" role="tab" data-view="pipeline">Pipeline</button>
+    <div class="field" id="datasetField" style="margin-left:auto; display:none">
+      <label for="datasetSelect">Dataset</label>
+      <select id="datasetSelect"></select>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <div id="overview"></div>
+  <div id="graphs" class="hidden"></div>
+  <div id="order" class="hidden"></div>
+  <div id="pipeline" class="hidden"></div>
+  <div id="noData" class="empty hidden">
+    No results found. Generate the data with
+    <code>python -m causal_discovery.build_report</code> and refresh this page.
+  </div>
+</main>
+
+<script src="report_data.js" onerror="window.__noData=true"></script>
+<script>
+"use strict";
+
+const COLORS = {
+  correct:'#2ca02c', reversed:'#ff7f0e', extra:'#d62728',
+  missing:'#9e9e9e', uncertain:'#9467bd'
+};
+const ORDER_OK = '#2ca02c', ORDER_BAD = '#d62728', ORDER_AMB = '#b6bccb';
+const METRIC_LABELS = {
+  shd:'SHD', topo_divergence:'Topo. div.', cycles:'Cycles',
+  isolated:'Isolated', precision:'Precision', recall:'Recall',
+  f1:'F1', n_pred_edges:'# edges'
+};
+const PREDICTED_CATS = new Set(['correct','reversed','extra']);
+const DATA = window.REPORT_DATA || null;
+let networks = [];          // live vis.Network refs (disposed on view change)
+let chartRefs = [];         // live Chart.js refs
+
+/* ============================================================= helpers === */
+function byGraph() {
+  const m = {};
+  for (const r of DATA.results) (m[r.graph] ??= []).push(r);
+  return m;
+}
+function fmt(v){ return (v === null || v === undefined) ? '—' : v; }
+function bestMetrics(r){ return r.acyclic ? r.acyclic.metrics : r.raw.metrics; }
+function bestView(r){ return r.acyclic ? r.acyclic : r.raw; }
+function disposeNetworks(){ while (networks.length) networks.pop().destroy(); }
+function disposeCharts(){ while (chartRefs.length) chartRefs.pop().destroy(); }
+function shortName(s, n=14){ return s.length > n ? s.slice(0, n-1) + '…' : s; }
+
+/* ---- per-variable colour identity ----
+ * Deterministic by the variable's index in a dataset's node list, so the same
+ * variable gets the same colour in every panel / view of that dataset. A
+ * golden-angle hue rotation keeps neighbouring variables far apart on the wheel
+ * for any node count (5 → 27). Light tinted fill + saturated border + dark
+ * hue-tinted ink keeps it legible and on-brand. */
+const _varColorCache = new Map();
+function varColors(nodes){
+  const cacheKey = nodes.join('\u001f');
+  if (_varColorCache.has(cacheKey)) return _varColorCache.get(cacheKey);
+  const m = {};
+  nodes.forEach((n, i) => {
+    const h = Math.round((i * 137.508) % 360);
+    m[n] = {
+      hue:h,
+      bg:`hsl(${h}, 68%, 91%)`,
+      hot:`hsl(${h}, 70%, 82%)`,
+      border:`hsl(${h}, 55%, 42%)`,
+      ink:`hsl(${h}, 48%, 26%)`,
+    };
+  });
+  _varColorCache.set(cacheKey, m);
+  return m;
+}
+function varDot(c){ return `<i class="var-dot" style="background:${c.border}"></i>`; }
+/* an inline, colour-coded reference to one variable (dot + hue-tinted name) */
+function varRef(name, vc){
+  const c = vc[name] || { border:'#9aa6bd', ink:'var(--ink)' };
+  return `<span class="v-ref" style="color:${c.ink}">${varDot(c)}${escapeHtml(name)}</span>`;
+}
+function varSet(group, vc){
+  return '{' + group.map(n => varRef(n, vc)).join('<span class="dim">, </span>') + '}';
+}
+function varEdge(a, b, vc){
+  return `${varRef(a, vc)}<span class="gi-ar">→</span>${varRef(b, vc)}`;
+}
+/* a full-name variable chip (tinted) that wraps gracefully for long names */
+function varChip(name, vc){
+  const c = vc[name] || { bg:'var(--line-soft)', border:'var(--line)', ink:'var(--ink)' };
+  return `<span class="vchip" style="background:${c.bg};border-color:${c.border};color:${c.ink}"
+    title="${escapeHtml(name)}">${varDot(c)}<span>${escapeHtml(name)}</span></span>`;
+}
+/* a "A → B" chip with both endpoints colour-coded; wraps for long names */
+function edgeChip(a, b, vc){
+  return `<span class="edge-chip" title="${escapeHtml(a)} → ${escapeHtml(b)}">${varChip(a, vc)}<span class="ar">→</span>${varChip(b, vc)}</span>`;
+}
+/* one row of the step-3 input → output list: a two-column card */
+function ioRowHtml(inVars, outEdges, vc, emptyLabel){
+  const edges = outEdges.length
+    ? outEdges.map(e => edgeChip(e[0], e[1], vc)).join('')
+    : `<span class="edge-chip none">${emptyLabel || 'no edges'}</span>`;
+  return `<div class="grp-io">
+    <div class="gi-col"><span class="gi-lab">Nodes</span>
+      <div class="gi-chips">${inVars.map(n => varChip(n, vc)).join('')}</div></div>
+    <div class="gi-col"><span class="gi-lab">Edges</span>
+      <div class="gi-chips">${edges}</div></div></div>`;
+}
+function varLegendHtml(nodes){
+  const c = varColors(nodes);
+  return `<div class="var-legend"><span class="var-legend-lab">Variables</span>` +
+    nodes.map(n => `<span class="var-chip" style="background:${c[n].bg};
+      border-color:${c[n].border};color:${c[n].ink}">${varDot(c[n])}${escapeHtml(n)}</span>`).join('') +
+    `</div>`;
+}
+
+/* directed edges actually predicted by a method (excludes missing / uncertain) */
+function predictedDirectedEdges(view){
+  return view.edges
+    .filter(e => PREDICTED_CATS.has(e.category))
+    .map(e => [e.from, e.to]);
+}
+
+/* ----- topological order matching networkx.topological_sort (3.x) -------- *
+ * Kahn with LIFO pop from the zero-indegree list, nodes/adjacency in the
+ * insertion order produced by add_edges_from — so the divergence count we
+ * recompute lines up with the value reported by build_report.py.            */
+function topoOrder(edges){
+  const order = [], seen = new Set(), adj = new Map(), indeg = new Map();
+  const ensure = n => { if (!seen.has(n)) { seen.add(n); order.push(n);
+    adj.set(n, []); indeg.set(n, 0); } };
+  for (const [u, v] of edges){ ensure(u); ensure(v);
+    adj.get(u).push(v); indeg.set(v, indeg.get(v) + 1); }
+  const z = order.filter(n => indeg.get(n) === 0);
+  const im = new Map(); for (const n of order) if (indeg.get(n) > 0) im.set(n, indeg.get(n));
+  const res = [];
+  while (z.length){
+    const node = z.pop();
+    for (const c of adj.get(node)){
+      im.set(c, im.get(c) - 1);
+      if (im.get(c) === 0){ z.push(c); im.delete(c); }
+    }
+    res.push(node);
+  }
+  return res.length === order.length ? res : null;   // null ⇒ cyclic
+}
+
+/* longest-path layer (generation) per node — a plain object keyed by node id,
+ * so makeNodes() can index it the same way it indexes result.node_levels */
+function generations(nodes, edges){
+  const order = topoOrder(edges);
+  const level = {}; nodes.forEach(n => level[n] = 0);
+  if (!order) return level;                          // cyclic: flat fallback
+  const adj = new Map(nodes.map(n => [n, []]));
+  for (const [u, v] of edges){ if (!adj.has(u)) adj.set(u, []); adj.get(u).push(v);
+    if (!(u in level)) level[u] = 0; if (!(v in level)) level[v] = 0; }
+  for (const u of order)
+    for (const v of adj.get(u) || [])
+      level[v] = Math.max(level[v] || 0, (level[u] || 0) + 1);
+  return level;
+}
+
+/* ===================================================== graph rendering === */
+function makeNodes(result, levels){
+  const c = varColors(result.nodes);
+  return result.nodes.map(n => ({
+    id:n, label:n, level:(levels ?? result.node_levels)[n] ?? 0,
+    title:result.descriptions?.[n] || n,
+    shape:'box', margin:7, borderWidth:1.6,
+    color:{ background:c[n].bg, border:c[n].border,
+            highlight:{ background:c[n].hot, border:c[n].border } },
+    font:{ size:13, color:'#1b2230', face:'system-ui' },
+    widthConstraint:{ maximum:130 }
+  }));
+}
+function networkOptions(direction){
+  return {
+    layout:{ hierarchical:{ enabled:true, direction, sortMethod:'directed',
+             levelSeparation:direction === 'LR' ? 150 : 95,
+             nodeSpacing:120, treeSpacing:130, parentCentralization:true } },
+    physics:false,
+    interaction:{ dragNodes:true, zoomView:true, dragView:true, hover:true },
+    edges:{ arrowStrikethrough:false, selectionWidth:0 }
+  };
+}
+function buildGraphNetwork(container, result, view){
+  const edges = view.edges.map(e => {
+    const c = COLORS[e.category];
+    const dashed = e.category === 'missing' || e.category === 'uncertain';
+    return { from:e.from, to:e.to, arrows:'to',
+      color:{ color:c, highlight:c }, width:e.category === 'correct' ? 2.6 : 1.8,
+      dashes:dashed, smooth:{ type:'curvedCW', roundness:0.1 },
+      title:`${e.from} → ${e.to} (${e.category})` };
+  });
+  networks.push(new vis.Network(container,
+    { nodes:makeNodes(result), edges }, networkOptions('UD')));
+}
+
+function countsHtml(counts){
+  return ['correct','reversed','extra','missing','uncertain']
+    .filter(k => counts[k])
+    .map(k => `<span class="pill" style="background:${COLORS[k]}">${k} ${counts[k]}</span>`)
+    .join('');
+}
+
+/* ===================================================== OVERVIEW table === */
+let sortState = { key:'graph', dir:1 };
+function renderOverview(){
+  const host = document.getElementById('overview');
+  const graphs = Object.keys(byGraph());
+  const rows = DATA.results.map(r => ({ graph:r.graph, method:r.method,
+    _acyclic:!!r.acyclic, ...bestMetrics(r) }));
+
+  // headline stats
+  const f1s = rows.map(r => r.f1).filter(v => v !== null);
+  const best = rows.reduce((a, b) => (b.f1 ?? -1) > (a.f1 ?? -1) ? b : a, rows[0]);
+  const validOrders = DATA.results.filter(r => bestMetrics(r).cycles === 0).length;
+  const strip = `
+    <div class="stat-strip">
+      <div class="stat"><div class="k">Datasets</div><div class="v">${graphs.length}</div></div>
+      <div class="stat"><div class="k">Method runs</div><div class="v">${rows.length}</div></div>
+      <div class="stat"><div class="k">Best F1</div>
+        <div class="v">${best.f1 ?? '—'} <small>${shortName(best.method, 22)}</small></div></div>
+      <div class="stat"><div class="k">Valid causal order</div>
+        <div class="v">${validOrders}<small>/ ${rows.length} acyclic</small></div></div>
+    </div>`;
+
+  const cols = ['graph','method','shd','topo_divergence','cycles','isolated',
+                'precision','recall','f1','n_pred_edges'];
+  rows.sort((a, b) => {
+    const k = sortState.key; let x = a[k], y = b[k];
+    if (x === null || x === undefined) x = Infinity;
+    if (y === null || y === undefined) y = Infinity;
+    if (typeof x === 'string') return sortState.dir * x.localeCompare(y);
+    return sortState.dir * (x > y ? 1 : x < y ? -1 : 0);
+  });
+  const head = cols.map(c => {
+    const lab = c === 'graph' ? 'Dataset' : c === 'method' ? 'Method' : METRIC_LABELS[c];
+    const active = sortState.key === c;
+    const arrow = active ? `<span class="arr">${sortState.dir > 0 ? '▲' : '▼'}</span>` : '';
+    const lcol = (c === 'graph' || c === 'method') ? 'lcol' : '';
+    return `<th class="${lcol}" data-key="${c}" aria-sort="${active ?
+      (sortState.dir > 0 ? 'ascending' : 'descending') : 'none'}">${lab}${arrow}</th>`;
+  }).join('');
+  const body = rows.map(r => '<tr>' + cols.map(c => {
+    let v = fmt(r[c]), cls = c === 'method' ? 'method' : '';
+    if (c === 'method' && r._acyclic) v += '<span class="tag">acyclic</span>';
+    if (c === 'graph' || c === 'method') cls += ' lcol';
+    if (c === 'f1' && r.f1 !== null) cls += r.f1 >= 0.7 ? ' good' : (r.f1 < 0.4 ? ' bad' : '');
+    if (c === 'cycles' && r.cycles > 0) cls += ' bad';
+    if (c === 'topo_divergence') cls += (r.topo_divergence === 0 ? ' good'
+      : (r.topo_divergence > 0 ? ' bad' : ' dim'));
+    return `<td class="${cls.trim()}">${v}</td>`;
+  }).join('') + '</tr>').join('');
+
+  host.innerHTML = strip + `
+    <div class="card">
+      <h2>All results</h2>
+      <p class="lead">One row per (dataset × method). Metrics use the graph
+        <b>after</b> entropy-based cycle removal when available, otherwise the raw
+        prediction. <b>Topological divergence</b> counts ground-truth edges that the
+        method's inferred causal order reverses — the paper's key signal. Click any
+        column to sort.</p>
+      <div class="table-wrap">
+        <table id="ovTable"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+      </div>
+      <div class="legend" style="margin-top:16px">
+        <span><i class="swatch" style="border-color:var(--correct)"></i>correct</span>
+        <span><i class="swatch" style="border-color:var(--reversed)"></i>reversed</span>
+        <span><i class="swatch" style="border-color:var(--extra)"></i>extra</span>
+        <span><i class="swatch dash" style="border-color:var(--missing)"></i>missing</span>
+        <span><i class="swatch dash" style="border-color:var(--uncertain)"></i>uncertain (LLM tie-break)</span>
+      </div>
+    </div>`;
+  host.querySelectorAll('#ovTable th').forEach(th => th.onclick = () => {
+    const k = th.dataset.key;
+    if (sortState.key === k) sortState.dir *= -1; else sortState = { key:k, dir:1 };
+    renderOverview();
+  });
+}
+
+/* ===================================================== GRAPHS explorer === */
+let graphMode = 'auto';                    // auto | raw | acyclic
+function viewFor(r){
+  return graphMode === 'raw' ? r.raw
+       : graphMode === 'acyclic' ? (r.acyclic || r.raw)
+       : (r.acyclic || r.raw);
+}
+function viewTag(r, view){
+  if (!r.acyclic) return '';
+  return view === r.acyclic ? '· acyclic' : '· raw';
+}
+function renderGraphs(graphName){
+  disposeNetworks(); disposeCharts();
+  const results = byGraph()[graphName];
+  const host = document.getElementById('graphs');
+  const gt = results[0];
+
+  let panels = `<div class="panel gt"><div class="phead">
+      <span class="ptitle">Ground truth <span class="ptag">· true DAG</span></span></div>
+      <div class="net" id="net_gt"></div></div>`;
+  results.forEach((r, i) => {
+    const view = viewFor(r);
+    panels += `<div class="panel"><div class="phead">
+        <span class="ptitle">${r.method} <span class="ptag">${viewTag(r, view)}</span></span>
+        <span class="pcounts">${countsHtml(view.counts)}</span></div>
+        <div class="net" id="net_${i}"></div></div>`;
+  });
+
+  host.innerHTML = `
+    <div class="card">
+      <div class="controls">
+        <div class="field">
+          <label for="modeSelect">Graph shown</label>
+          <select id="modeSelect">
+            <option value="auto">Best available</option>
+            <option value="raw">Raw prediction</option>
+            <option value="acyclic">After cycle removal</option>
+          </select>
+        </div>
+        <span class="dim">${results.length} method(s) on “${graphName}”
+          · ${gt.nodes.length} nodes · drag nodes / scroll to zoom</span>
+      </div>
+      <div class="legend" style="margin-bottom:14px">
+        <span class="var-legend-lab" style="margin-right:0">Edges</span>
+        <span><i class="swatch" style="border-color:var(--correct)"></i>correct</span>
+        <span><i class="swatch" style="border-color:var(--reversed)"></i>reversed</span>
+        <span><i class="swatch" style="border-color:var(--extra)"></i>extra</span>
+        <span><i class="swatch dash" style="border-color:var(--missing)"></i>missing</span>
+        <span><i class="swatch dash" style="border-color:var(--uncertain)"></i>uncertain</span>
+      </div>
+      ${varLegendHtml(gt.nodes)}
+      <div class="panels">${panels}</div>
+    </div>
+    <div class="card">
+      <h2>Metric comparison</h2>
+      <p class="lead tight">Lower is better for SHD, topological divergence, cycles and
+        isolated nodes; higher is better for F1. Click a legend entry to toggle a method.</p>
+      <div class="chart-box"><canvas id="metricChart"></canvas></div>
+    </div>
+    <div class="card hidden" id="heatCard"></div>`;
+
+  buildGraphNetwork(document.getElementById('net_gt'), gt,
+    { edges:gt.ground_truth_edges.map(e => ({ from:e[0], to:e[1], category:'correct' })) });
+  results.forEach((r, i) =>
+    buildGraphNetwork(document.getElementById('net_' + i), r, viewFor(r)));
+
+  const ms = document.getElementById('modeSelect');
+  ms.value = graphMode;
+  ms.onchange = e => { graphMode = e.target.value; renderGraphs(graphName); };
+
+  renderMetricChart(results);
+  renderHeatmaps(results);
+}
+
+const CHART_PALETTE = ['#3a567d','#c77c1e','#2f9e44','#a83254','#6f42c1','#1098ad','#b08900'];
+function renderMetricChart(results){
+  const keys = ['shd','topo_divergence','cycles','isolated','f1'];
+  const datasets = results.map((r, i) => {
+    const m = bestMetrics(r);
+    return { label:r.method, data:keys.map(k => m[k] === null ? 0 : m[k]),
+      backgroundColor:CHART_PALETTE[i % CHART_PALETTE.length], borderRadius:3,
+      maxBarThickness:34 };
+  });
+  chartRefs.push(new Chart(document.getElementById('metricChart'), {
+    type:'bar',
+    data:{ labels:keys.map(k => METRIC_LABELS[k]), datasets },
+    options:{ responsive:true, maintainAspectRatio:false, animation:!REDUCED_MOTION,
+      plugins:{ legend:{ position:'top', labels:{ font:{ family:'system-ui' }, boxWidth:12, padding:14 } },
+        tooltip:{ callbacks:{ label:c => `${c.dataset.label}: ${c.parsed.y}` } } },
+      scales:{ y:{ beginAtZero:true, grid:{ color:'#f0efe9' }, ticks:{ font:{ family:'system-ui' } } },
+        x:{ grid:{ display:false }, ticks:{ font:{ family:'system-ui' } } } } }
+  }));
+}
+
+/* ----- confidence heatmaps ----- */
+function viridis(t){
+  t = Math.max(0, Math.min(1, t));
+  const stops = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
+  const x = t * (stops.length - 1), i = Math.floor(x), f = x - i;
+  const a = stops[i], b = stops[Math.min(i + 1, stops.length - 1)];
+  const c = a.map((v, k) => Math.round(v + (b[k] - v) * f));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function renderHeatmaps(results){
+  const withEW = results.filter(r => r.edgewise);
+  const card = document.getElementById('heatCard');
+  if (!withEW.length) return;
+  card.classList.remove('hidden');
+  card.innerHTML = '<h2>Edge confidence</h2>' +
+    '<p class="lead tight">Maximum directed-vote probability per variable pair (triplet / ' +
+    'quadruplet voting). Darker = more confident the pair is directed; light = mostly “no edge”. ' +
+    'Symmetric matrix.</p>' +
+    '<div class="heat-legend"><span>0</span><span class="heat-bar"></span><span>1</span>' +
+    '<span class="dim">probability</span></div>' +
+    withEW.map(r => `<details class="heat-block" open><summary>${r.method}</summary>
+      <div class="heat-scroll">${heatTable(r)}</div></details>`).join('');
+}
+function heatTable(r){
+  const nodes = r.nodes, idx = {}; nodes.forEach((n, i) => idx[n] = i);
+  const N = nodes.length, conf = Array.from({ length:N }, () => Array(N).fill(null));
+  for (const e of r.edgewise){
+    if (!(e.a in idx) || !(e.b in idx)) continue;
+    const v = Math.max(e.probs[0], e.probs[1]);
+    conf[idx[e.a]][idx[e.b]] = v; conf[idx[e.b]][idx[e.a]] = v;
+  }
+  let h = '<table class="heat"><thead><tr><th></th>' +
+    nodes.map(n => `<th title="${n}">${shortName(n, 12)}</th>`).join('') + '</tr></thead><tbody>';
+  for (let i = 0; i < N; i++){
+    h += `<tr><td class="rowlab" title="${nodes[i]}">${shortName(nodes[i], 12)}</td>`;
+    for (let j = 0; j < N; j++){
+      if (i === j || conf[i][j] === null){ h += '<td style="background:#fff"></td>'; continue; }
+      const v = conf[i][j], txt = v >= 0.995 ? '1' : v.toFixed(1);
+      h += `<td title="${nodes[i]}–${nodes[j]}: ${v.toFixed(3)}"
+        style="background:${viridis(v)};color:${v > 0.55 ? '#000' : '#fff'}">${txt}</td>`;
+    }
+    h += '</tr>';
+  }
+  return h + '</tbody></table>';
+}
+
+/* ===================================================== CAUSAL ORDER === */
+let orderMode = 'auto';
+function orderViewFor(r){
+  return orderMode === 'raw' ? r.raw
+       : orderMode === 'acyclic' ? (r.acyclic || r.raw)
+       : (r.acyclic || r.raw);
+}
+function renderOrder(graphName){
+  disposeNetworks(); disposeCharts();
+  const results = byGraph()[graphName];
+  const host = document.getElementById('order');
+  const gt = results[0];
+
+  // ground-truth panel uses the precomputed GT levels; all edges respected
+  let panels = orderPanelHtml('gt', 'Ground-truth order', 'true causal order', null, true);
+  results.forEach((r, i) => {
+    const view = orderViewFor(r);
+    const valid = view.metrics.cycles === 0 && predictedDirectedEdges(view).length > 0;
+    panels += orderPanelHtml('m' + i, r.method, viewTag(r, view).replace('· ', ''),
+      view.metrics, valid);
+  });
+
+  host.innerHTML = `
+    <div class="card">
+      <h2>Causal order vs. ground truth</h2>
+      <p class="lead">The paper's central claim: a pairwise/graph prediction can contain
+        structural errors (high SHD) yet still imply the <b>correct causal order</b>. Each panel
+        lays nodes out by the order the method inferred (earlier causes on the left); ground-truth
+        edges are drawn over that layout. A <b style="color:var(--extra)">red</b> edge runs
+        backwards — a ground-truth cause placed after its effect — and is counted by
+        <b>topological divergence</b>.</p>
+      <div class="controls">
+        <div class="field">
+          <label for="orderMode">Graph used</label>
+          <select id="orderMode">
+            <option value="auto">Best available</option>
+            <option value="raw">Raw prediction</option>
+            <option value="acyclic">After cycle removal</option>
+          </select>
+        </div>
+        <span class="dim">${results.length} method(s) on “${graphName}”</span>
+      </div>
+      <div class="order-legend">
+        <span><i class="swatch" style="border-color:var(--correct)"></i>edge respected by inferred order</span>
+        <span><i class="swatch" style="border-color:var(--extra)"></i>edge reversed (divergence)</span>
+        <span><i class="swatch" style="border-color:${ORDER_AMB}"></i>endpoint not ordered</span>
+      </div>
+      ${varLegendHtml(gt.nodes)}
+      <div class="order-grid">${panels}</div>
+    </div>
+    <div class="card">
+      <h2>Structural error vs. order error</h2>
+      <p class="lead tight">SHD measures errors in the predicted <b>graph</b>; topological
+        divergence measures errors in the implied <b>order</b>. The gap between the two bars is
+        the paper's point — order is the more stable interface.</p>
+      <div class="chart-box"><canvas id="orderChart"></canvas></div>
+    </div>`;
+
+  // render the ground-truth order network
+  buildOrderNetwork(document.getElementById('net_gt'), gt, gt.node_levels,
+    gt.ground_truth_edges.map(e => [e[0], e[1]]), gtPosMap(gt));
+
+  // render each method
+  results.forEach((r, i) => {
+    const view = orderViewFor(r);
+    const pred = predictedDirectedEdges(view);
+    const cont = document.getElementById('net_m' + i);
+    if (view.metrics.cycles > 0 || !pred.length){
+      cont.closest('.order-panel').querySelector('.order-body').innerHTML =
+        view.metrics.cycles > 0
+          ? `<div class="callout"><b>No valid causal order.</b> The predicted graph contains
+             ${view.metrics.cycles} cycle(s), so a topological order does not exist — exactly the
+             failure mode the paper attributes to naïve pairwise prompting.</div>`
+          : `<div class="order-note">No directed edges were predicted, so there is no order to show.</div>`;
+      return;
+    }
+    const levels = generations(r.nodes, pred);
+    // prefer the order build_report.py recorded (matches the reported metric)
+    const pos = posMap(view.order || topoOrder(pred));
+    buildOrderNetwork(cont, r, levels, gt.ground_truth_edges.map(e => [e[0], e[1]]), pos);
+    // list the reversed ground-truth edges
+    const viol = gt.ground_truth_edges.filter(([u, v]) =>
+      pos.has(u) && pos.has(v) && pos.get(u) > pos.get(v));
+    if (viol.length){
+      const vbox = cont.closest('.order-panel').querySelector('.violations');
+      vbox.innerHTML = '<div class="vlab">Reversed ground-truth edges</div>' +
+        viol.map(([u, v]) => `<span class="vedge">${u} &rarr; ${v}</span>`).join('');
+    }
+  });
+
+  const om = document.getElementById('orderMode');
+  om.value = orderMode;
+  om.onchange = e => { orderMode = e.target.value; renderOrder(graphName); };
+
+  renderOrderChart(results);
+}
+
+function orderPanelHtml(id, title, tag, metrics, valid){
+  const isGt = id === 'gt';
+  const td = metrics ? metrics.topo_divergence : 0;
+  const shd = metrics ? metrics.shd : 0;
+  const stats = isGt ? '' : `
+    <div class="order-stats">
+      <div class="ostat">Topo. divergence
+        <b class="${td === 0 ? 'ok' : (td > 0 ? 'warn' : '')}">${td === null ? '—' : td}</b></div>
+      <div class="ostat">Valid order <b class="${valid ? 'ok' : 'warn'}">${valid ? 'Yes' : 'No'}</b></div>
+      <div class="ostat">SHD (graph) <b>${shd}</b></div>
+    </div>`;
+  return `<div class="order-panel ${isGt ? 'gt' : ''}">
+      <div class="order-head"><span class="otitle">${title}
+        ${tag ? `<span class="ptag" style="color:var(--faint);font-weight:500;font-size:11.5px"> · ${tag}</span>` : ''}</span>
+        ${stats}</div>
+      <div class="order-body"><div class="order-net" id="net_${id}"></div></div>
+      <div class="violations"></div>
+    </div>`;
+}
+
+function gtPosMap(gt){
+  // a concrete linear order consistent with the GT DAG, for completeness
+  return posMap(topoOrder(gt.ground_truth_edges.map(e => [e[0], e[1]])) || gt.nodes);
+}
+function posMap(order){
+  const m = new Map();
+  (order || []).forEach((n, i) => m.set(n, i));
+  return m;
+}
+
+/* draw nodes positioned by `levels`; overlay ground-truth edges coloured by
+ * whether the inferred order (pos) respects them */
+function buildOrderNetwork(container, result, levels, gtEdges, pos){
+  const edges = gtEdges.map(([u, v]) => {
+    let color = ORDER_OK;
+    if (!pos.has(u) || !pos.has(v)) color = ORDER_AMB;
+    else if (pos.get(u) > pos.get(v)) color = ORDER_BAD;
+    return { from:u, to:v, arrows:'to', width:color === ORDER_BAD ? 2.6 : 2,
+      color:{ color, highlight:color }, smooth:{ type:'curvedCW', roundness:0.12 },
+      title:`${u} → ${v}` };
+  });
+  networks.push(new vis.Network(container,
+    { nodes:makeNodes(result, levels), edges }, networkOptions('LR')));
+}
+
+function renderOrderChart(results){
+  const labels = results.map(r => shortName(r.method, 18));
+  const shd = results.map(r => bestMetrics(r).shd);
+  const td = results.map(r => { const v = bestMetrics(r).topo_divergence; return v === null ? 0 : v; });
+  chartRefs.push(new Chart(document.getElementById('orderChart'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'SHD (graph error)', data:shd, backgroundColor:'#a83254', borderRadius:3, maxBarThickness:40 },
+      { label:'Topological divergence (order error)', data:td, backgroundColor:'#3a567d', borderRadius:3, maxBarThickness:40 }
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:!REDUCED_MOTION,
+      plugins:{ legend:{ position:'top', labels:{ font:{ family:'system-ui' }, boxWidth:12, padding:14 } } },
+      scales:{ y:{ beginAtZero:true, grid:{ color:'#f0efe9' }, ticks:{ precision:0, font:{ family:'system-ui' } } },
+        x:{ grid:{ display:false }, ticks:{ font:{ family:'system-ui' } } } } }
+  }));
+}
+
+/* ===================================================== PIPELINE (flow) === */
+let pl = null;                 // { result, steps, idx, playing, timer, speed, network, nodesDS, edgesDS }
+let pipelineMethodIdx = 0;
+
+function comb(n, k){
+  if (k < 0 || k > n) return 0;
+  k = Math.min(k, n - k); let r = 1;
+  for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+  return Math.round(r);
+}
+function combinations(arr, k){
+  const out = [], cur = [];
+  (function rec(start){
+    if (cur.length === k){ out.push(cur.slice()); return; }
+    for (let i = start; i < arr.length; i++){ cur.push(arr[i]); rec(i + 1); cur.pop(); }
+  })(0);
+  return out;
+}
+const ukey = (a, b) => [a, b].slice().sort().join('\u001f');
+
+/* node positions: laid out by ground-truth level (top → bottom) */
+function levelPositions(result){
+  const lv = result.node_levels, byLevel = {};
+  result.nodes.forEach(n => { (byLevel[lv[n] ?? 0] ??= []).push(n); });
+  const maxL = Math.max(0, ...Object.keys(byLevel).map(Number));
+  const pos = {}, xGap = 190, yGap = 130;
+  for (let L = 0; L <= maxL; L++){
+    const row = byLevel[L] || [];
+    row.forEach((n, i) => { pos[n] = { x: (i - (row.length - 1) / 2) * xGap, y: L * yGap }; });
+  }
+  return pos;
+}
+function neutralEdge(from, to, hot){
+  return { from, to, arrows:'to', dashes:false,
+    color:{ color: hot ? '#2b425f' : '#9aa6bd' }, width: hot ? 3.2 : 1.8,
+    smooth:{ type:'curvedCW', roundness:0.12 } };
+}
+function removingEdge(from, to){
+  return { from, to, arrows:'to', dashes:[4,4],
+    color:{ color:'#d62728' }, width:2.6, smooth:{ type:'curvedCW', roundness:0.12 } };
+}
+function classifiedEdgeObj(e){
+  const c = COLORS[e.category], dashed = e.category === 'missing' || e.category === 'uncertain';
+  return { from:e.from, to:e.to, arrows:'to', color:{ color:c },
+    width: e.category === 'correct' ? 2.6 : 1.8, dashes:dashed,
+    smooth:{ type:'curvedCW', roundness:0.12 } };
+}
+
+/* ----- prompt snippets (trimmed from causal_discovery/prompts) ----- */
+function subgraphPrompt(group, descr, ctx){
+  const ds = group.map(n => descr[n] || n);
+  return `Identify the causal relationships between the given variables and
+create a directed acyclic graph to ${ctx}.
+Output a list of tuples, e.g. [('A','B'),('B','C')], inside <Answer></Answer>.
+… (few-shot example omitted) …
+
+Input: Nodes: ${JSON.stringify(group)};
+Description: ${JSON.stringify(ds)};
+Output:`;
+}
+function pairwisePrompt(a, b, nodes, ctx){
+  return `For a causal graph used to ${ctx}
+with nodes ${JSON.stringify(nodes)},
+which cause-and-effect relationship is more likely between '${a}' and '${b}'?
+
+A. '${a}' causally affects '${b}'.
+B. '${b}' causally affects '${a}'.
+C. no causal relation between '${a}' and '${b}'.
+
+Give grounded reasoning, then answer as <Answer>A/B/C</Answer>.`;
+}
+
+/* ----- shared lookups from a result ----- */
+function pairDecisions(result){
+  // unordered pair -> { dir:[from,to] | null, tie:bool }
+  const predDir = new Map(), ties = new Set();
+  result.raw.edges.forEach(e => {
+    if (e.category === 'uncertain') ties.add(ukey(e.from, e.to));
+    else if (PREDICTED_CATS.has(e.category)) predDir.set(ukey(e.from, e.to), [e.from, e.to]);
+  });
+  return { predDir, ties };
+}
+function gtAmong(group, gtEdges){
+  const s = new Set(group);
+  return gtEdges.filter(([u, v]) => s.has(u) && s.has(v));
+}
+function orderChips(order){
+  if (!order || !order.length) return '<span class="dim">no valid order (graph is cyclic)</span>';
+  return '<div class="order-chips">' + order.map((n, i) =>
+    `<span class="chip"><span class="rk">${i + 1}</span>${n}</span>`).join('') + '</div>';
+}
+function metricCards(m){
+  const td = m.topo_divergence;
+  return `<div class="pl-metrics">
+    <div class="pl-metric"><div class="k">SHD (graph)</div><div class="v">${m.shd}</div></div>
+    <div class="pl-metric"><div class="k">Topo. divergence</div>
+      <div class="v" style="color:${td === 0 ? 'var(--good)' : (td > 0 ? 'var(--bad)' : 'inherit')}">${td === null ? '—' : td}</div></div>
+    <div class="pl-metric"><div class="k">F1</div><div class="v">${m.f1}</div></div>
+    <div class="pl-metric"><div class="k">Cycles</div>
+      <div class="v" style="color:${m.cycles > 0 ? 'var(--bad)' : 'inherit'}">${m.cycles}</div></div>
+  </div>`;
+}
+
+/* ======================= build the step list ======================= */
+function buildPipelineSteps(result){
+  const flow = result.flow || { strategy:'pairwise', k:2, context:'' };
+  return flow.strategy === 'subgroup'
+    ? subgroupSteps(result, flow) : pairwiseSteps(result, flow);
+}
+
+function subgroupSteps(result, flow){
+  const { nodes } = result;
+  const descr = result.descriptions || {}, gt = result.ground_truth_edges;
+  const ctx = flow.context, k = flow.k, n = nodes.length;
+  const kName = k === 3 ? 'triplet' : k === 4 ? 'quadruplet' : `${k}-node subgroup`;
+  const nGroups = comb(n, k), D = comb(n - 2, k - 2);
+  const vc = varColors(nodes);
+  const steps = [];
+
+  // edgewise probs/entropy, oriented for (a,b) with a before b in `nodes`
+  const ew = {};
+  (result.edgewise || []).forEach(e => {
+    ew[ukey(e.a, e.b)] = { a:e.a, b:e.b, probs:e.probs, entropy:e.entropy };
+  });
+  const { predDir, ties } = pairDecisions(result);
+
+  // merged edges + per-pair vote tallies (recovered from the saved distribution)
+  const merged = [], votes = [];
+  for (let i = 0; i < n; i++){
+    for (let j = i + 1; j < n; j++){
+      const a = nodes[i], b = nodes[j], uk = ukey(a, b);
+      const rec = ew[uk];
+      let counts = [0, 0, 0];
+      if (rec){
+        const p = rec.a === a ? rec.probs : [rec.probs[1], rec.probs[0], rec.probs[2]];
+        counts = p.map(x => Math.round(x * D));
+      }
+      const tie = ties.has(uk), dir = predDir.get(uk);
+      let decision = 'none', added = null;
+      if (tie) decision = 'tie';
+      else if (dir){ added = dir; decision = dir[0] === a ? 'ab' : 'ba'; }
+      if (added) merged.push(added);
+      votes.push({ a, b, uk, counts, decision, added });
+    }
+  }
+  const mergedByPair = new Map(merged.map(e => [ukey(e[0], e[1]), e]));
+
+  // STAGE 1 — dataset (no graph): variables + descriptions
+  steps.push({ stage:'Dataset', dur:4400, full:true, highlight:[], graphEdges:[],
+    captionHtml:`We recover causal structure for <b>${result.graph}</b> — ${n} variables — with the
+      <span class="em">${kName}</span> strategy: rather than trusting one large answer, we ask a weaker LLM
+      about many small ${k}-node subsets and let them <span class="em">vote</span>. First, the variables and
+      their descriptions (from the benchmark definition) and the modelling context handed to the model.`,
+    sideHtml: datasetSideHtml(result, ctx) });
+
+  // STAGE 2 — enumerate subgroups (no graph)
+  const groups = combinations(nodes, k);
+  steps.push({ stage:'Subgroups', dur:4400, full:true, highlight:[], graphEdges:[],
+    captionHtml:`Enumerate <span class="em">every ${k}-node subset</span>:
+      C(${n},${k}) = <b>${nGroups}</b> ${kName}s. Each is sent to the subgraph model to be oriented as a
+      small DAG. Every pair of variables therefore appears in <b>${D}</b> of them.`,
+    sideHtml:`<div class="pl-h">${nGroups} ${kName}s</div>
+      <div class="chip-wrap">${groups.map(g =>
+        `<span class="chip grp">${varSet(g, vc)}</span>`).join('')}</div>` });
+
+  // STAGE 3 — example prompt + input→output for every group (no graph)
+  const example = groups.slice().sort((a, b) => gtAmong(b, gt).length - gtAmong(a, gt).length)[0] || groups[0];
+  const ioRows = groups.map(g => {
+    const out = [];
+    for (let p = 0; p < g.length; p++)
+      for (let q = p + 1; q < g.length; q++){
+        const e = mergedByPair.get(ukey(g[p], g[q]));
+        if (e) out.push(e);
+      }
+    return { g, out };
+  });
+  steps.push({ stage:'LLM query', dur:5400, full:true, highlight:[], graphEdges:[],
+    captionHtml:`Each ${kName} is oriented by the (weaker) subgraph model with the prompt shown. Below, every
+      ${kName} is listed with the edges it contributes among its own nodes.`,
+    sideHtml:`<div class="pl-h">Example ${kName} query</div>
+      <div class="prompt-card"><div class="prompt-role">system → subgraph model (${kName})</div>
+        <div class="prompt-body">${escapeHtml(subgraphPrompt(example, descr, ctx))}</div></div>
+      <div class="pl-h" style="margin-top:16px">Input → output · all ${nGroups} ${kName}s</div>
+      <p class="pl-hint">Raw per-${kName} responses aren't stored in the artefact, so the “output” is the
+        orientation each ${kName} contributes to the <b>aggregated</b> result (read off the merged graph).</p>
+      <div class="grp-io-list">${ioRows.map(({ g, out }) => ioRowHtml(g, out, vc)).join('')}</div>` });
+
+  // STAGE 4 — merged graph + interactive vote list (all pairs at once)
+  steps.push({ stage:'Vote & merge', dur:7500, interactive:'votes', highlight:[],
+    votes, mergedByPair,
+    graphEdges: merged.map(e => ({ id:ukey(e[0], e[1]), ...neutralEdge(e[0], e[1], false) })),
+    captionHtml:`For <span class="em">every pair</span>, the votes from the ${D} ${kName}s containing it are
+      tallied; the majority direction wins (ties go to a stronger <span class="em">expert</span> model) and
+      becomes an edge in the merged graph. <b>Click a row — or a node/edge in the graph —</b> to link the two.`,
+    sideHtml: votesSideHtml(votes,
+      `<div class="pl-h">Majority vote · ${votes.length} pairs</div>`,
+      `<p class="pl-hint">Each pair was decided across ${D} ${kName}s. <b>Sort</b> by directed-vote count
+        (the “no edge” tally is ignored) or <b>filter</b> to one variable; click a pair (or a graph node /
+        edge) to inspect it.</p>`, vc) });
+
+  // STAGE 5 — cycle check / removal
+  const rawCycles = result.raw.metrics.cycles;
+  const acyclicPred = result.acyclic ? predictedDirectedEdges(result.acyclic) : null;
+  if (rawCycles > 0 && acyclicPred){
+    const keep = new Set(acyclicPred.map(e => e.join('\u001f')));
+    const removed = merged.filter(e => !keep.has(e.join('\u001f')));
+    const entOf = e => { const r = ew[ukey(e[0], e[1])]; return r ? r.entropy : 0; };
+    removed.sort((x, y) => entOf(y) - entOf(x));   // remove highest-entropy (lowest weight) first
+    steps.push({ stage:'Cycle removal', dur:2600, highlight:[],
+      graphEdges: merged.map(e => neutralEdge(e[0], e[1], false)),
+      captionHtml:`The merged graph has <b>${rawCycles}</b> cycle(s) — a graph can encode contradictions.
+        We weight each edge by <span class="em">1 / (entropy + ε)</span> and drop the least-confident edges
+        until it becomes acyclic.`,
+      sideHtml:`<div class="pl-h">Edge confidence (1 / entropy)</div>` +
+        merged.map(e => `<div class="pl-kv">${e[0]} → ${e[1]} &nbsp;·&nbsp; entropy <b>${entOf(e).toFixed(3)}</b></div>`).join('') });
+    let cur = merged.slice();
+    removed.forEach(rm => {
+      const before = cur.slice();
+      cur = cur.filter(e => !(e[0] === rm[0] && e[1] === rm[1]));
+      steps.push({ stage:'Cycle removal', dur:2200, highlight:[rm[0], rm[1]],
+        graphEdges: before.map(e => (e[0] === rm[0] && e[1] === rm[1]) ? removingEdge(e[0], e[1]) : neutralEdge(e[0], e[1], false)),
+        captionHtml:`Remove the lowest-confidence edge <b>${rm[0]} → ${rm[1]}</b>
+          (entropy ${entOf(rm).toFixed(3)}) to break a cycle.`,
+        sideHtml:`<div class="pl-h">Removing edge</div>
+          <div class="pl-kv">${rm[0]} → ${rm[1]} — highest entropy among cycle edges.</div>` });
+    });
+  } else {
+    steps.push({ stage:'Cycle removal', dur:2400, highlight:[],
+      graphEdges: merged.map(e => neutralEdge(e[0], e[1], false)),
+      captionHtml:`The merged graph has <b>no cycles</b> — it is already a valid DAG, so the
+        entropy-based cycle-removal step makes no changes here.`,
+      sideHtml:`<div class="pl-h">Cycle check</div><div class="pl-kv">Cycles found: <b>0</b>.
+        Entropy-based repair (weight = 1 / (entropy + ε)) is skipped.</div>` });
+  }
+
+  // STAGE 6 — causal order
+  const finalView = result.acyclic || result.raw;
+  const finalPred = predictedDirectedEdges(finalView);
+  const order = finalView.order;
+  steps.push({ stage:'Causal order', dur:3000, highlight:[],
+    graphEdges: finalPred.map(e => neutralEdge(e[0], e[1], false)),
+    captionHtml:`Read the <span class="em">causal order</span> off the DAG (topological sort). This order is
+      the paper's stable output: even when individual edges are wrong, the order is usually right.`,
+    sideHtml:`<div class="pl-h">Inferred causal order</div>${orderChips(order)}` });
+
+  // STAGE 7 — evaluate
+  steps.push(evaluateStep(result));
+  return steps;
+}
+
+function pairwiseSteps(result, flow){
+  const { nodes } = result, ctx = flow.context, n = nodes.length;
+  const nPairs = comb(n, 2), steps = [];
+  const gt = result.ground_truth_edges;
+  const vc = varColors(nodes);
+  const { predDir, ties } = pairDecisions(result);
+
+  // merged edges + per-pair answers
+  const merged = [], votes = [];
+  for (let i = 0; i < n; i++){
+    for (let j = i + 1; j < n; j++){
+      const a = nodes[i], b = nodes[j], uk = ukey(a, b);
+      const tie = ties.has(uk), dir = predDir.get(uk);
+      let decision = 'none', added = null, ans = 'C';
+      if (tie){ decision = 'tie'; ans = 'tie'; }
+      else if (dir){ added = dir; decision = dir[0] === a ? 'ab' : 'ba'; ans = dir[0] === a ? 'A' : 'B'; }
+      if (added) merged.push(added);
+      votes.push({ a, b, uk, counts:null, decision, added, ans });
+    }
+  }
+  const mergedByPair = new Map(merged.map(e => [ukey(e[0], e[1]), e]));
+
+  // STAGE 1 — dataset (no graph)
+  steps.push({ stage:'Dataset', dur:4400, full:true, highlight:[], graphEdges:[],
+    captionHtml:`The <span class="em">pairwise</span> strategy on <b>${result.graph}</b> (${n} variables):
+      query the LLM directly about every pair of variables and assemble the answers into a graph. First, the
+      variables, their descriptions (from the benchmark definition), and the modelling context.`,
+    sideHtml: datasetSideHtml(result, ctx) });
+
+  // STAGE 2 — enumerate pairs (no graph)
+  const pairs = combinations(nodes, 2);
+  steps.push({ stage:'Pairs', dur:4200, full:true, highlight:[], graphEdges:[],
+    captionHtml:`Enumerate all C(${n},2) = <b>${nPairs}</b> pairs. Each gets one A / B / C question
+      (A: cause → effect, B: effect → cause, C: no edge).`,
+    sideHtml:`<div class="pl-h">${nPairs} pairs</div>
+      <div class="chip-wrap">${pairs.map(p =>
+        `<span class="chip grp">(${varRef(p[0], vc)}<span class="dim">, </span>${varRef(p[1], vc)})</span>`).join('')}</div>` });
+
+  // STAGE 3 — example prompt + answer for every pair (no graph)
+  const example = pairs.slice().sort((x, y) =>
+    (gtAmong(y, gt).length) - (gtAmong(x, gt).length))[0] || pairs[0];
+  steps.push({ stage:'Query each pair', dur:5400, full:true, highlight:[], graphEdges:[],
+    captionHtml:`Each pair is sent one chain-of-thought A / B / C question, shown below for
+      (${example[0]}, ${example[1]}). Every pair's parsed answer and the edge it yields is listed.`,
+    sideHtml:`<div class="pl-h">Example pairwise query</div>
+      <div class="prompt-card"><div class="prompt-role">user → model (chain-of-thought)</div>
+        <div class="prompt-body">${escapeHtml(pairwisePrompt(example[0], example[1], nodes, ctx))}</div></div>
+      <div class="pl-h" style="margin-top:16px">Input → output · all ${nPairs} pairs</div>
+      <div class="grp-io-list">${votes.map(v =>
+        ioRowHtml([v.a, v.b], v.added ? [v.added] : [], vc,
+          v.decision === 'tie' ? 'tie → expert' : 'no edge')).join('')}</div>` });
+
+  // STAGE 4 — assembled graph + interactive answer list
+  const cyc0 = result.raw.metrics.cycles;
+  steps.push({ stage:'Assemble', dur:7500, interactive:'votes', highlight:[],
+    votes, mergedByPair,
+    graphEdges: merged.map(e => ({ id:ukey(e[0], e[1]), ...neutralEdge(e[0], e[1], false) })),
+    captionHtml:`The ${nPairs} answers are assembled into one graph (${merged.length} edges, <b>${cyc0}</b>
+      cycle(s)). <b>Click an answer — or a node/edge —</b> to link the list and the graph.`,
+    sideHtml: votesSideHtml(votes,
+      `<div class="pl-h">Pairwise answers · ${votes.length} pairs</div>`,
+      `<p class="pl-hint">Pairwise has no vote distribution — one A/B/C answer per pair. <b>Filter</b> to one
+        variable, or click a pair (or a graph node / edge) to inspect it.</p>`, vc) });
+
+  const cyc = cyc0;
+  steps.push({ stage:'Assemble', dur:3000, highlight:[],
+    graphEdges: merged.map(e => neutralEdge(e[0], e[1], false)),
+    captionHtml: cyc > 0
+      ? `The assembled graph contains <b>${cyc}</b> cycle(s) → there is <span class="em">no single valid
+         causal order</span>. This is exactly the failure mode the paper attributes to pairwise prompting.`
+      : `All ${nPairs} answers assembled into a graph of <b>${merged.length}</b> edges, with <b>no cycles</b>.`,
+    sideHtml:`<div class="pl-h">Assembled graph</div>
+      <div class="pl-kv">Edges: <b>${merged.length}</b><br>Cycles: <b style="color:${cyc > 0 ? 'var(--bad)' : 'inherit'}">${cyc}</b></div>
+      <div class="pl-note">Unlike the subgroup flow, pairwise has no per-edge vote distribution, so cycles
+        cannot be repaired by confidence — they simply remain.</div>` });
+
+  const order = result.raw.order;
+  steps.push({ stage:'Causal order', dur:3000, highlight:[],
+    graphEdges: merged.map(e => neutralEdge(e[0], e[1], false)),
+    captionHtml: order
+      ? `Read the <span class="em">causal order</span> off the graph (topological sort).`
+      : `No topological order exists because the graph is cyclic.`,
+    sideHtml:`<div class="pl-h">Inferred causal order</div>${orderChips(order)}` });
+
+  steps.push(evaluateStep(result));
+  return steps;
+}
+
+function evaluateStep(result){
+  const view = result.acyclic || result.raw, m = view.metrics;
+  return { stage:'Evaluate', dur:4200, highlight:[],
+    graphEdges: view.edges.map(classifiedEdgeObj),
+    captionHtml:`Finally, compare against ground truth. Edges are coloured
+      <b style="color:var(--correct)">correct</b> / <b style="color:var(--reversed)">reversed</b> /
+      <b style="color:var(--extra)">extra</b>, with <b style="color:var(--missing)">missing</b> ones dashed.
+      <b>SHD ${m.shd}</b>, <b>topological divergence ${m.topo_divergence === null ? '—' : m.topo_divergence}</b>.`,
+    sideHtml:`<div class="pl-h">Scorecard vs. ground truth</div>${metricCards(m)}
+      <div class="pl-note">SHD counts graph errors; topological divergence counts order errors — the gap is
+        the paper's point.</div>` };
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ----- full-width side panels (no graph) ----- */
+function datasetSideHtml(result, ctx){
+  const descr = result.descriptions || {}, n = result.nodes.length;
+  const c = varColors(result.nodes);
+  const rows = result.nodes.map(x => `<tr>
+      <td class="vname"><span class="vname-wrap">${varDot(c[x])}<span style="color:${c[x].ink}">${escapeHtml(x)}</span></span></td>
+      <td class="vdesc">${descr[x] ? escapeHtml(descr[x])
+        : '<span class="dim">— not provided in the benchmark definition</span>'}</td></tr>`).join('');
+  return `<div class="pl-h">Variables (${n}) &amp; descriptions</div>
+    <table class="var-table"><thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    <div class="pl-note"><b>Modelling context.</b> ${escapeHtml(ctx || '')}</div>`;
+}
+
+/* ----- interactive vote / answer list (step 4) ----- */
+const VOTE_FILLS = ['#3a567d', '#c77c1e', '#8893a6'];
+function voteVerdict(v){
+  return v.decision === 'ab' ? `${v.a} → ${v.b}`
+       : v.decision === 'ba' ? `${v.b} → ${v.a}`
+       : v.decision === 'tie' ? 'tie → expert' : 'no edge';
+}
+// vertical card: each variable on its own full-width line (wraps cleanly for
+// long names), a direction arrow between them, then the vote bar + counts that
+// use arrows/colour instead of repeating the names.
+const VI_GLYPH = { ab:'↓', ba:'↑', none:'—', tie:'?' };
+const VI_TAG = { ab:'', ba:'', none:'no edge', tie:'tie → expert' };
+function voteItemHtml(v, vc){
+  const cA = vc[v.a] || {}, cB = vc[v.b] || {};
+  const tag = VI_TAG[v.decision];
+  let body = '';
+  if (v.counts){
+    const tot = Math.max(1, v.counts[0] + v.counts[1] + v.counts[2]);
+    const segs = v.counts.map((c, idx) => c > 0
+      ? `<span class="vi-seg" style="width:${c / tot * 100}%;background:${VOTE_FILLS[idx]}"></span>` : '').join('');
+    body = `<div class="vi-bar">${segs}</div>
+      <div class="vi-counts">
+        <span class="vi-cc" title="${escapeHtml(v.a)} → ${escapeHtml(v.b)}"><i style="background:${VOTE_FILLS[0]}"></i>↓ ${v.counts[0]}</span>
+        <span class="vi-cc" title="${escapeHtml(v.b)} → ${escapeHtml(v.a)}"><i style="background:${VOTE_FILLS[1]}"></i>↑ ${v.counts[1]}</span>
+        <span class="vi-cc" title="no edge"><i style="background:${VOTE_FILLS[2]}"></i>∅ ${v.counts[2]}</span></div>`;
+  }
+  return `<button class="vote-item" data-uk="${escapeHtml(v.uk)}">
+      <div class="vi-node">${varDot(cA)}<span>${escapeHtml(v.a)}</span></div>
+      <div class="vi-mid"><span class="vi-arrow ${v.decision}">${VI_GLYPH[v.decision]}</span>${tag ? `<span class="vi-tag ${v.decision}">${tag}</span>` : ''}</div>
+      <div class="vi-node">${varDot(cB)}<span>${escapeHtml(v.b)}</span></div>
+      ${body}</button>`;
+}
+function votesSideHtml(votes, headerHtml, hintHtml, vc){
+  const hasVotes = votes.some(v => v.counts);
+  const sortCtl = hasVotes ? `<div class="vc-group"><span class="vc-lab">Sort</span>
+      <select id="voteSort" title="Ranked by the strongest directed vote; the ‘no edge’ tally is ignored">
+        <option value="order">Pair order</option>
+        <option value="desc">Most edge votes</option>
+        <option value="asc">Fewest edge votes</option>
+      </select></div>` : '';
+  const opts = `<option value="">All variables</option>` +
+    Object.keys(vc).map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  return `${headerHtml}${hintHtml}
+    <div class="vote-controls">${sortCtl}
+      <div class="vc-group"><span class="vc-lab">Filter</span>
+        <select id="voteFilter">${opts}</select></div></div>
+    <div class="vote-list" id="voteList"></div>`;
+}
+
+/* ----- graph ↔ list interaction (sort / filter / select) ----- */
+function plHighlightNodes(set){
+  const c = varColors(pl.result.nodes);
+  pl.nodesDS.update(pl.result.nodes.map(n => ({ id:n,
+    color: { background: set.has(n) ? c[n].hot : c[n].bg, border:c[n].border },
+    borderWidth: set.has(n) ? 3.2 : 1.6 })));
+}
+function plResetGraphHighlight(){ plHighlightNodes(new Set()); }
+
+// ranking score for the Sort control: strongest *directed* vote, ignoring the
+// "no edge" (none) tally so pairs with a confident direction rank highest
+function voteScore(v){ return v.counts ? Math.max(v.counts[0], v.counts[1]) : -1; }
+function plSyncFilter(){
+  const fs = document.getElementById('voteFilter');
+  if (fs) fs.value = pl.voteFilter || '';
+}
+function plRenderVoteList(){
+  const s = pl.step; if (!s || !s.votes) return;
+  const vc = varColors(pl.result.nodes);
+  let list = s.votes.slice();
+  if (pl.voteFilter) list = list.filter(v => v.a === pl.voteFilter || v.b === pl.voteFilter);
+  if (pl.voteSort === 'desc') list.sort((x, y) => voteScore(y) - voteScore(x));
+  else if (pl.voteSort === 'asc') list.sort((x, y) => voteScore(x) - voteScore(y));
+  const host = document.getElementById('voteList'); if (!host) return;
+  host.innerHTML = list.length
+    ? list.map(v => voteItemHtml(v, vc)).join('')
+    : '<div class="pl-note" style="padding:8px 2px">No pairs involve this variable.</div>';
+  host.querySelectorAll('.vote-item').forEach(el => {
+    el.onclick = () => plSelectPair(el.dataset.uk, false);
+    if (el.dataset.uk === pl.voteSel) el.classList.add('active');
+  });
+}
+function plSetFilter(v){
+  pl.voteFilter = v || null; pl.voteSel = null;
+  const s = pl.step;
+  if (pl.voteFilter && s){
+    plHighlightNodes(new Set([pl.voteFilter]));
+    const inc = [...s.mergedByPair.keys()].filter(uk => {
+      const x = s.votes.find(z => z.uk === uk); return x && (x.a === pl.voteFilter || x.b === pl.voteFilter);
+    });
+    pl.network.unselectAll(); try { pl.network.selectEdges(inc); } catch (e) {}
+  } else { plResetGraphHighlight(); if (pl.network) pl.network.unselectAll(); }
+  plSyncFilter();
+  plRenderVoteList();
+}
+function plSelectPair(uk, scroll){
+  const s = pl.step; if (!s || !s.votes) return;
+  const v = s.votes.find(x => x.uk === uk); if (!v) return;
+  pl.voteSel = uk;
+  // reveal the row if the current filter would hide it
+  if (pl.voteFilter && v.a !== pl.voteFilter && v.b !== pl.voteFilter){ pl.voteFilter = null; plSyncFilter(); }
+  plRenderVoteList();
+  plHighlightNodes(new Set([v.a, v.b]));
+  pl.network.unselectAll();
+  if (s.mergedByPair.has(uk)){ try { pl.network.selectEdges([uk]); } catch (e) {} }
+  if (scroll){ const el = document.querySelector('#voteList .vote-item.active');
+    if (el) el.scrollIntoView({ block:'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+}
+function plClearVoteSelection(){ pl.voteSel = null; plSetFilter(null); }
+function wireVotes(s){
+  pl.voteSort = 'order'; pl.voteFilter = null; pl.voteSel = null;
+  const ss = document.getElementById('voteSort');
+  if (ss) ss.onchange = e => { pl.voteSort = e.target.value; plRenderVoteList(); };
+  const fs = document.getElementById('voteFilter');
+  if (fs) fs.onchange = e => plSetFilter(e.target.value || null);
+  if (pl.network){
+    pl.network.off('click');
+    pl.network.on('click', params => {
+      if (params.edges && params.edges.length) plSelectPair(params.edges[0], true);
+      else if (params.nodes && params.nodes.length) plSetFilter(params.nodes[0]);
+      else plClearVoteSelection();
+    });
+  }
+  plRenderVoteList();
+}
+
+/* ======================= render + player ======================= */
+function disposePipeline(){
+  if (!pl) return;
+  clearTimeout(pl.timer);
+  if (pl.network) pl.network.destroy();
+  pl = null;
+}
+
+function renderPipeline(graphName){
+  disposePipeline();
+  const results = byGraph()[graphName];
+  pipelineMethodIdx = Math.min(pipelineMethodIdx, results.length - 1);
+  const result = results[pipelineMethodIdx];
+  const flow = result.flow || { strategy:'pairwise' };
+  const host = document.getElementById('pipeline');
+
+  host.innerHTML = `
+    <div class="card">
+      <div class="controls" style="margin-bottom:14px">
+        <div class="field"><label for="plMethod">Method</label>
+          <select id="plMethod">${results.map((r, i) =>
+            `<option value="${i}" ${i === pipelineMethodIdx ? 'selected' : ''}>${r.method}</option>`).join('')}</select>
+        </div>
+        <span class="dim">${flow.strategy === 'subgroup'
+          ? `${flow.k === 4 ? 'quadruplet' : 'triplet'} voting flow` : 'pairwise flow'} on “${graphName}”</span>
+      </div>
+      <div class="pl-bar">
+        <div class="pl-controls">
+          <button class="pl-btn" id="plPrev" title="Previous step" aria-label="Previous step">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h2v14H7zM18 5l-9 7 9 7z"/></svg></button>
+          <button class="pl-btn play" id="plPlay" aria-label="Play"></button>
+          <button class="pl-btn" id="plNext" title="Next step" aria-label="Next step">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M15 5h2v14h-2zM6 5l9 7-9 7z"/></svg></button>
+          <button class="pl-btn" id="plRestart" title="Restart" aria-label="Restart">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        </div>
+        <div class="field"><label for="plSpeed">Speed</label>
+          <select id="plSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option>
+            <option value="2">2×</option></select></div>
+        <span class="pl-progress" id="plProgress"></span>
+      </div>
+      <div class="pl-timeline" id="plTimeline"></div>
+      <div class="pl-grid">
+        <div class="pl-graph-wrap"><div class="pl-stagebadge" id="plStageBadge"></div>
+          <div class="pl-graph" id="plGraph"></div></div>
+        <div class="pl-side" id="plSide"></div>
+      </div>
+      <div class="pl-caption pl-pop" id="plCaption"></div>
+    </div>`;
+
+  const steps = buildPipelineSteps(result);
+  const pos = levelPositions(result);
+  const vc = varColors(result.nodes);
+  const nodesDS = new vis.DataSet(result.nodes.map(n => ({
+    id:n, label:n, x:pos[n].x, y:pos[n].y, fixed:true, physics:false,
+    shape:'box', margin:7, borderWidth:1.6, title:result.descriptions?.[n] || n,
+    color:{ background:vc[n].bg, border:vc[n].border },
+    font:{ size:13, color:'#1b2230', face:'system-ui' }, widthConstraint:{ maximum:130 }
+  })));
+  const edgesDS = new vis.DataSet([]);
+  const network = new vis.Network(document.getElementById('plGraph'),
+    { nodes:nodesDS, edges:edgesDS },
+    { layout:{ hierarchical:{ enabled:false } }, physics:false,
+      interaction:{ dragNodes:true, zoomView:true, dragView:true }, edges:{ arrowStrikethrough:false } });
+  network.fit();
+
+  pl = { result, steps, idx:0, playing:false, timer:null, speed:1, network, nodesDS, edgesDS,
+         step:null, fitted:false, voteSort:'order', voteFilter:null, voteSel:null };
+
+  // wire controls
+  document.getElementById('plMethod').onchange = e => {
+    pipelineMethodIdx = +e.target.value; renderPipeline(graphName);
+  };
+  document.getElementById('plSpeed').onchange = e => { pl.speed = +e.target.value; };
+  document.getElementById('plPrev').onclick = () => { plPause(); plGo(pl.idx - 1); };
+  document.getElementById('plNext').onclick = () => { plPause(); plGo(pl.idx + 1); };
+  document.getElementById('plRestart').onclick = () => { plGo(0); plPlay(); };
+  document.getElementById('plPlay').onclick = () => pl.playing ? plPause() : plPlay();
+
+  // timeline
+  const stageOrder = [];
+  steps.forEach(s => { if (!stageOrder.includes(s.stage)) stageOrder.push(s.stage); });
+  pl.stageFirstIdx = {};
+  stageOrder.forEach(st => { pl.stageFirstIdx[st] = steps.findIndex(s => s.stage === st); });
+  document.getElementById('plTimeline').innerHTML = stageOrder.map((st, i) =>
+    `<div class="pl-stage" data-stage="${st}">${i + 1}. ${st}</div>`).join('');
+  document.querySelectorAll('#plTimeline .pl-stage').forEach(el => el.onclick = () => {
+    plPause(); plGo(pl.stageFirstIdx[el.dataset.stage]);
+  });
+
+  renderPlStep(0);
+  if (!reducedMotion()) plPlay();
+}
+
+function reducedMotion(){
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function renderPlStep(i){
+  if (!pl) return;
+  pl.idx = i;
+  const s = pl.steps[i];
+  pl.step = s;
+
+  // full-width steps (1–3) hide the graph; others show it
+  const grid = document.querySelector('#pipeline .pl-grid');
+  if (grid){ grid.classList.toggle('full', !!s.full);
+    grid.classList.toggle('wide-side', s.interactive === 'votes'); }
+  if (pl.network) pl.network.off('click');
+
+  pl.edgesDS.clear();
+  pl.edgesDS.add(s.graphEdges || []);
+  const hot = new Set(s.highlight || []);
+  const vc = varColors(pl.result.nodes);
+  pl.nodesDS.update(pl.result.nodes.map(n => ({ id:n,
+    color: { background: hot.has(n) ? vc[n].hot : vc[n].bg, border:vc[n].border },
+    borderWidth: hot.has(n) ? 3.2 : 1.6 })));
+  if (!s.full && pl.network){
+    pl.network.unselectAll(); pl.network.redraw();
+    if (!pl.fitted){ pl.network.fit(); pl.fitted = true; }
+  }
+
+  document.getElementById('plSide').innerHTML = s.sideHtml || '';
+  if (s.interactive === 'votes') wireVotes(s);
+  document.getElementById('plStageBadge').textContent = s.stage || '';
+  document.getElementById('plProgress').textContent = `Step ${i + 1} / ${pl.steps.length}`;
+  const cap = document.getElementById('plCaption');
+  cap.innerHTML = s.captionHtml || '';
+  cap.classList.remove('pl-pop'); void cap.offsetWidth; cap.classList.add('pl-pop');
+  document.querySelectorAll('#plTimeline .pl-stage').forEach(el => {
+    const first = pl.stageFirstIdx[el.dataset.stage];
+    el.classList.toggle('active', el.dataset.stage === s.stage);
+    el.classList.toggle('done', first < pl.stageFirstIdx[s.stage]);
+  });
+  updatePlControls();
+}
+function updatePlControls(){
+  const play = document.getElementById('plPlay');
+  if (!play || !pl) return;
+  play.innerHTML = pl.playing
+    ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg> Pause`
+    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg> Play`;
+  document.getElementById('plPrev').disabled = pl.idx === 0;
+  document.getElementById('plNext').disabled = pl.idx === pl.steps.length - 1;
+}
+function plSchedule(){
+  clearTimeout(pl.timer);
+  if (!pl.playing) return;
+  if (pl.idx >= pl.steps.length - 1){ pl.playing = false; updatePlControls(); return; }
+  const dur = (pl.steps[pl.idx].dur || 1800) / pl.speed;
+  pl.timer = setTimeout(() => { renderPlStep(pl.idx + 1); plSchedule(); }, dur);
+}
+function plPlay(){
+  if (!pl) return;
+  if (pl.idx >= pl.steps.length - 1) renderPlStep(0);
+  pl.playing = true; updatePlControls(); plSchedule();
+}
+function plPause(){ if (!pl) return; pl.playing = false; clearTimeout(pl.timer); updatePlControls(); }
+function plGo(i){
+  if (!pl) return;
+  renderPlStep(Math.max(0, Math.min(pl.steps.length - 1, i)));
+  if (pl.playing) plSchedule();
+}
+
+/* ===================================================== view switching === */
+const REDUCED_MOTION = window.matchMedia &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const VIEWS = ['overview','graphs','order','pipeline'];
+function setView(view){
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === view));
+  VIEWS.forEach(v => document.getElementById(v).classList.toggle('hidden', v !== view));
+  const usesDataset = view === 'graphs' || view === 'order' || view === 'pipeline';
+  document.getElementById('datasetField').style.display = usesDataset ? 'flex' : 'none';
+  disposeNetworks(); disposeCharts(); disposePipeline();
+  const g = document.getElementById('datasetSelect').value;
+  if (view === 'overview') renderOverview();
+  else if (view === 'graphs') renderGraphs(g);
+  else if (view === 'order') renderOrder(g);
+  else if (view === 'pipeline'){ pipelineMethodIdx = 0; renderPipeline(g); }
+}
+
+/* ===================================================== init === */
+function init(){
+  if (window.__noData || !DATA || !DATA.results || !DATA.results.length){
+    VIEWS.forEach(v => document.getElementById(v).classList.add('hidden'));
+    document.getElementById('noData').classList.remove('hidden');
+    document.getElementById('metaInfo').textContent = '';
+    return;
+  }
+  const graphs = Object.keys(byGraph()).sort();
+  document.getElementById('metaInfo').innerHTML =
+    `<b>${DATA.results.length}</b> result(s) · <b>${graphs.length}</b> dataset(s)` +
+    (DATA.generated_at ? ` · built ${DATA.generated_at.replace('T', ' ')}` : '');
+
+  const sel = document.getElementById('datasetSelect');
+  sel.innerHTML = graphs.map(g => `<option value="${g}">${g}</option>`).join('');
+  sel.onchange = () => {
+    const active = document.querySelector('.tab.active').dataset.view;
+    if (active === 'graphs') renderGraphs(sel.value);
+    else if (active === 'order') renderOrder(sel.value);
+    else if (active === 'pipeline'){ pipelineMethodIdx = 0; renderPipeline(sel.value); }
+  };
+
+  document.querySelectorAll('.tab').forEach(t =>
+    t.onclick = () => { location.hash = t.dataset.view; setView(t.dataset.view); });
+
+  // deep-linking: #graphs, #order, #graphs=child, #order=cancer
+  const hash = (location.hash || '').replace('#', '');
+  const [hv, hg] = hash.split('=');
+  if (hg && graphs.includes(hg)) sel.value = hg;
+  setView(VIEWS.includes(hv) ? hv : 'overview');
+}
+init();
+</script>
+</body>
+</html>

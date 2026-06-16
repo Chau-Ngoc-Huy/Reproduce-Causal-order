@@ -1,0 +1,34 @@
+{
+  "graph": "earthquake",
+  "method": "pairwise/cot (gpt-4o)",
+  "predicted_edges": [
+    [
+      "Burglary",
+      "Alarm"
+    ],
+    [
+      "Burglary",
+      "JohnCalls"
+    ],
+    [
+      "Burglary",
+      "Marycalls"
+    ],
+    [
+      "Earthquake",
+      "Alarm"
+    ],
+    [
+      "Earthquake",
+      "Marycalls"
+    ],
+    [
+      "Alarm",
+      "JohnCalls"
+    ],
+    [
+      "Alarm",
+      "Marycalls"
+    ]
+  ]
+}

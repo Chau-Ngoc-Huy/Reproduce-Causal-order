@@ -1,0 +1,30 @@
+{
+  "graph": "cancer",
+  "method": "pairwise/cot (gpt-4o)",
+  "predicted_edges": [
+    [
+      "smoker",
+      "cancer"
+    ],
+    [
+      "smoker",
+      "dyspnoea"
+    ],
+    [
+      "pollution",
+      "cancer"
+    ],
+    [
+      "pollution",
+      "dyspnoea"
+    ],
+    [
+      "cancer",
+      "xray"
+    ],
+    [
+      "cancer",
+      "dyspnoea"
+    ]
+  ]
+}

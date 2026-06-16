@@ -1,0 +1,324 @@
+{
+  "schema_version": "1.0",
+  "synthetic": false,
+  "run_id": "earthquake_pairwise_20260616_213219",
+  "strategy": "pairwise",
+  "graph": "earthquake",
+  "generated_at": "2026-06-16T21:32:19",
+  "config": {
+    "prompt_type": "cot",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 1
+  },
+  "graph_meta": {
+    "nodes": [
+      "Burglary",
+      "Earthquake",
+      "Alarm",
+      "JohnCalls",
+      "Marycalls"
+    ],
+    "descriptions": {
+      "Burglary": "burglar entering",
+      "Earthquake": "earthquake hitting",
+      "Alarm": "home alarm going off in a house",
+      "JohnCalls": "first neighbor to call to inform the alarm sound",
+      "Marycalls": "second neighbor to call to inform the alarm sound"
+    },
+    "context": "model factors influencing the probability of a burglary",
+    "ground_truth_edges": [
+      [
+        "Burglary",
+        "Alarm"
+      ],
+      [
+        "Earthquake",
+        "Alarm"
+      ],
+      [
+        "Alarm",
+        "JohnCalls"
+      ],
+      [
+        "Alarm",
+        "MaryCalls"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 10,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "Burglary",
+            "Earthquake"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Burglary' and 'Earthquake'? (A: Burglary -> Earthquake;  B: Earthquake -> Burglary;  C: no causal relation)",
+          "response_raw": "In the context of modeling factors influencing the probability of a burglary, the relationship between \"Burglary\" and \"Earthquake\" is typically considered to be non-causal. An earthquake is a natural event that occurs due to geological processes and is not influenced by human activities such as burglary. Conversely, a burglary is a human action that is not caused by an earthquake. While an earthquake might indirectly create conditions that could increase the likelihood of a burglary (e.g., by causing damage that makes properties more vulnerable), it does not directly cause a burglary. Therefore, there is no direct causal relationship between these two nodes.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 3.865,
+          "usage": {
+            "prompt_tokens": 3876,
+            "completion_tokens": 134,
+            "total_tokens": 4010
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "Burglary",
+            "Alarm"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Burglary' and 'Alarm'? (A: Burglary -> Alarm;  B: Alarm -> Burglary;  C: no causal relation)",
+          "response_raw": "The causal relationship between Burglary and Alarm is that a burglary event is likely to trigger an alarm system. When a burglary occurs, it often sets off an alarm as a response to unauthorized entry, which is the primary function of an alarm system. Therefore, the occurrence of a burglary causally affects the activation of an alarm. The reverse is not true; an alarm going off does not cause a burglary to happen. Therefore, the correct causal relationship is that a change in the state of the node Burglary causally affects a change in the node Alarm.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "Alarm"
+          ],
+          "latency_sec": 2.108,
+          "usage": {
+            "prompt_tokens": 3872,
+            "completion_tokens": 119,
+            "total_tokens": 3991
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "Burglary",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Burglary' and 'JohnCalls'? (A: Burglary -> JohnCalls;  B: JohnCalls -> Burglary;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between \"Burglary\" and \"JohnCalls\" is typically modeled such that a burglary event triggers John to call. This is because John is likely to call the authorities or someone else if he perceives or is alerted to a burglary happening. Therefore, the causal direction is from \"Burglary\" to \"JohnCalls,\" as the occurrence of a burglary increases the likelihood that John will make a call. There is no causal effect in the reverse direction, as John calling does not cause a burglary to occur. Therefore, the correct answer is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "JohnCalls"
+          ],
+          "latency_sec": 2.576,
+          "usage": {
+            "prompt_tokens": 3876,
+            "completion_tokens": 131,
+            "total_tokens": 4007
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "Burglary",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Burglary' and 'Marycalls'? (A: Burglary -> Marycalls;  B: Marycalls -> Burglary;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between \"Burglary\" and \"Marycalls\" is typically understood as follows: if a burglary occurs, it may trigger an alarm or some other event that prompts Mary to call. Therefore, the occurrence of a burglary can causally lead to Mary making a call. This suggests a causal direction from \"Burglary\" to \"Marycalls.\" There is no direct causal mechanism by which Mary calling would affect the occurrence of a burglary. Therefore, the most likely cause-and-effect relationship is that a change in the state of the \"Burglary\" node causally affects a change in the \"Marycalls\" node.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "Marycalls"
+          ],
+          "latency_sec": 2.073,
+          "usage": {
+            "prompt_tokens": 3876,
+            "completion_tokens": 146,
+            "total_tokens": 4022
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "Earthquake",
+            "Alarm"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Earthquake' and 'Alarm'? (A: Earthquake -> Alarm;  B: Alarm -> Earthquake;  C: no causal relation)",
+          "response_raw": "In the context of a causal graph modeling factors influencing the probability of a burglary, an earthquake can cause an alarm to go off due to the physical shaking and vibrations that might trigger the alarm system. This is a common scenario in causal reasoning where an external event (earthquake) can lead to a response (alarm sounding). The alarm system is designed to detect disturbances, and an earthquake can mimic the kind of disturbance that would typically be caused by a burglary attempt. Therefore, the causal relationship is that an earthquake can cause an alarm to go off.\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Earthquake",
+            "Alarm"
+          ],
+          "latency_sec": 3.346,
+          "usage": {
+            "prompt_tokens": 3868,
+            "completion_tokens": 120,
+            "total_tokens": 3988
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "Earthquake",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Earthquake' and 'JohnCalls'? (A: Earthquake -> JohnCalls;  B: JohnCalls -> Earthquake;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between \"Earthquake\" and \"JohnCalls\" can be understood by considering the context in which these nodes are typically used. An earthquake might trigger an alarm system, which could lead to John calling the authorities or the homeowner to report a potential issue. However, the primary causal pathway is not direct; rather, it involves an intermediary node, such as an alarm system being triggered. Therefore, while an earthquake might indirectly lead to John calling, it is not a direct causal relationship. Instead, the relationship is more about the indirect effects through other nodes like an alarm system. Thus, the most accurate representation is that there is no direct causal relation between \"Earthquake\" and \"JohnCalls\" without considering intermediary nodes.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.889,
+          "usage": {
+            "prompt_tokens": 3872,
+            "completion_tokens": 169,
+            "total_tokens": 4041
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "Earthquake",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Earthquake' and 'Marycalls'? (A: Earthquake -> Marycalls;  B: Marycalls -> Earthquake;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between \"Earthquake\" and \"Marycalls\" can be understood through the context of how these events might be connected. An earthquake can trigger alarms, which might lead Mary to call, thinking there is a burglary. However, Mary's call does not influence the occurrence of an earthquake. Therefore, the causal relationship is more likely that an earthquake affects whether Mary calls, rather than the other way around. Thus, the causal direction is from \"Earthquake\" to \"Marycalls\".\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Earthquake",
+            "Marycalls"
+          ],
+          "latency_sec": 2.008,
+          "usage": {
+            "prompt_tokens": 3872,
+            "completion_tokens": 121,
+            "total_tokens": 3993
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "Alarm",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Alarm' and 'JohnCalls'? (A: Alarm -> JohnCalls;  B: JohnCalls -> Alarm;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between the nodes \"Alarm\" and \"JohnCalls\" is typically such that the alarm going off is a cause for John to call. This is because the alarm sounding is an event that can trigger John to respond by making a call, likely to report the alarm or check on the situation. Therefore, the causal direction is from \"Alarm\" to \"JohnCalls\". \n\nThus, changing the state of the \"Alarm\" node (e.g., the alarm goes off) causally affects a change in the \"JohnCalls\" node (e.g., John makes a call). \n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Alarm",
+            "JohnCalls"
+          ],
+          "latency_sec": 2.416,
+          "usage": {
+            "prompt_tokens": 3868,
+            "completion_tokens": 142,
+            "total_tokens": 4010
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "Alarm",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Alarm' and 'Marycalls'? (A: Alarm -> Marycalls;  B: Marycalls -> Alarm;  C: no causal relation)",
+          "response_raw": "In a causal graph modeling factors influencing the probability of a burglary, the relationship between the nodes \"Alarm\" and \"Marycalls\" is typically understood as follows: if the alarm goes off, it is likely to trigger a response from Mary, prompting her to call. This suggests a causal relationship where the activation of the alarm (Alarm) leads to Mary making a call (Marycalls). The alarm serves as a signal that something might be wrong, prompting Mary to take action. Therefore, the causal direction is from \"Alarm\" to \"Marycalls.\"\n\nThus, the correct answer is:\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Alarm",
+            "Marycalls"
+          ],
+          "latency_sec": 1.776,
+          "usage": {
+            "prompt_tokens": 3868,
+            "completion_tokens": 123,
+            "total_tokens": 3991
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "JohnCalls",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'JohnCalls' and 'Marycalls'? (A: JohnCalls -> Marycalls;  B: Marycalls -> JohnCalls;  C: no causal relation)",
+          "response_raw": "In the context of a causal graph modeling factors influencing the probability of a burglary, JohnCalls and MaryCalls are typically considered as nodes that represent independent responses to the same underlying event, such as an alarm going off due to a burglary. The causal relationship is not directly between JohnCalls and MaryCalls, but rather both are influenced by the same cause (e.g., the alarm). Therefore, there is no direct causal relationship between JohnCalls and MaryCalls themselves. They are conditionally independent given the state of the alarm or the burglary event. Thus, the most appropriate answer is that there is no causal relation between the nodes JohnCalls and MaryCalls.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.092,
+          "usage": {
+            "prompt_tokens": 3872,
+            "completion_tokens": 136,
+            "total_tokens": 4008
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "Burglary",
+        "Alarm"
+      ],
+      [
+        "Burglary",
+        "JohnCalls"
+      ],
+      [
+        "Burglary",
+        "Marycalls"
+      ],
+      [
+        "Earthquake",
+        "Alarm"
+      ],
+      [
+        "Earthquake",
+        "Marycalls"
+      ],
+      [
+        "Alarm",
+        "JohnCalls"
+      ],
+      [
+        "Alarm",
+        "Marycalls"
+      ]
+    ],
+    "order": [
+      "Burglary",
+      "Earthquake",
+      "Alarm",
+      "JohnCalls",
+      "Marycalls"
+    ],
+    "metrics": {
+      "predicted_edges": 7,
+      "shd": 5,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 0.5455
+    },
+    "elapsed_sec": 35.8
+  }
+}

@@ -1,0 +1,881 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "_note": "Example/synthetic trace for UI development. Vote stage is derived by the real merge logic and matches data/cancer_triplet_edgewise.pkl; reasoning text is illustrative, not from a live API call.",
+  "run_id": "cancer_subgroup_k3_example",
+  "strategy": "subgroup",
+  "graph": "cancer",
+  "generated_at": "2026-06-16T18:11:54",
+  "config": {
+    "subgroup_size": 3,
+    "subgraph_model": "gpt-4o-mini",
+    "expert_model": "gpt-4o",
+    "delay": 12,
+    "max_tokens": 300
+  },
+  "graph_meta": {
+    "nodes": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "descriptions": {
+      "smoker": "smoking habit",
+      "pollution": "exposure to pollutants",
+      "cancer": "cancer",
+      "xray": "getting positive xray result",
+      "dyspnoea": "dyspnoea"
+    },
+    "context": "model the relation between various variables responsible for causing Cancer and its possible outcomes",
+    "ground_truth_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ]
+  },
+  "stages": {
+    "decompose": {
+      "subgroup_size": 3,
+      "count": 10,
+      "subgroups": [
+        [
+          "smoker",
+          "pollution",
+          "cancer"
+        ],
+        [
+          "smoker",
+          "pollution",
+          "xray"
+        ],
+        [
+          "smoker",
+          "pollution",
+          "dyspnoea"
+        ],
+        [
+          "smoker",
+          "cancer",
+          "xray"
+        ],
+        [
+          "smoker",
+          "cancer",
+          "dyspnoea"
+        ],
+        [
+          "smoker",
+          "xray",
+          "dyspnoea"
+        ],
+        [
+          "pollution",
+          "cancer",
+          "xray"
+        ],
+        [
+          "pollution",
+          "cancer",
+          "dyspnoea"
+        ],
+        [
+          "pollution",
+          "xray",
+          "dyspnoea"
+        ],
+        [
+          "cancer",
+          "xray",
+          "dyspnoea"
+        ]
+      ]
+    },
+    "subgraph_queries": [
+      {
+        "index": 0,
+        "subgroup": [
+          "smoker",
+          "pollution",
+          "cancer"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'pollution', 'cancer'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Smoking introduces carcinogens and pollution exposure damages lung tissue; both raise cancer risk. Smoking and pollution are independent exposures, so no edge between them. <Answer>[('smoker', 'cancer'), ('pollution', 'cancer')]</Answer>",
+        "answer_tag": "[('smoker', 'cancer'), ('pollution', 'cancer')]",
+        "edges": [
+          [
+            "smoker",
+            "cancer"
+          ],
+          [
+            "pollution",
+            "cancer"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.2,
+        "usage": {
+          "prompt_tokens": 113,
+          "completion_tokens": 59,
+          "total_tokens": 172
+        }
+      },
+      {
+        "index": 1,
+        "subgroup": [
+          "smoker",
+          "pollution",
+          "xray"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'pollution', 'xray'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Among smoking, pollution and an x-ray result there is no direct mechanism linking any pair without the disease itself; treat all three as isolated here. <Answer>[('smoker'), ('pollution'), ('xray')]</Answer>",
+        "answer_tag": "[('smoker'), ('pollution'), ('xray')]",
+        "edges": [],
+        "isolated": [
+          "smoker",
+          "pollution",
+          "xray"
+        ],
+        "latency_sec": 1.15,
+        "usage": {
+          "prompt_tokens": 112,
+          "completion_tokens": 51,
+          "total_tokens": 163
+        }
+      },
+      {
+        "index": 2,
+        "subgroup": [
+          "smoker",
+          "pollution",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'pollution', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Dyspnoea is a symptom; neither smoking nor pollution acts on it directly in this local view, and the two exposures are independent. No edges. <Answer>[('smoker'), ('pollution'), ('dyspnoea')]</Answer>",
+        "answer_tag": "[('smoker'), ('pollution'), ('dyspnoea')]",
+        "edges": [],
+        "isolated": [
+          "smoker",
+          "pollution",
+          "dyspnoea"
+        ],
+        "latency_sec": 1.13,
+        "usage": {
+          "prompt_tokens": 113,
+          "completion_tokens": 50,
+          "total_tokens": 163
+        }
+      },
+      {
+        "index": 3,
+        "subgroup": [
+          "smoker",
+          "cancer",
+          "xray"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'cancer', 'xray'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Smoking causes cancer, and cancer is what an x-ray detects, so cancer drives the x-ray result. Smoking does not affect the x-ray except through cancer. <Answer>[('smoker', 'cancer'), ('cancer', 'xray')]</Answer>",
+        "answer_tag": "[('smoker', 'cancer'), ('cancer', 'xray')]",
+        "edges": [
+          [
+            "smoker",
+            "cancer"
+          ],
+          [
+            "cancer",
+            "xray"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.15,
+        "usage": {
+          "prompt_tokens": 112,
+          "completion_tokens": 52,
+          "total_tokens": 164
+        }
+      },
+      {
+        "index": 4,
+        "subgroup": [
+          "smoker",
+          "cancer",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'cancer', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Smoking causes cancer, and cancer produces dyspnoea. Smoking's effect on breathing here runs through cancer, so only the two direct edges remain. <Answer>[('smoker', 'cancer'), ('cancer', 'dyspnoea')]</Answer>",
+        "answer_tag": "[('smoker', 'cancer'), ('cancer', 'dyspnoea')]",
+        "edges": [
+          [
+            "smoker",
+            "cancer"
+          ],
+          [
+            "cancer",
+            "dyspnoea"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.15,
+        "usage": {
+          "prompt_tokens": 113,
+          "completion_tokens": 52,
+          "total_tokens": 165
+        }
+      },
+      {
+        "index": 5,
+        "subgroup": [
+          "smoker",
+          "xray",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['smoker', 'xray', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "An x-ray result and dyspnoea are both downstream effects of disease; locally, with smoking, none of these pairs has a direct causal link. <Answer>[('smoker'), ('xray'), ('dyspnoea')]</Answer>",
+        "answer_tag": "[('smoker'), ('xray'), ('dyspnoea')]",
+        "edges": [],
+        "isolated": [
+          "smoker",
+          "xray",
+          "dyspnoea"
+        ],
+        "latency_sec": 1.12,
+        "usage": {
+          "prompt_tokens": 112,
+          "completion_tokens": 47,
+          "total_tokens": 159
+        }
+      },
+      {
+        "index": 6,
+        "subgroup": [
+          "pollution",
+          "cancer",
+          "xray"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['pollution', 'cancer', 'xray'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Pollution exposure contributes to cancer, and cancer is detected by the x-ray. No direct pollution-to-x-ray link. <Answer>[('pollution', 'cancer'), ('cancer', 'xray')]</Answer>",
+        "answer_tag": "[('pollution', 'cancer'), ('cancer', 'xray')]",
+        "edges": [
+          [
+            "pollution",
+            "cancer"
+          ],
+          [
+            "cancer",
+            "xray"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.09,
+        "usage": {
+          "prompt_tokens": 112,
+          "completion_tokens": 44,
+          "total_tokens": 156
+        }
+      },
+      {
+        "index": 7,
+        "subgroup": [
+          "pollution",
+          "cancer",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['pollution', 'cancer', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Pollution contributes to cancer, and cancer causes dyspnoea. The two direct edges capture the chain. <Answer>[('pollution', 'cancer'), ('cancer', 'dyspnoea')]</Answer>",
+        "answer_tag": "[('pollution', 'cancer'), ('cancer', 'dyspnoea')]",
+        "edges": [
+          [
+            "pollution",
+            "cancer"
+          ],
+          [
+            "cancer",
+            "dyspnoea"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.08,
+        "usage": {
+          "prompt_tokens": 113,
+          "completion_tokens": 41,
+          "total_tokens": 154
+        }
+      },
+      {
+        "index": 8,
+        "subgroup": [
+          "pollution",
+          "xray",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['pollution', 'xray', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "Pollution, an x-ray result, and dyspnoea have no direct pairwise cause locally; mark them isolated. <Answer>[('pollution'), ('xray'), ('dyspnoea')]</Answer>",
+        "answer_tag": "[('pollution'), ('xray'), ('dyspnoea')]",
+        "edges": [],
+        "isolated": [
+          "pollution",
+          "xray",
+          "dyspnoea"
+        ],
+        "latency_sec": 1.06,
+        "usage": {
+          "prompt_tokens": 113,
+          "completion_tokens": 39,
+          "total_tokens": 152
+        }
+      },
+      {
+        "index": 9,
+        "subgroup": [
+          "cancer",
+          "xray",
+          "dyspnoea"
+        ],
+        "model": "gpt-4o-mini",
+        "question": "Identify the causal DAG among ['cancer', 'xray', 'dyspnoea'] to model the relation between various variables responsible for causing Cancer and its possible outcomes. Output a list of directed-edge tuples inside <Answer></Answer>.",
+        "response_raw": "An x-ray is ordered/abnormal because of suspected disease, so the x-ray finding points to cancer here; cancer in turn causes dyspnoea. <Answer>[('xray', 'cancer'), ('cancer', 'dyspnoea')]</Answer>",
+        "answer_tag": "[('xray', 'cancer'), ('cancer', 'dyspnoea')]",
+        "edges": [
+          [
+            "xray",
+            "cancer"
+          ],
+          [
+            "cancer",
+            "dyspnoea"
+          ]
+        ],
+        "isolated": [],
+        "latency_sec": 1.13,
+        "usage": {
+          "prompt_tokens": 112,
+          "completion_tokens": 49,
+          "total_tokens": 161
+        }
+      }
+    ],
+    "vote": {
+      "pairs": [
+        {
+          "pair": [
+            "smoker",
+            "pollution"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "cancer"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "xray"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "smoker",
+            "cancer"
+          ],
+          "counts": {
+            "forward": 3,
+            "reverse": 0,
+            "none": 0
+          },
+          "probs": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "cancer"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "xray"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "forward"
+            }
+          ],
+          "winner": "forward",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "smoker",
+            "xray"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "xray"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "xray"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "smoker",
+            "dyspnoea"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "smoker",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "pollution",
+            "cancer"
+          ],
+          "counts": {
+            "forward": 3,
+            "reverse": 0,
+            "none": 0
+          },
+          "probs": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "cancer"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "xray"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "forward"
+            }
+          ],
+          "winner": "forward",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "pollution",
+            "xray"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "xray"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "xray"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "pollution",
+            "dyspnoea"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "pollution",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "cancer",
+            "xray"
+          ],
+          "counts": {
+            "forward": 2,
+            "reverse": 1,
+            "none": 0
+          },
+          "probs": [
+            0.6667,
+            0.3333,
+            0.0
+          ],
+          "entropy": 0.9183,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "xray"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "xray"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "cancer",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "reverse"
+            }
+          ],
+          "winner": "forward",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "cancer",
+            "dyspnoea"
+          ],
+          "counts": {
+            "forward": 3,
+            "reverse": 0,
+            "none": 0
+          },
+          "probs": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "cancer",
+                "dyspnoea"
+              ],
+              "vote": "forward"
+            },
+            {
+              "subgroup": [
+                "cancer",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "forward"
+            }
+          ],
+          "winner": "forward",
+          "tie": false,
+          "tiebreaker_ref": null
+        },
+        {
+          "pair": [
+            "xray",
+            "dyspnoea"
+          ],
+          "counts": {
+            "forward": 0,
+            "reverse": 0,
+            "none": 3
+          },
+          "probs": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "entropy": 0.0,
+          "contributors": [
+            {
+              "subgroup": [
+                "smoker",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "pollution",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            },
+            {
+              "subgroup": [
+                "cancer",
+                "xray",
+                "dyspnoea"
+              ],
+              "vote": "none"
+            }
+          ],
+          "winner": "none",
+          "tie": false,
+          "tiebreaker_ref": null
+        }
+      ]
+    },
+    "tiebreaker_queries": []
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ],
+    "order": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "metrics": {
+      "predicted_edges": 4,
+      "shd": 0,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 1.0
+    },
+    "elapsed_sec": 121.4
+  }
+}

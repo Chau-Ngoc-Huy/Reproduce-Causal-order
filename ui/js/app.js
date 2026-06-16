@@ -1,0 +1,385 @@
+/* ============================================================
+   app.js — wiring: nav scroll-spy, graph explorer, metrics,
+   comparison claims, charts
+   ============================================================ */
+(function () {
+  const C = window.CORE;
+  const PR = window.PAPER_REFERENCE;
+
+  // ---------------- nav scroll-spy ----------------
+  function initNav() {
+    const links = Array.from(document.querySelectorAll(".nav-links a"));
+    const map = {};
+    links.forEach((a) => { const id = a.getAttribute("href").slice(1); if (id) map[id] = a; });
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          links.forEach((l) => l.classList.remove("active"));
+          if (map[e.target.id]) map[e.target.id].classList.add("active");
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    Object.keys(map).forEach((id) => { const s = document.getElementById(id); if (s) obs.observe(s); });
+  }
+
+  // ---------------- graph explorer ----------------
+  function initExplorer() {
+    const state = { graph: C.GRAPHS[0], kind: "triplet", layout: "hier" };
+    const gSeg = document.getElementById("g-graph-seg");
+    const mSeg = document.getElementById("g-method-seg");
+    const lSeg = document.getElementById("g-layout-seg");
+    let netA = null, netB = null;
+
+    function methodsAvailable(graph) {
+      return C.resultsFor(graph).map((r) => r._kind);
+    }
+
+    function buildMethodSeg() {
+      const kinds = methodsAvailable(state.graph);
+      mSeg.innerHTML = "";
+      if (!kinds.includes(state.kind)) state.kind = kinds[kinds.length - 1];
+      kinds.forEach((k) => {
+        const b = document.createElement("button");
+        b.textContent = C.methodLabel(k);
+        b.classList.toggle("on", k === state.kind);
+        b.addEventListener("click", () => { state.kind = k; buildMethodSeg(); draw(); });
+        mSeg.appendChild(b);
+      });
+    }
+
+    function buildGraphSeg() {
+      gSeg.innerHTML = "";
+      C.GRAPHS.forEach((g) => {
+        const b = document.createElement("button");
+        b.textContent = (C.GRAPH_META[g] || {}).label || g;
+        b.classList.toggle("on", g === state.graph);
+        b.addEventListener("click", () => { state.graph = g; buildMethodSeg(); draw(); });
+        gSeg.appendChild(b);
+      });
+    }
+    lSeg.querySelectorAll("button").forEach((b) => {
+      b.addEventListener("click", () => {
+        state.layout = b.dataset.layout;
+        lSeg.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+        draw();
+      });
+    });
+
+    function draw() {
+      const r = C.getResult(state.graph, state.kind);
+      if (!r) return;
+      const m = r.raw.metrics;
+      // headings
+      document.getElementById("gv-pred-tag").textContent = `${r._kindLabel} · SHD ${m.shd}`;
+      document.getElementById("gv-truth-tag").textContent = `${r.nodes.length} nodes · ${r.ground_truth_edges.length} edges`;
+      // meta line
+      document.getElementById("gv-meta").innerHTML =
+        `<b>${(C.GRAPH_META[state.graph] || {}).label || state.graph}</b> · ${(C.GRAPH_META[state.graph] || {}).blurb || ""}`;
+
+      const cPred = document.getElementById("gv-pred");
+      const cTruth = document.getElementById("gv-truth");
+      if (netA) netA.destroy();
+      if (netB) netB.destroy();
+      netA = window.GRAPHVIZ.render(cPred, r, "predicted", state.layout);
+      netB = window.GRAPHVIZ.render(cTruth, r, "truth", state.layout);
+
+      // stat readout under graphs
+      const stats = document.getElementById("gv-stats");
+      const cells = [
+        ["Topological divergence", m.topo_divergence, m.topo_divergence === 0],
+        ["SHD", m.shd, m.shd === 0],
+        ["Precision", C.fmt(m.precision, 2), m.precision === 1],
+        ["Recall", C.fmt(m.recall, 2), m.recall === 1],
+        ["F1", C.fmt(m.f1, 2), m.f1 === 1],
+        ["Cycles", m.cycles, m.cycles === 0],
+      ];
+      stats.innerHTML = cells.map(([l, v, good]) =>
+        `<div class="stat"><div class="n" style="${good ? "color:var(--c-correct)" : ""}">${v}</div><div class="l">${l}</div></div>`
+      ).join("");
+    }
+
+    buildGraphSeg(); buildMethodSeg(); draw();
+    document.getElementById("gv-fit").addEventListener("click", () => {
+      if (netA) netA.fit({ animation: { duration: 350 } });
+      if (netB) netB.fit({ animation: { duration: 350 } });
+    });
+
+    // hook used by the Datasets section "view in explorer" links
+    window.__selectExplorer = function (graphKey) {
+      if (!C.GRAPHS.includes(graphKey)) return;
+      state.graph = graphKey;
+      buildGraphSeg(); buildMethodSeg(); draw();
+    };
+  }
+
+  // ---------------- metrics table ----------------
+  function initTable() {
+    const tbody = document.getElementById("metrics-tbody");
+    const rows = [];
+    C.GRAPHS.forEach((g) => {
+      const rs = C.resultsFor(g);
+      // find best (lowest) shd & topo per graph for highlight
+      const minShd = Math.min(...rs.map((r) => r.raw.metrics.shd));
+      const minTopo = Math.min(...rs.map((r) => r.raw.metrics.topo_divergence));
+      const maxF1 = Math.max(...rs.map((r) => r.raw.metrics.f1));
+      rs.forEach((r, i) => {
+        const m = r.raw.metrics;
+        const chipCls = r._kind === "triplet" ? "tri" : r._kind === "quadruplet" ? "quad" : "pair";
+        rows.push(`<tr>
+          <td>${i === 0 ? `<b>${(C.GRAPH_META[g] || {}).label || g}</b>` : ""}</td>
+          <td><span class="row-method"><span class="chip ${chipCls}">${r._kindLabel}</span></span></td>
+          <td class="num ${m.shd === minShd ? "best" : ""}">${m.shd}</td>
+          <td class="num ${m.topo_divergence === minTopo ? "best" : ""}">${m.topo_divergence}</td>
+          <td class="num">${C.fmt(m.precision, 2)}</td>
+          <td class="num">${C.fmt(m.recall, 2)}</td>
+          <td class="num ${m.f1 === maxF1 ? "best" : ""}">${C.fmt(m.f1, 2)}</td>
+          <td class="num">${m.n_pred_edges}</td>
+          <td class="num">${m.cycles}</td>
+        </tr>`);
+      });
+    });
+    tbody.innerHTML = rows.join("");
+  }
+
+  // ---------------- comparison: two published-style tables ----------------
+  function initComparePair() {
+    const host = document.getElementById("compare-pair");
+    if (!host || !PR.comparison) return;
+    const kindMap = { pairwise: "pairwise", triplet: "triplet", quadruplet: "quadruplet" };
+
+    // assemble per-run records — only for runs actually loaded from data/
+    const recs = PR.comparison
+      .filter((c) => C.getResult(c.graph, kindMap[c.method]))
+      .map((c) => {
+      const r = C.getResult(c.graph, kindMap[c.method]);
+      const ours = r ? r.raw.metrics : null;
+      const paper = c.paper || {};
+      return {
+        graph: c.graph, method: c.method, note: c.note, alt: paper.alt || null,
+        gLabel: (C.GRAPH_META[c.graph] || {}).label || c.graph,
+        mlab: C.methodLabel(c.method),
+        chipCls: c.method === "triplet" ? "tri" : c.method === "quadruplet" ? "quad" : "pair",
+        paper: { shd: paper.shd, dtop: paper.dtop, cycles: paper.cycles, model: paper.model || "—", table: paper.table || "" },
+        ours: ours ? { shd: ours.shd, dtop: ours.topo_divergence, cycles: ours.cycles } : { shd: null, dtop: null, cycles: null },
+      };
+    });
+
+    function fmtv(v) { return (v === null || v === undefined) ? "—" : v; }
+    // compare class for an "ours" cell vs paper (lower is better)
+    function cmpClass(paperVal, ourVal) {
+      const pn = typeof paperVal === "number", on = typeof ourVal === "number";
+      if (pn && on) { if (paperVal === ourVal) return "cmp-match"; return ourVal < paperVal ? "cmp-better" : "cmp-worse"; }
+      if (!pn && on && paperVal !== null && paperVal !== undefined) return "cmp-diverge"; // paper non-numeric (e.g. >1000)
+      return "cmp-match";
+    }
+
+    function runCell(rec) {
+      return `<td class="cp-run"><span class="cp-g">${rec.gLabel}</span><span class="chip ${rec.chipCls}">${rec.mlab}</span></td>`;
+    }
+
+    // ---- paper table ----
+    const paperRows = recs.map((rec) => `<tr>
+      ${runCell(rec)}
+      <td class="num">${fmtv(rec.paper.shd)}</td>
+      <td class="num">${fmtv(rec.paper.dtop)}</td>
+      <td class="num">${fmtv(rec.paper.cycles)}</td>
+    </tr>`).join("");
+
+    // ---- ours table (shaded) ----
+    const ourRows = recs.map((rec) => {
+      const sc = cmpClass(rec.paper.shd, rec.ours.shd);
+      const dc = cmpClass(rec.paper.dtop, rec.ours.dtop);
+      const cc = cmpClass(rec.paper.cycles, rec.ours.cycles);
+      return `<tr>
+        ${runCell(rec)}
+        <td class="num cp-cell ${sc}">${fmtv(rec.ours.shd)}</td>
+        <td class="num cp-cell ${dc}">${fmtv(rec.ours.dtop)}</td>
+        <td class="num cp-cell ${cc}">${fmtv(rec.ours.cycles)}</td>
+      </tr>`;
+    }).join("");
+
+    function tableBlock(kind, title, sub, bodyRows) {
+      return `<div class="cp-card cp-${kind}">
+        <div class="cp-head"><div><h4>${title}</h4><span class="cp-sub">${sub}</span></div>
+          <span class="cp-tag">${kind === "paper" ? "as published" : "GPT-4o"}</span></div>
+        <div class="tbl-wrap" style="box-shadow:none;border-radius:0;border:0">
+          <table class="metrics cp-table">
+            <thead><tr><th>Run</th><th>SHD</th><th>D<sub>top</sub></th><th>Cycles</th></tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
+    host.innerHTML =
+      tableBlock("paper", "Reported in the paper", "GPT-3.5 / GPT-4 · Tables 3, A7, A9", paperRows) +
+      tableBlock("ours", "Our reproduction", "GPT-4o · this site", ourRows);
+
+    // ---- key differences cards ----
+    const grid = document.getElementById("diff-grid");
+    if (grid) {
+      // pick runs that diverge most: worse, diverge, or large better gap
+      const diffs = recs.filter((rec) => {
+        const classes = [cmpClass(rec.paper.shd, rec.ours.shd), cmpClass(rec.paper.dtop, rec.ours.dtop), cmpClass(rec.paper.cycles, rec.ours.cycles)];
+        return classes.some((c) => c !== "cmp-match");
+      });
+      grid.innerHTML = diffs.map((rec) => {
+        // headline delta
+        let kind = "better", tag = "We do better";
+        const classes = [cmpClass(rec.paper.shd, rec.ours.shd), cmpClass(rec.paper.dtop, rec.ours.dtop), cmpClass(rec.paper.cycles, rec.ours.cycles)];
+        if (classes.includes("cmp-diverge")) { kind = "diverge"; tag = "Qualitative divergence"; }
+        else if (classes.includes("cmp-worse")) { kind = "worse"; tag = "We do worse"; }
+        return `<div class="diff-card diff-${kind}">
+          <div class="diff-top"><span class="diff-run">${rec.gLabel} · ${rec.mlab}</span><span class="diff-badge diff-b-${kind}">${tag}</span></div>
+          <div class="diff-nums">
+            ${deltaPill("SHD", rec.paper.shd, rec.ours.shd)}
+            ${deltaPill("D_top", rec.paper.dtop, rec.ours.dtop)}
+            ${deltaPill("Cycles", rec.paper.cycles, rec.ours.cycles)}
+          </div>
+          <p class="diff-note">${rec.note}</p>
+          ${rec.alt ? `<p class="diff-alt mono">${rec.alt}</p>` : ""}
+        </div>`;
+      }).join("");
+    }
+  }
+
+  function deltaPill(label, paperVal, ourVal) {
+    const sub = label === "D_top" ? "<span>D</span><sub>top</sub>" : label;
+    return `<span class="dpill"><span class="dpill-l">${sub}</span>
+      <span class="dpill-v"><b class="dpill-paper">${paperVal === null || paperVal === undefined ? "—" : paperVal}</b>→<b class="dpill-ours">${ourVal === null || ourVal === undefined ? "—" : ourVal}</b></span></span>`;
+  }
+  function initCharts() {
+    if (!window.Chart) return;
+    Chart.defaults.font.family = "Hanken Grotesk";
+    Chart.defaults.color = "#647089";
+
+    // SHD by method, grouped by graph
+    const byKind = { pairwise: [], triplet: [], quadruplet: [] };
+    const labels = [];
+    C.GRAPHS.forEach((g) => {
+      labels.push((C.GRAPH_META[g] || {}).label || g);
+      ["pairwise", "triplet", "quadruplet"].forEach((k) => {
+        const r = C.getResult(g, k);
+        byKind[k].push(r ? r.raw.metrics.shd : null);
+      });
+    });
+    const ds = [
+      { label: "Pairwise", data: byKind.pairwise, backgroundColor: "#e0457b" },
+      { label: "Triplet", data: byKind.triplet, backgroundColor: "#4f46e5" },
+      { label: "Quadruplet", data: byKind.quadruplet, backgroundColor: "#0ea5b7" },
+    ];
+    new Chart(document.getElementById("chart-shd"), {
+      type: "bar",
+      data: { labels, datasets: ds },
+      options: barOpts("Structural Hamming Distance  (lower = better)"),
+    });
+
+    // Topological divergence
+    const topoKind = { pairwise: [], triplet: [], quadruplet: [] };
+    C.GRAPHS.forEach((g) => {
+      ["pairwise", "triplet", "quadruplet"].forEach((k) => {
+        const r = C.getResult(g, k);
+        topoKind[k].push(r ? r.raw.metrics.topo_divergence : null);
+      });
+    });
+    new Chart(document.getElementById("chart-topo"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Pairwise", data: topoKind.pairwise, backgroundColor: "#e0457b" },
+          { label: "Triplet", data: topoKind.triplet, backgroundColor: "#4f46e5" },
+          { label: "Quadruplet", data: topoKind.quadruplet, backgroundColor: "#0ea5b7" },
+        ],
+      },
+      options: barOpts("Topological divergence  (lower = better)"),
+    });
+  }
+
+  function barOpts(title) {
+    return {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12, boxHeight: 12, usePointStyle: true, padding: 16, font: { size: 12.5 } } },
+        title: { display: true, text: title, color: "#0c1322", font: { size: 13.5, weight: "600" }, padding: { bottom: 14 } },
+        tooltip: { callbacks: { label: (c) => c.dataset.label + ": " + (c.raw === null ? "n/a" : c.raw) } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 13, weight: "600" }, color: "#33405a" } },
+        y: { beginAtZero: true, grid: { color: "#eef1f6" }, border: { display: false }, ticks: { precision: 0 } },
+      },
+    };
+  }
+
+  // ---------------- pipeline ----------------
+  function initPipeline() {
+    const root = document.getElementById("pipeline-root");
+    if (root && window.PIPELINE) window.PIPELINE.mount(root);
+  }
+
+  // ---------------- hero / footer copy (data-driven) ----------------
+  // Keep the benchmark + method blurbs in sync with whatever is actually
+  // loaded (data/*.trace.json), instead of hardcoding dataset names.
+  function initCopy() {
+    const kinds = ["pairwise", "triplet", "quadruplet"]
+      .filter((k) => C.RESULTS.some((r) => r._kind === k))
+      .map((k) => C.methodLabel(k).toLowerCase());
+    const methods = kinds.length ? kinds.join(", ") : "—";
+
+    const hero = document.getElementById("hero-benchmarks");
+    if (hero) {
+      const items = C.GRAPHS.map((g) => {
+        const r = C.resultsFor(g)[0];
+        const label = (C.GRAPH_META[g] || {}).label || g;
+        const n = r ? r.nodes.length : (C.GRAPH_META[g] || {}).nodes;
+        return `<b class="mono">${label}</b>${n ? ` (${n} nodes)` : ""}`;
+      });
+      hero.innerHTML = `Benchmarks reproduced: ${items.join(" · ")} &nbsp;·&nbsp; methods: ${methods}`;
+    }
+
+    const foot = document.getElementById("footer-benchmarks");
+    if (foot) {
+      const labels = C.GRAPHS.map((g) => (C.GRAPH_META[g] || {}).label || g);
+      foot.innerHTML =
+        `Benchmarks: ${labels.join(" · ") || "—"}<br/>` +
+        `Methods: ${kinds.join(" · ") || "—"}<br/>` +
+        `Expert: GPT-4o (chain-of-thought)`;
+    }
+
+    const summary = document.getElementById("results-summary");
+    if (summary) {
+      const nRuns = C.RESULTS.length, nGraphs = C.GRAPHS.length;
+      summary.textContent =
+        `${nRuns} run${nRuns === 1 ? "" : "s"} across ` +
+        `${nGraphs} benchmark${nGraphs === 1 ? "" : "s"}.`;
+    }
+  }
+
+  // ---------------- boot ----------------
+  // Give any dataset that isn't hardcoded in CORE.GRAPH_META a proper label /
+  // blurb from the source-code catalog (window.DATASETS), so freshly-added
+  // datasets (e.g. earthquake) render with a clean name everywhere.
+  function augmentGraphMeta() {
+    (window.DATASETS || []).forEach((d) => {
+      if (!C.GRAPH_META[d.key]) {
+        C.GRAPH_META[d.key] = {
+          label: d.label, blurb: d.origin || d.context || "",
+          nodes: d.nodeCount, edges: d.edgeCount,
+        };
+      }
+    });
+  }
+
+  function boot() {
+    augmentGraphMeta();
+    initNav();
+    initExplorer();
+    initTable();
+    initComparePair();
+    initCharts();
+    initPipeline();
+    initCopy();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();

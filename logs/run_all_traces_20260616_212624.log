@@ -1,0 +1,19 @@
+============================================================
+  RUN ALL TRACES | 20260616_212624
+============================================================
+Datasets       : cancer earthquake survey asia child
+Pairwise       : model=gpt-4o prompt=cot  (enabled=1)
+Triplet (k=3)  : subgraph=gpt-4o-mini expert=gpt-4o  (enabled=1)
+Delay          : 1s   Output: data/   Log: logs/run_all_traces_20260616_212624.log
+Skip existing  : 1
+------------------------------------------------------------
+dataset         pairs triplets
+cancer             10       10
+earthquake         10       10
+survey             15       20
+asia               28       56
+child             190     1140
+------------------------------------------------------------
+Approx LLM calls: 1489  (+ tie-breakers)   ~1489s of delay alone
+============================================================
+Proceed? [y/N] Aborted.

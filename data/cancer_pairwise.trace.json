@@ -1,0 +1,318 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "_note": "Example/synthetic trace for UI development. Predicted edges match data/cancer_pairwise.json; reasoning text is illustrative, not from a live API call.",
+  "run_id": "cancer_pairwise_cot_example",
+  "strategy": "pairwise",
+  "graph": "cancer",
+  "generated_at": "2026-06-16T18:12:32",
+  "config": {
+    "prompt_type": "cot",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 0
+  },
+  "graph_meta": {
+    "nodes": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "descriptions": {
+      "smoker": "smoking habit",
+      "pollution": "exposure to pollutants",
+      "cancer": "cancer",
+      "xray": "getting positive xray result",
+      "dyspnoea": "dyspnoea"
+    },
+    "context": "model the relation between various variables responsible for causing Cancer and its possible outcomes",
+    "ground_truth_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 10,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "smoker",
+            "pollution"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'smoker' and 'pollution'? (A: smoker -> pollution;  B: pollution -> smoker;  C: no causal relation)",
+          "response_raw": "Smoking and pollution are independent exposures; changing one does not change the other. No causal edge. Therefore answer is <Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 1.24,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 35,
+            "total_tokens": 575
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "smoker",
+            "cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'smoker' and 'cancer'? (A: smoker -> cancer;  B: cancer -> smoker;  C: no causal relation)",
+          "response_raw": "Smoking introduces carcinogens that damage lung cells, increasing cancer risk. Smoking causes cancer. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "smoker",
+            "cancer"
+          ],
+          "latency_sec": 1.23,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 35,
+            "total_tokens": 575
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "smoker",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'smoker' and 'xray'? (A: smoker -> xray;  B: xray -> smoker;  C: no causal relation)",
+          "response_raw": "Smoking does not directly affect an x-ray result; any link is mediated by cancer. No direct edge. Therefore answer is <Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 1.23,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 34,
+            "total_tokens": 574
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "smoker",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'smoker' and 'dyspnoea'? (A: smoker -> dyspnoea;  B: dyspnoea -> smoker;  C: no causal relation)",
+          "response_raw": "Smoking irritates and damages the airways, which can directly produce breathlessness, so smoking affects dyspnoea. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "smoker",
+            "dyspnoea"
+          ],
+          "latency_sec": 1.25,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 38,
+            "total_tokens": 578
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "pollution",
+            "cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'pollution' and 'cancer'? (A: pollution -> cancer;  B: cancer -> pollution;  C: no causal relation)",
+          "response_raw": "Airborne pollutants are inhaled carcinogens that damage lung tissue, so pollution causes cancer. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "pollution",
+            "cancer"
+          ],
+          "latency_sec": 1.23,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 33,
+            "total_tokens": 573
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "pollution",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'pollution' and 'xray'? (A: pollution -> xray;  B: xray -> pollution;  C: no causal relation)",
+          "response_raw": "Pollution has no direct effect on an x-ray result; the relation runs through disease. No direct edge. Therefore answer is <Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 1.23,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 35,
+            "total_tokens": 575
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "pollution",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'pollution' and 'dyspnoea'? (A: pollution -> dyspnoea;  B: dyspnoea -> pollution;  C: no causal relation)",
+          "response_raw": "Pollution inflames and constricts the airways, which can directly cause shortness of breath, so pollution affects dyspnoea. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "pollution",
+            "dyspnoea"
+          ],
+          "latency_sec": 1.27,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 40,
+            "total_tokens": 580
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "cancer",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'cancer' and 'xray'? (A: cancer -> xray;  B: xray -> cancer;  C: no causal relation)",
+          "response_raw": "An x-ray is used to detect cancer, so the presence of cancer drives a positive x-ray result. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "cancer",
+            "xray"
+          ],
+          "latency_sec": 1.22,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 32,
+            "total_tokens": 572
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "cancer",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'cancer' and 'dyspnoea'? (A: cancer -> dyspnoea;  B: dyspnoea -> cancer;  C: no causal relation)",
+          "response_raw": "A lung tumour obstructs airflow and reduces lung capacity, so cancer causes dyspnoea. Therefore answer is <Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "cancer",
+            "dyspnoea"
+          ],
+          "latency_sec": 1.21,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 31,
+            "total_tokens": 571
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "xray",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'xray' and 'dyspnoea'? (A: xray -> dyspnoea;  B: dyspnoea -> xray;  C: no causal relation)",
+          "response_raw": "An x-ray result and dyspnoea are both consequences of disease; neither causes the other. No edge. Therefore answer is <Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 1.23,
+          "usage": {
+            "prompt_tokens": 540,
+            "completion_tokens": 34,
+            "total_tokens": 574
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "smoker",
+        "dyspnoea"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "dyspnoea"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ],
+    "order": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "metrics": {
+      "predicted_edges": 6,
+      "shd": 2,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 0.8
+    },
+    "elapsed_sec": 47.8
+  }
+}
