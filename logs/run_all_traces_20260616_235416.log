@@ -1,0 +1,71 @@
+============================================================
+  RUN ALL TRACES | 20260616_235416
+============================================================
+Datasets       : child
+Pairwise       : model=gpt-4o prompt=cot  (enabled=1)
+Triplet (k=3)  : subgraph=gpt-4o-mini expert=gpt-4o  (enabled=1)
+Delay          : 1s   Output: data/   Log: logs/run_all_traces_20260616_235416.log
+Skip existing  : 1
+------------------------------------------------------------
+dataset         pairs triplets
+child             190     1140
+------------------------------------------------------------
+Approx LLM calls: 1330  (+ tie-breakers)   ~1330s of delay alone
+============================================================
+
+============================================================
+  PAIRWISE | child | gpt-4o
+  -> data/child_pairwise.trace.json
+============================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/run_pairwise.py", line 117, in <module>
+    main()
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/run_pairwise.py", line 57, in main
+    result = run_pairwise_experiment(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/strategies/pairwise.py", line 82, in run_pairwise_experiment
+    context = graph_config["context"]
+              ~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'context'
+
+============================================================
+Graph: child (20 nodes, 25 GT edges)
+Model: gpt-4o
+Prompt type: cot
+============================================================
+
+FAILED: PAIRWISE | child | gpt-4o (exit 1)
+
+============================================================
+  TRIPLET | child | gpt-4o-mini/gpt-4o
+  -> data/child_subgroup.trace.json
+============================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/run_triplet.py", line 132, in <module>
+    main()
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/run_triplet.py", line 57, in main
+    result = run_triplet_experiment(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/temp-user/Documents/Documents/SauDaiHoc/Data Analysis/Causal_Order_Imperfect_Experts/causal_discovery/strategies/triplet.py", line 306, in run_triplet_experiment
+    context = graph_config["context"]
+              ~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'context'
+
+============================================================
+Graph: child (20 nodes, 25 GT edges)
+Subgraph model (weak learner): gpt-4o-mini
+Expert model (tie-breaker):    gpt-4o
+============================================================
+
+FAILED: TRIPLET | child | gpt-4o-mini/gpt-4o (exit 1)
+
+============================================================
+  COMPLETED WITH 2 FAILURE(S):
+    - PAIRWISE | child | gpt-4o
+    - TRIPLET | child | gpt-4o-mini/gpt-4o
+  Traces in: data/    Log: logs/run_all_traces_20260616_235416.log
+============================================================

@@ -57,43 +57,23 @@ window.PAPER_REFERENCE = {
     },
   ],
 
-  /* Curated side-by-side highlights vs. the paper's published numbers.
-     `paper` is null where the paper does not report that cell. `ours`
-     is pulled live from CORE at render time. Lower is better for shd,
-     dtop, cycles. Only rows whose run is actually loaded are shown. */
-  comparison: [
-    {
-      graph: "cancer", method: "pairwise",
-      paper: { shd: 6, dtop: 0, cycles: 0, model: "GPT-3.5 · base", table: "Table 3" },
-      note: "GPT-4o adds far fewer spurious edges (SHD 2 vs 6); both keep the order exact (Dtop 0).",
-    },
-    {
-      graph: "cancer", method: "triplet",
-      paper: { shd: 6, dtop: 1, cycles: 0, model: "GPT-3.5", table: "Table 3" },
-      note: "Our run is cleaner — a perfect graph (SHD 0) and a perfect order (Dtop 0) vs the paper's SHD 6 / Dtop 1.",
-    },
-    {
-      graph: "earthquake", method: "pairwise",
-      paper: { shd: 7, dtop: 0, cycles: 0, model: "GPT-3.5 · base", table: "Table 3" },
-      note: "GPT-4o (CoT) recovers a tighter graph (SHD 3 vs 7 base / 4 CoT) with a perfect order (Dtop 0).",
-    },
-    {
-      graph: "earthquake", method: "triplet",
-      paper: { shd: 4, dtop: 0, cycles: 0, model: "GPT-3.5", table: "Table 3" },
-      note: "Triplet recovers the graph exactly (SHD 0 vs 4) and the order exactly (Dtop 0).",
-    },
-  ],
-
   /* ==========================================================
      EVERY published experimental table, transcribed verbatim.
+     This is a STATIC transcription of the paper — you never edit it
+     when you run a new dataset. The dashboard matches your runs to
+     the right rows automatically (app.js → normGraphKey/paperRef):
+     just run `python -m causal_discovery.build_ui_traces` and any
+     graph present in traces_report.js lights up beside its paper row.
+
      Layouts:
        byMethod : rows = (dataset × metric), columns = methods
        byMetric : rows = (block × dataset),  columns = metrics
        matrix   : free grid (downstream tasks; transcription only)
      A method/block `kind` of "pairwise" | "triplet" | "quadruplet"
      tells the renderer which of OUR runs to place beside that column;
-     `null` = no overlay (different expert/strategy → left blank).
-     Row `key` is our internal graph id ("cancer"/"earthquake") or null.
+     `null` = no overlay (different expert/strategy → always blank).
+     Row `key` is OPTIONAL: by default the graph id is derived from the
+     dataset label (e.g. "Survey"→survey); set `key` only to override.
      ========================================================== */
   publishedTables: [
 
@@ -127,7 +107,7 @@ window.PAPER_REFERENCE = {
       metrics: ["dtop", "shd", "cycles", "in"],
       rows: [
         { dataset: "Earthquake", key: "earthquake", vals: { "Pairwise (Base)": { dtop: "0", shd: "7", cycles: "0", in: "0/5" }, "Pairwise (CoT)": { dtop: "0", shd: "4", cycles: "0", in: "0/5" }, Triplet: { dtop: "0", shd: "4", cycles: "0", in: "0/5" } } },
-        { dataset: "Survey", key: null, vals: { "Pairwise (Base)": { dtop: "3", shd: "12", cycles: "0", in: "0/6" }, "Pairwise (CoT)": { dtop: "1", shd: "9", cycles: "0", in: "2/6" }, Triplet: { dtop: "0", shd: "9", cycles: "0", in: "0/6" } } },
+        { dataset: "Survey", key: "survey", vals: { "Pairwise (Base)": { dtop: "3", shd: "12", cycles: "0", in: "0/6" }, "Pairwise (CoT)": { dtop: "1", shd: "9", cycles: "0", in: "2/6" }, Triplet: { dtop: "0", shd: "9", cycles: "0", in: "0/6" } } },
         { dataset: "Cancer", key: "cancer", vals: { "Pairwise (Base)": { dtop: "0", shd: "6", cycles: "0", in: "0/5" }, "Pairwise (CoT)": { dtop: "-", shd: "-", cycles: "-", in: "-" }, Triplet: { dtop: "1", shd: "6", cycles: "0", in: "0/5" } } },
         { dataset: "Asia-M", key: null, vals: { "Pairwise (Base)": { dtop: "-", shd: "15", cycles: "7", in: "0/7" }, "Pairwise (CoT)": { dtop: "-", shd: "13", cycles: "1", in: "0/7" }, Triplet: { dtop: "1", shd: "11", cycles: "0", in: "0/7" } } },
         { dataset: "Child", key: null, vals: { "Pairwise (Base)": { dtop: "-", shd: "177", cycles: "»3k", in: "0/20" }, "Pairwise (CoT)": { dtop: "-", shd: "138", cycles: "»500", in: "0/20" }, Triplet: { dtop: "1", shd: "28", cycles: "0", in: "0/20" } } },
@@ -211,8 +191,8 @@ window.PAPER_REFERENCE = {
         {
           label: "Chain of Thought", kind: "pairwise", rows: [
             { dataset: "Earthquake", key: "earthquake", vals: { dtop: "0", shd: "4", in: "0/5", cycles: "0" } },
-            { dataset: "Survey", key: null, vals: { dtop: "1", shd: "9", in: "2/6", cycles: "0" } },
-            { dataset: "Asia", key: null, vals: { dtop: "-", shd: "18", in: "0/8", cycles: "1" } },
+            { dataset: "Survey", key: "survey", vals: { dtop: "1", shd: "9", in: "2/6", cycles: "0" } },
+            { dataset: "Asia", key: "asia", vals: { dtop: "-", shd: "18", in: "0/8", cycles: "1" } },
             { dataset: "Asia-M", key: null, vals: { dtop: "-", shd: "13", in: "0/7", cycles: "1" } },
             { dataset: "Child", key: null, vals: { dtop: "-", shd: "138", in: "0/20", cycles: "»500" } },
             { dataset: "Neuropathic", key: null, vals: { dtop: "-", shd: "64", in: "0/22", cycles: "5" } },
@@ -222,8 +202,8 @@ window.PAPER_REFERENCE = {
           label: "Triplet Query", kind: "triplet", rows: [
             { dataset: "Earthquake", key: "earthquake", vals: { dtop: "0", shd: "4", in: "0/5", cycles: "0" } },
             { dataset: "Cancer", key: "cancer", vals: { dtop: "1", shd: "6", in: "0/5", cycles: "0" } },
-            { dataset: "Survey", key: null, vals: { dtop: "0", shd: "9", in: "0/6", cycles: "0" } },
-            { dataset: "Asia", key: null, vals: { dtop: "1", shd: "14", in: "0/8", cycles: "0" } },
+            { dataset: "Survey", key: "survey", vals: { dtop: "0", shd: "9", in: "0/6", cycles: "0" } },
+            { dataset: "Asia", key: "asia", vals: { dtop: "1", shd: "14", in: "0/8", cycles: "0" } },
             { dataset: "Asia-M", key: null, vals: { dtop: "1", shd: "11", in: "0/7", cycles: "0" } },
             { dataset: "Child", key: null, vals: { dtop: "-", shd: "138", in: "0/20", cycles: "391" } },
             { dataset: "Child (+ Cycle Remover)", key: null, vals: { dtop: "1", shd: "28", in: "10/20", cycles: "0" } },

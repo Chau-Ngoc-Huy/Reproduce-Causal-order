@@ -1,0 +1,42 @@
+{
+  "graph": "survey",
+  "method": "pairwise/cot (gpt-4o)",
+  "predicted_edges": [
+    [
+      "Age",
+      "Education"
+    ],
+    [
+      "Age",
+      "Occupation"
+    ],
+    [
+      "Age",
+      "Travel"
+    ],
+    [
+      "Sex",
+      "Travel"
+    ],
+    [
+      "Education",
+      "Occupation"
+    ],
+    [
+      "Education",
+      "Travel"
+    ],
+    [
+      "Occupation",
+      "Residence"
+    ],
+    [
+      "Occupation",
+      "Travel"
+    ],
+    [
+      "Residence",
+      "Travel"
+    ]
+  ]
+}

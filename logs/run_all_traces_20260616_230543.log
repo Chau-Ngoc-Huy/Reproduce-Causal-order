@@ -1,0 +1,242 @@
+============================================================
+  RUN ALL TRACES | 20260616_230543
+============================================================
+Datasets       : survey asia
+Pairwise       : model=gpt-4o prompt=cot  (enabled=1)
+Triplet (k=3)  : subgraph=gpt-4o-mini expert=gpt-4o  (enabled=1)
+Delay          : 1s   Output: data/   Log: logs/run_all_traces_20260616_230543.log
+Skip existing  : 1
+------------------------------------------------------------
+dataset         pairs triplets
+survey             15       20
+asia               28       56
+------------------------------------------------------------
+Approx LLM calls: 119  (+ tie-breakers)   ~119s of delay alone
+============================================================
+
+============================================================
+  PAIRWISE | survey | gpt-4o
+  -> data/survey_pairwise.trace.json
+============================================================
+
+============================================================
+Graph: survey (6 nodes, 6 GT edges)
+Model: gpt-4o
+Prompt type: cot
+============================================================
+
+Total pairs: 15
+Querying pairs:   0%|          | 0/15 [00:00<?, ?it/s]Querying pairs:   7%|▋         | 1/15 [00:06<01:36,  6.86s/it]Querying pairs:  13%|█▎        | 2/15 [00:10<01:01,  4.76s/it]Querying pairs:  20%|██        | 3/15 [00:13<00:50,  4.17s/it]Querying pairs:  27%|██▋       | 4/15 [00:17<00:43,  3.94s/it]Querying pairs:  33%|███▎      | 5/15 [00:20<00:36,  3.62s/it]Querying pairs:  40%|████      | 6/15 [00:23<00:31,  3.51s/it]Querying pairs:  47%|████▋     | 7/15 [00:26<00:27,  3.42s/it]Querying pairs:  53%|█████▎    | 8/15 [00:30<00:23,  3.36s/it]Querying pairs:  60%|██████    | 9/15 [00:33<00:19,  3.26s/it]Querying pairs:  67%|██████▋   | 10/15 [00:36<00:15,  3.18s/it]Querying pairs:  73%|███████▎  | 11/15 [00:39<00:12,  3.19s/it]Querying pairs:  80%|████████  | 12/15 [00:42<00:09,  3.33s/it]Querying pairs:  87%|████████▋ | 13/15 [00:50<00:09,  4.71s/it]Querying pairs:  93%|█████████▎| 14/15 [00:58<00:05,  5.66s/it]Querying pairs: 100%|██████████| 15/15 [01:07<00:00,  6.50s/it]Querying pairs: 100%|██████████| 15/15 [01:07<00:00,  4.47s/it]
+
+--- Pairwise Results ---
+Predicted edges: 9
+SHD: 7
+Connected nodes: 6, Isolated: 0
+Cycles: 0
+Topological Divergence: 0
+Saved result bundle to data/survey_pairwise.json
+Saved pipeline trace to data/survey_pairwise.trace.json
+
+============================================================
+Done.
+OK: PAIRWISE | survey | gpt-4o  (68s)
+
+============================================================
+  TRIPLET | survey | gpt-4o-mini/gpt-4o
+  -> data/survey_subgroup.trace.json
+============================================================
+
+============================================================
+Graph: survey (6 nodes, 6 GT edges)
+Subgraph model (weak learner): gpt-4o-mini
+Expert model (tie-breaker):    gpt-4o
+============================================================
+
+Total triplets: 20
+Querying triplets:   0%|          | 0/20 [00:00<?, ?it/s]Querying triplets:   5%|▌         | 1/20 [00:07<02:24,  7.62s/it]Querying triplets:  10%|█         | 2/20 [00:15<02:17,  7.63s/it]Querying triplets:  15%|█▌        | 3/20 [00:22<02:09,  7.61s/it]Querying triplets:  20%|██        | 4/20 [00:29<01:54,  7.13s/it]Querying triplets:  25%|██▌       | 5/20 [00:36<01:48,  7.23s/it]Querying triplets:  30%|███       | 6/20 [00:42<01:36,  6.90s/it]Querying triplets:  35%|███▌      | 7/20 [00:48<01:24,  6.51s/it]Querying triplets:  40%|████      | 8/20 [00:54<01:16,  6.38s/it]Querying triplets:  45%|████▌     | 9/20 [01:00<01:06,  6.07s/it]Querying triplets:  50%|█████     | 10/20 [01:05<00:59,  5.97s/it]Querying triplets:  55%|█████▌    | 11/20 [01:11<00:52,  5.82s/it]Querying triplets:  60%|██████    | 12/20 [01:17<00:46,  5.78s/it]Querying triplets:  65%|██████▌   | 13/20 [01:23<00:41,  5.92s/it]Querying triplets:  70%|███████   | 14/20 [01:28<00:34,  5.83s/it]Querying triplets:  75%|███████▌  | 15/20 [01:35<00:30,  6.17s/it]Querying triplets:  80%|████████  | 16/20 [01:43<00:25,  6.47s/it]Querying triplets:  85%|████████▌ | 17/20 [01:48<00:18,  6.06s/it]Querying triplets:  90%|█████████ | 18/20 [01:57<00:13,  6.95s/it]Querying triplets:  95%|█████████▌| 19/20 [02:03<00:06,  6.85s/it]Querying triplets: 100%|██████████| 20/20 [02:09<00:00,  6.66s/it]Querying triplets: 100%|██████████| 20/20 [02:09<00:00,  6.50s/it]
+Warning: no answer for triplet ('Age', 'Sex', 'Education')
+Warning: no answer for triplet ('Age', 'Sex', 'Occupation')
+Warning: no answer for triplet ('Age', 'Sex', 'Residence')
+Warning: no answer for triplet ('Age', 'Education', 'Occupation')
+Warning: no answer for triplet ('Age', 'Education', 'Residence')
+Warning: no answer for triplet ('Age', 'Occupation', 'Residence')
+Warning: no answer for triplet ('Sex', 'Occupation', 'Residence')
+Warning: no answer for triplet ('Occupation', 'Residence', 'Travel')
+Merging (outer):   0%|          | 0/6 [00:00<?, ?it/s]
+Merging (inner):   0%|          | 0/5 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/4 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/3 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/2 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/1 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner): 0it [00:00, ?it/s][A
+                                   [AMerging (outer): 100%|██████████| 6/6 [00:00<00:00, 3555.00it/s]
+
+--- Raw Triplet Merge Results ---
+Predicted edges: 9
+SHD: 7
+Connected nodes: 6, Isolated: 0
+Cycles: 0
+
+Edgewise distribution entries: 15
+Saved edgewise distribution to data/survey_triplet_edgewise.pkl
+Topological Divergence: 0
+Saved pipeline trace to data/survey_subgroup.trace.json
+
+============================================================
+Done.
+OK: TRIPLET | survey | gpt-4o-mini/gpt-4o  (131s)
+
+============================================================
+  PAIRWISE | asia | gpt-4o
+  -> data/asia_pairwise.trace.json
+============================================================
+
+============================================================
+Graph: asia (8 nodes, 8 GT edges)
+Model: gpt-4o
+Prompt type: cot
+============================================================
+
+Total pairs: 28
+Querying pairs:   0%|          | 0/28 [00:00<?, ?it/s]Querying pairs:   4%|▎         | 1/28 [00:03<01:26,  3.22s/it]Querying pairs:   7%|▋         | 2/28 [00:06<01:23,  3.21s/it]Querying pairs:  11%|█         | 3/28 [00:09<01:17,  3.10s/it]Querying pairs:  14%|█▍        | 4/28 [00:12<01:12,  3.00s/it]Querying pairs:  18%|█▊        | 5/28 [00:15<01:10,  3.06s/it]Querying pairs:  21%|██▏       | 6/28 [00:18<01:08,  3.10s/it]Querying pairs:  25%|██▌       | 7/28 [00:21<01:04,  3.08s/it]Querying pairs:  29%|██▊       | 8/28 [00:24<01:02,  3.15s/it]Querying pairs:  32%|███▏      | 9/28 [00:27<00:57,  3.04s/it]Querying pairs:  36%|███▌      | 10/28 [00:30<00:53,  2.98s/it]Querying pairs:  39%|███▉      | 11/28 [00:35<00:58,  3.43s/it]Querying pairs:  43%|████▎     | 12/28 [00:41<01:10,  4.39s/it]Querying pairs:  46%|████▋     | 13/28 [00:49<01:22,  5.50s/it]Querying pairs:  50%|█████     | 14/28 [00:57<01:27,  6.26s/it]Querying pairs:  54%|█████▎    | 15/28 [01:05<01:29,  6.86s/it]Querying pairs:  57%|█████▋    | 16/28 [01:14<01:26,  7.23s/it]Querying pairs:  61%|██████    | 17/28 [01:21<01:21,  7.45s/it]Querying pairs:  64%|██████▍   | 18/28 [01:29<01:15,  7.54s/it]Querying pairs:  68%|██████▊   | 19/28 [01:38<01:10,  7.83s/it]Querying pairs:  71%|███████▏  | 20/28 [01:46<01:03,  7.88s/it]Querying pairs:  75%|███████▌  | 21/28 [01:53<00:54,  7.82s/it]Querying pairs:  79%|███████▊  | 22/28 [02:02<00:48,  8.02s/it]Querying pairs:  82%|████████▏ | 23/28 [02:09<00:39,  7.86s/it]Querying pairs:  86%|████████▌ | 24/28 [02:17<00:31,  7.88s/it]Querying pairs:  89%|████████▉ | 25/28 [02:25<00:23,  7.93s/it]Querying pairs:  93%|█████████▎| 26/28 [02:34<00:16,  8.14s/it]Querying pairs:  96%|█████████▋| 27/28 [02:41<00:07,  7.87s/it]Querying pairs: 100%|██████████| 28/28 [02:50<00:00,  8.09s/it]Querying pairs: 100%|██████████| 28/28 [02:50<00:00,  6.08s/it]
+
+--- Pairwise Results ---
+Predicted edges: 19
+SHD: 15
+Connected nodes: 8, Isolated: 0
+Cycles: 0
+Topological Divergence: 1
+Saved result bundle to data/asia_pairwise.json
+Saved pipeline trace to data/asia_pairwise.trace.json
+
+============================================================
+Done.
+OK: PAIRWISE | asia | gpt-4o  (171s)
+
+============================================================
+  TRIPLET | asia | gpt-4o-mini/gpt-4o
+  -> data/asia_subgroup.trace.json
+============================================================
+
+============================================================
+Graph: asia (8 nodes, 8 GT edges)
+Subgraph model (weak learner): gpt-4o-mini
+Expert model (tie-breaker):    gpt-4o
+============================================================
+
+Total triplets: 56
+Querying triplets:   0%|          | 0/56 [00:00<?, ?it/s]Querying triplets:   2%|▏         | 1/56 [00:08<07:23,  8.07s/it]Querying triplets:   4%|▎         | 2/56 [00:14<06:10,  6.87s/it]Querying triplets:   5%|▌         | 3/56 [00:18<05:11,  5.87s/it]Querying triplets:   7%|▋         | 4/56 [00:23<04:42,  5.42s/it]Querying triplets:   9%|▉         | 5/56 [00:29<04:46,  5.61s/it]Querying triplets:  11%|█         | 6/56 [00:37<05:21,  6.43s/it]Querying triplets:  12%|█▎        | 7/56 [00:44<05:20,  6.55s/it]Querying triplets:  14%|█▍        | 8/56 [00:49<04:59,  6.23s/it]Querying triplets:  16%|█▌        | 9/56 [00:57<05:15,  6.71s/it]Querying triplets:  18%|█▊        | 10/56 [01:03<04:51,  6.34s/it]Querying triplets:  20%|█▉        | 11/56 [01:08<04:36,  6.15s/it]Querying triplets:  21%|██▏       | 12/56 [01:14<04:24,  6.01s/it]Querying triplets:  23%|██▎       | 13/56 [01:19<04:10,  5.82s/it]Querying triplets:  25%|██▌       | 14/56 [01:25<04:06,  5.88s/it]Querying triplets:  27%|██▋       | 15/56 [01:31<03:55,  5.74s/it]Querying triplets:  29%|██▊       | 16/56 [01:37<03:56,  5.92s/it]Querying triplets:  30%|███       | 17/56 [01:43<03:48,  5.85s/it]Querying triplets:  32%|███▏      | 18/56 [01:48<03:36,  5.69s/it]Querying triplets:  34%|███▍      | 19/56 [01:53<03:22,  5.47s/it]Querying triplets:  36%|███▌      | 20/56 [01:59<03:23,  5.66s/it]Querying triplets:  38%|███▊      | 21/56 [02:05<03:21,  5.76s/it]Querying triplets:  39%|███▉      | 22/56 [02:10<03:08,  5.53s/it]Querying triplets:  41%|████      | 23/56 [02:17<03:15,  5.94s/it]Querying triplets:  43%|████▎     | 24/56 [02:23<03:06,  5.83s/it]Querying triplets:  45%|████▍     | 25/56 [02:28<02:57,  5.72s/it]Querying triplets:  46%|████▋     | 26/56 [02:34<02:49,  5.64s/it]Querying triplets:  48%|████▊     | 27/56 [02:40<02:47,  5.77s/it]Querying triplets:  50%|█████     | 28/56 [02:45<02:39,  5.68s/it]Querying triplets:  52%|█████▏    | 29/56 [02:54<03:01,  6.74s/it]Querying triplets:  54%|█████▎    | 30/56 [03:00<02:46,  6.41s/it]Querying triplets:  55%|█████▌    | 31/56 [03:06<02:39,  6.39s/it]Querying triplets:  57%|█████▋    | 32/56 [03:12<02:30,  6.27s/it]Querying triplets:  59%|█████▉    | 33/56 [03:19<02:25,  6.31s/it]Querying triplets:  61%|██████    | 34/56 [03:25<02:16,  6.23s/it]Querying triplets:  62%|██████▎   | 35/56 [03:31<02:09,  6.17s/it]Querying triplets:  64%|██████▍   | 36/56 [03:38<02:08,  6.44s/it]Querying triplets:  66%|██████▌   | 37/56 [03:44<01:59,  6.27s/it]Querying triplets:  68%|██████▊   | 38/56 [03:51<01:55,  6.43s/it]Querying triplets:  70%|██████▉   | 39/56 [03:56<01:44,  6.12s/it]Querying triplets:  71%|███████▏  | 40/56 [04:03<01:42,  6.39s/it]Querying triplets:  73%|███████▎  | 41/56 [04:09<01:32,  6.16s/it]Querying triplets:  75%|███████▌  | 42/56 [04:14<01:23,  5.93s/it]Querying triplets:  77%|███████▋  | 43/56 [04:21<01:20,  6.16s/it]Querying triplets:  79%|███████▊  | 44/56 [04:28<01:17,  6.45s/it]Querying triplets:  80%|████████  | 45/56 [04:33<01:07,  6.12s/it]Querying triplets:  82%|████████▏ | 46/56 [04:39<00:59,  5.95s/it]Querying triplets:  84%|████████▍ | 47/56 [04:44<00:52,  5.79s/it]Querying triplets:  86%|████████▌ | 48/56 [04:50<00:45,  5.66s/it]Querying triplets:  88%|████████▊ | 49/56 [04:55<00:39,  5.59s/it]Querying triplets:  89%|████████▉ | 50/56 [05:00<00:33,  5.51s/it]Querying triplets:  91%|█████████ | 51/56 [05:06<00:27,  5.48s/it]Querying triplets:  93%|█████████▎| 52/56 [05:11<00:21,  5.39s/it]Querying triplets:  95%|█████████▍| 53/56 [05:16<00:15,  5.30s/it]Querying triplets:  96%|█████████▋| 54/56 [05:22<00:10,  5.40s/it]Querying triplets:  98%|█████████▊| 55/56 [05:27<00:05,  5.32s/it]Querying triplets: 100%|██████████| 56/56 [05:33<00:00,  5.58s/it]Querying triplets: 100%|██████████| 56/56 [05:33<00:00,  5.95s/it]
+Warning: no answer for triplet ('visit to Asia', 'tuberculosis', 'either tuberculosis or lung cancer')
+Warning: no answer for triplet ('visit to Asia', 'tuberculosis', 'positive X-ray')
+Warning: no answer for triplet ('visit to Asia', 'tuberculosis', 'bronchitis')
+Warning: no answer for triplet ('visit to Asia', 'tuberculosis', 'lung cancer')
+Warning: no answer for triplet ('visit to Asia', 'tuberculosis', 'smoking')
+Warning: no answer for triplet ('visit to Asia', 'either tuberculosis or lung cancer', 'positive X-ray')
+Warning: no answer for triplet ('visit to Asia', 'either tuberculosis or lung cancer', 'dyspnoea')
+Warning: no answer for triplet ('visit to Asia', 'either tuberculosis or lung cancer', 'bronchitis')
+Warning: no answer for triplet ('visit to Asia', 'either tuberculosis or lung cancer', 'smoking')
+Warning: no answer for triplet ('visit to Asia', 'positive X-ray', 'dyspnoea')
+Warning: no answer for triplet ('visit to Asia', 'positive X-ray', 'bronchitis')
+Warning: no answer for triplet ('visit to Asia', 'positive X-ray', 'lung cancer')
+Warning: no answer for triplet ('visit to Asia', 'positive X-ray', 'smoking')
+Warning: no answer for triplet ('visit to Asia', 'dyspnoea', 'bronchitis')
+Warning: no answer for triplet ('visit to Asia', 'dyspnoea', 'lung cancer')
+Warning: no answer for triplet ('visit to Asia', 'dyspnoea', 'smoking')
+Warning: no answer for triplet ('visit to Asia', 'bronchitis', 'lung cancer')
+Warning: no answer for triplet ('visit to Asia', 'bronchitis', 'smoking')
+Warning: no answer for triplet ('visit to Asia', 'lung cancer', 'smoking')
+Warning: no answer for triplet ('tuberculosis', 'either tuberculosis or lung cancer', 'positive X-ray')
+Warning: no answer for triplet ('tuberculosis', 'either tuberculosis or lung cancer', 'dyspnoea')
+Warning: no answer for triplet ('tuberculosis', 'either tuberculosis or lung cancer', 'bronchitis')
+Warning: no answer for triplet ('tuberculosis', 'either tuberculosis or lung cancer', 'lung cancer')
+Warning: no answer for triplet ('tuberculosis', 'either tuberculosis or lung cancer', 'smoking')
+Warning: no answer for triplet ('tuberculosis', 'positive X-ray', 'dyspnoea')
+Warning: no answer for triplet ('tuberculosis', 'positive X-ray', 'bronchitis')
+Warning: no answer for triplet ('tuberculosis', 'positive X-ray', 'lung cancer')
+Warning: no answer for triplet ('tuberculosis', 'positive X-ray', 'smoking')
+Warning: no answer for triplet ('tuberculosis', 'dyspnoea', 'bronchitis')
+Warning: no answer for triplet ('tuberculosis', 'dyspnoea', 'lung cancer')
+Warning: no answer for triplet ('tuberculosis', 'dyspnoea', 'smoking')
+Warning: no answer for triplet ('tuberculosis', 'bronchitis', 'lung cancer')
+Warning: no answer for triplet ('tuberculosis', 'bronchitis', 'smoking')
+Warning: no answer for triplet ('tuberculosis', 'lung cancer', 'smoking')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'positive X-ray', 'dyspnoea')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'positive X-ray', 'bronchitis')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'positive X-ray', 'lung cancer')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'positive X-ray', 'smoking')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'dyspnoea', 'bronchitis')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'dyspnoea', 'lung cancer')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'bronchitis', 'lung cancer')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'bronchitis', 'smoking')
+Warning: no answer for triplet ('either tuberculosis or lung cancer', 'lung cancer', 'smoking')
+Warning: no answer for triplet ('positive X-ray', 'dyspnoea', 'bronchitis')
+Warning: no answer for triplet ('positive X-ray', 'dyspnoea', 'lung cancer')
+Warning: no answer for triplet ('positive X-ray', 'dyspnoea', 'smoking')
+Warning: no answer for triplet ('positive X-ray', 'bronchitis', 'lung cancer')
+Warning: no answer for triplet ('positive X-ray', 'bronchitis', 'smoking')
+Warning: no answer for triplet ('positive X-ray', 'lung cancer', 'smoking')
+Warning: no answer for triplet ('dyspnoea', 'bronchitis', 'lung cancer')
+Warning: no answer for triplet ('dyspnoea', 'bronchitis', 'smoking')
+Warning: no answer for triplet ('dyspnoea', 'lung cancer', 'smoking')
+Warning: no answer for triplet ('bronchitis', 'lung cancer', 'smoking')
+Merging (outer):   0%|          | 0/8 [00:00<?, ?it/s]
+Merging (inner):   0%|          | 0/7 [00:00<?, ?it/s][A
+Merging (inner):  43%|████▎     | 3/7 [00:03<00:04,  1.06s/it][A
+Merging (inner):  71%|███████▏  | 5/7 [00:06<00:02,  1.26s/it][A
+Merging (inner): 100%|██████████| 7/7 [00:08<00:00,  1.33s/it][A
+                                                              [AMerging (outer):  12%|█▎        | 1/8 [00:08<01:02,  8.97s/it]
+Merging (inner):   0%|          | 0/6 [00:00<?, ?it/s][A
+Merging (inner):  17%|█▋        | 1/6 [00:03<00:16,  3.25s/it][A
+Merging (inner):  33%|███▎      | 2/6 [00:06<00:12,  3.15s/it][A
+Merging (inner):  67%|██████▋   | 4/6 [00:09<00:04,  2.03s/it][A
+Merging (inner):  83%|████████▎ | 5/6 [00:11<00:02,  2.22s/it][A
+Merging (inner): 100%|██████████| 6/6 [00:15<00:00,  2.64s/it][A
+                                                              [AMerging (outer):  25%|██▌       | 2/8 [00:24<01:16, 12.68s/it]
+Merging (inner):   0%|          | 0/5 [00:00<?, ?it/s][A
+Merging (inner):  20%|██        | 1/5 [00:02<00:11,  2.80s/it][A
+Merging (inner):  60%|██████    | 3/5 [00:05<00:03,  1.79s/it][A
+                                                              [AMerging (outer):  38%|███▊      | 3/8 [00:29<00:47,  9.48s/it]
+Merging (inner):   0%|          | 0/4 [00:00<?, ?it/s][A
+Merging (inner):  25%|██▌       | 1/4 [00:04<00:12,  4.11s/it][A
+Merging (inner):  50%|█████     | 2/4 [00:12<00:13,  6.69s/it][A
+Merging (inner):  75%|███████▌  | 3/4 [00:20<00:07,  7.29s/it][A
+Merging (inner): 100%|██████████| 4/4 [00:28<00:00,  7.62s/it][A
+                                                              [AMerging (outer):  50%|█████     | 4/8 [00:58<01:08, 17.09s/it]
+Merging (inner):   0%|          | 0/3 [00:00<?, ?it/s][A
+Merging (inner):  33%|███▎      | 1/3 [00:08<00:16,  8.30s/it][A
+Merging (inner):  67%|██████▋   | 2/3 [00:16<00:08,  8.23s/it][A
+                                                              [AMerging (outer):  62%|██████▎   | 5/8 [01:15<00:50, 16.87s/it]
+Merging (inner):   0%|          | 0/2 [00:00<?, ?it/s][A
+Merging (inner):  50%|█████     | 1/2 [00:08<00:08,  8.15s/it][A
+Merging (inner): 100%|██████████| 2/2 [00:15<00:00,  7.86s/it][A
+                                                              [AMerging (outer):  75%|███████▌  | 6/8 [01:30<00:33, 16.51s/it]
+Merging (inner):   0%|          | 0/1 [00:00<?, ?it/s][A
+Merging (inner): 100%|██████████| 1/1 [00:08<00:00,  8.07s/it][A
+                                                              [AMerging (outer):  88%|████████▊ | 7/8 [01:39<00:13, 13.75s/it]
+Merging (inner): 0it [00:00, ?it/s][A
+                                   [AMerging (outer): 100%|██████████| 8/8 [01:39<00:00, 12.38s/it]
+
+--- Raw Triplet Merge Results ---
+Predicted edges: 16
+SHD: 9
+Connected nodes: 8, Isolated: 0
+Cycles: 0
+
+Edgewise distribution entries: 9
+Saved edgewise distribution to data/asia_triplet_edgewise.pkl
+Topological Divergence: 1
+Saved pipeline trace to data/asia_subgroup.trace.json
+
+============================================================
+Done.
+OK: TRIPLET | asia | gpt-4o-mini/gpt-4o  (433s)
+
+============================================================
+  ALL RUNS COMPLETED OK
+  Traces in: data/    Log: logs/run_all_traces_20260616_230543.log
+============================================================

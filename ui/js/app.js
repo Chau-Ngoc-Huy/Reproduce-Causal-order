@@ -6,6 +6,44 @@
   const C = window.CORE;
   const PR = window.PAPER_REFERENCE;
 
+  // Normalize a paper dataset label to our internal graph id used in the
+  // traces ("Survey"→survey, "Asia"→asia, "Covid"→covid). "Asia-M"→"asiam",
+  // which matches no graph, so the modified-Asia row never picks up our Asia.
+  function normGraphKey(label) {
+    return String(label || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+  // Parse a transcribed paper cell into a comparable value: a number, a token
+  // string for cycle explosions ("»3k"), or null when the paper left it blank.
+  function parsePaperCell(v, mk) {
+    if (v == null) return null;
+    v = String(v).trim();
+    if (v === "" || v === "-" || v === "–" || v === "N/A") return null;
+    let t = mk === "in" ? v.split("/")[0] : v;
+    if (/»|>>/.test(t)) return v;
+    const n = parseFloat(t.replace(/[^0-9.\-]/g, ""));
+    return isNaN(n) ? v : n;
+  }
+  // First paper value for (graphKey, methodKind) from the transcribed,
+  // reproducible tables (Table 3 preferred, then A6) — lets the highlights
+  // strip auto-fill for ANY dataset present in the loaded runs.
+  function paperRef(gk, kind) {
+    for (const t of (PR.publishedTables || [])) {
+      if (!t.reproduced) continue;
+      let vals = null;
+      if (t.layout === "byMethod") {
+        const m = t.methods.find((x) => x.kind === kind); if (!m) continue;
+        const row = t.rows.find((r) => (r.key || normGraphKey(r.dataset)) === gk); if (!row) continue;
+        vals = row.vals[m.label];
+      } else if (t.layout === "byMetric") {
+        const b = t.blocks.find((x) => x.kind === kind); if (!b) continue;
+        const row = b.rows.find((r) => (r.key || normGraphKey(r.dataset)) === gk); if (!row) continue;
+        vals = row.vals;
+      }
+      if (vals) return { shd: parsePaperCell(vals.shd, "shd"), dtop: parsePaperCell(vals.dtop, "dtop"), cycles: parsePaperCell(vals.cycles, "cycles"), table: t.num };
+    }
+    return null;
+  }
+
   // ---------------- nav scroll-spy ----------------
   function initNav() {
     const links = Array.from(document.querySelectorAll(".nav-links a"));
@@ -55,27 +93,41 @@
   }
 
   // ---------------- comparison: two published-style tables ----------------
+  // Fully data-driven: one record per loaded run (graph × method), with the
+  // paper's value pulled live from the transcribed tables. No per-dataset
+  // bookkeeping — running build_ui_traces is enough for a new graph to appear.
   function initComparePair() {
     const host = document.getElementById("compare-pair");
-    if (!host || !PR.comparison) return;
-    const kindMap = { pairwise: "pairwise", triplet: "triplet", quadruplet: "quadruplet" };
+    if (!host) return;
 
-    // assemble per-run records — only for runs actually loaded from data/
-    const recs = PR.comparison
-      .filter((c) => C.getResult(c.graph, kindMap[c.method]))
-      .map((c) => {
-      const r = C.getResult(c.graph, kindMap[c.method]);
-      const ours = r ? r.raw.metrics : null;
-      const paper = c.paper || {};
-      return {
-        graph: c.graph, method: c.method, note: c.note, alt: paper.alt || null,
-        gLabel: (C.GRAPH_META[c.graph] || {}).label || c.graph,
-        mlab: C.methodLabel(c.method),
-        chipCls: c.method === "triplet" ? "tri" : c.method === "quadruplet" ? "quad" : "pair",
-        paper: { shd: paper.shd, dtop: paper.dtop, cycles: paper.cycles, model: paper.model || "—", table: paper.table || "" },
-        ours: ours ? { shd: ours.shd, dtop: ours.topo_divergence, cycles: ours.cycles } : { shd: null, dtop: null, cycles: null },
-      };
+    const recs = [];
+    C.GRAPHS.forEach((g) => {
+      ["pairwise", "triplet", "quadruplet"].forEach((kind) => {
+        const r = C.getResult(g, kind);
+        if (!r) return;
+        const o = r.raw.metrics;
+        const pr = paperRef(g, kind);
+        recs.push({
+          graph: g, method: kind,
+          gLabel: (C.GRAPH_META[g] || {}).label || g,
+          mlab: C.methodLabel(kind),
+          chipCls: kind === "triplet" ? "tri" : kind === "quadruplet" ? "quad" : "pair",
+          paper: pr ? { shd: pr.shd, dtop: pr.dtop, cycles: pr.cycles, table: pr.table }
+                    : { shd: null, dtop: null, cycles: null, table: "" },
+          ours: { shd: o.shd, dtop: o.topo_divergence, cycles: o.cycles },
+        });
+      });
     });
+
+    // auto note summarising the deltas + provenance
+    function autoNote(rec) {
+      const parts = [];
+      const f = (lab, p, ov) => { if (ov == null) return; parts.push(`${lab} ${p == null ? "—" : p}→${ov}`); };
+      f("SHD", rec.paper.shd, rec.ours.shd);
+      f("D_top", rec.paper.dtop, rec.ours.dtop);
+      f("cycles", rec.paper.cycles, rec.ours.cycles);
+      return parts.join(" · ") + (rec.paper.table ? ` &nbsp;vs&nbsp; paper ${rec.paper.table}` : " &nbsp;(no comparable paper row)");
+    }
 
     function fmtv(v) { return (v === null || v === undefined) ? "—" : v; }
     // compare class for an "ours" cell vs paper (lower is better)
@@ -91,7 +143,7 @@
     }
 
     // ---- paper table ----
-    const paperRows = recs.map((rec) => `<tr>
+    const paperRows = recs.map((rec, i) => `<tr class="cp-row" data-rec="${i}">
       ${runCell(rec)}
       <td class="num">${fmtv(rec.paper.shd)}</td>
       <td class="num">${fmtv(rec.paper.dtop)}</td>
@@ -99,11 +151,11 @@
     </tr>`).join("");
 
     // ---- ours table (shaded) ----
-    const ourRows = recs.map((rec) => {
+    const ourRows = recs.map((rec, i) => {
       const sc = cmpClass(rec.paper.shd, rec.ours.shd);
       const dc = cmpClass(rec.paper.dtop, rec.ours.dtop);
       const cc = cmpClass(rec.paper.cycles, rec.ours.cycles);
-      return `<tr>
+      return `<tr class="cp-row" data-rec="${i}">
         ${runCell(rec)}
         <td class="num cp-cell ${sc}">${fmtv(rec.ours.shd)}</td>
         <td class="num cp-cell ${dc}">${fmtv(rec.ours.dtop)}</td>
@@ -128,32 +180,53 @@
       tableBlock("paper", "Reported in the paper", "GPT-3.5 / GPT-4 · Tables 3, A7, A9", paperRows) +
       tableBlock("ours", "Our reproduction", "GPT-4o · this site", ourRows);
 
-    // ---- key differences cards ----
-    const grid = document.getElementById("diff-grid");
-    if (grid) {
-      // pick runs that diverge most: worse, diverge, or large better gap
-      const diffs = recs.filter((rec) => {
-        const classes = [cmpClass(rec.paper.shd, rec.ours.shd), cmpClass(rec.paper.dtop, rec.ours.dtop), cmpClass(rec.paper.cycles, rec.ours.cycles)];
-        return classes.some((c) => c !== "cmp-match");
-      });
-      grid.innerHTML = diffs.map((rec) => {
-        // headline delta
-        let kind = "better", tag = "We do better";
-        const classes = [cmpClass(rec.paper.shd, rec.ours.shd), cmpClass(rec.paper.dtop, rec.ours.dtop), cmpClass(rec.paper.cycles, rec.ours.cycles)];
-        if (classes.includes("cmp-diverge")) { kind = "diverge"; tag = "Qualitative divergence"; }
-        else if (classes.includes("cmp-worse")) { kind = "worse"; tag = "We do worse"; }
-        return `<div class="diff-card diff-${kind}">
-          <div class="diff-top"><span class="diff-run">${rec.gLabel} · ${rec.mlab}</span><span class="diff-badge diff-b-${kind}">${tag}</span></div>
-          <div class="diff-nums">
-            ${deltaPill("SHD", rec.paper.shd, rec.ours.shd)}
-            ${deltaPill("D_top", rec.paper.dtop, rec.ours.dtop)}
-            ${deltaPill("Cycles", rec.paper.cycles, rec.ours.cycles)}
-          </div>
-          <p class="diff-note">${rec.note}</p>
-          ${rec.alt ? `<p class="diff-alt mono">${rec.alt}</p>` : ""}
-        </div>`;
-      }).join("");
+    // ---- per-run highlight, shown as a tooltip when a table row is hovered ----
+    // (previously a separate grid of cards; now attached to the data rows above
+    //  so the comparison stays compact). The headline delta picks better /
+    //  worse / qualitative-divergence, falling back to "matches" when equal.
+    function hlMeta(rec) {
+      const classes = [cmpClass(rec.paper.shd, rec.ours.shd), cmpClass(rec.paper.dtop, rec.ours.dtop), cmpClass(rec.paper.cycles, rec.ours.cycles)];
+      if (classes.includes("cmp-diverge")) return { kind: "diverge", tag: "Qualitative divergence" };
+      if (classes.includes("cmp-worse")) return { kind: "worse", tag: "We do worse" };
+      if (classes.includes("cmp-better")) return { kind: "better", tag: "We do better" };
+      return { kind: "match", tag: "Matches the paper" };
     }
+    function hlInner(rec) {
+      const m = hlMeta(rec);
+      return `<div class="diff-top"><span class="diff-run">${rec.gLabel} · ${rec.mlab}</span><span class="diff-badge diff-b-${m.kind}">${m.tag}</span></div>
+        <div class="diff-nums">
+          ${deltaPill("SHD", rec.paper.shd, rec.ours.shd)}
+          ${deltaPill("D_top", rec.paper.dtop, rec.ours.dtop)}
+          ${deltaPill("Cycles", rec.paper.cycles, rec.ours.cycles)}
+        </div>
+        <p class="diff-note">${autoNote(rec)}</p>`;
+    }
+
+    // one shared floating tooltip element, reused across hovers
+    let tip = document.getElementById("cp-hl-tip");
+    if (!tip) { tip = document.createElement("div"); tip.id = "cp-hl-tip"; document.body.appendChild(tip); }
+    function showTip(rec, rowEl) {
+      tip.className = "hl-tip hl-" + hlMeta(rec).kind;
+      tip.innerHTML = hlInner(rec);
+      tip.style.visibility = "hidden";
+      tip.style.display = "block";
+      const r = rowEl.getBoundingClientRect();
+      const t = tip.getBoundingClientRect();
+      let left = Math.min(r.left, window.innerWidth - t.width - 12);
+      left = Math.max(12, left);
+      let top = r.bottom + 8;
+      if (top + t.height > window.innerHeight - 8) top = r.top - t.height - 8; // flip above
+      top = Math.max(8, top);
+      tip.style.left = left + "px";
+      tip.style.top = top + "px";
+      tip.style.visibility = "visible";
+    }
+    function hideTip() { tip.style.display = "none"; }
+    host.querySelectorAll("tr[data-rec]").forEach((tr) => {
+      const rec = recs[+tr.dataset.rec];
+      tr.addEventListener("mouseenter", () => showTip(rec, tr));
+      tr.addEventListener("mouseleave", hideTip);
+    });
   }
 
   function deltaPill(label, paperVal, ourVal) {
@@ -171,8 +244,21 @@
     const host = document.getElementById("all-paper-tables");
     if (!host || !PR.publishedTables) return;
 
+    // keep the "we reproduced … on X, Y, Z" sentence in sync with loaded runs
+    const reproEl = document.getElementById("repro-list");
+    if (reproEl && C.GRAPHS.length) {
+      const labels = C.GRAPHS.map((g) => (C.GRAPH_META[g] || {}).label || g);
+      reproEl.textContent =
+        labels.length === 1 ? labels[0] + " only"
+          : labels.slice(0, -1).join(", ") + " and " + labels[labels.length - 1];
+    }
+
     const metricHead = (mk, inPlain) =>
       ({ dtop: "D<sub>top</sub>", shd: "SHD", cycles: "Cycles", in: inPlain ? "IN" : "IN/TN" }[mk] || mk);
+
+    // Map a paper row to our internal graph id (auto from the dataset label,
+    // so a run appears beside its row with NO edits to paper_reference.js).
+    const rowKey = (row) => row.key || normGraphKey(row.dataset);
 
     // our reproduced value for a (graph, method, metric), or null
     function oursMetric(graphKey, kind, mk) {
@@ -226,7 +312,7 @@
           body += `<td class="lft met">${metricHead(mk, t.inPlain)}</td>`;
           t.methods.forEach((m) => {
             const paperStr = (row.vals[m.label] || {})[mk];
-            const ours = m.kind ? oursMetric(row.key, m.kind, mk) : null;
+            const ours = m.kind ? oursMetric(rowKey(row), m.kind, mk) : null;
             body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
           });
           body += `</tr>`;
@@ -247,7 +333,7 @@
           body += `<tr><td class="lft ds">${row.dataset}</td>`;
           t.metrics.forEach((mk) => {
             const paperStr = (row.vals || {})[mk];
-            const ours = b.kind ? oursMetric(row.key, b.kind, mk) : null;
+            const ours = b.kind ? oursMetric(rowKey(row), b.kind, mk) : null;
             body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
           });
           body += `</tr>`;

@@ -131,7 +131,7 @@ CHILD = {
         'Sick': "presence of an illness",
     },
 
-    "contThinkingext": "model congenital heart disease in babies",
+    "context": "model congenital heart disease in babies",
 }
 
 

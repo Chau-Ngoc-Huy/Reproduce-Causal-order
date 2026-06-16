@@ -1,0 +1,793 @@
+{
+  "schema_version": "1.0",
+  "synthetic": false,
+  "run_id": "asia_pairwise_20260616_231152",
+  "strategy": "pairwise",
+  "graph": "asia",
+  "generated_at": "2026-06-16T23:11:52",
+  "config": {
+    "prompt_type": "cot",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 1
+  },
+  "graph_meta": {
+    "nodes": [
+      "visit to Asia",
+      "tuberculosis",
+      "either tuberculosis or lung cancer",
+      "positive X-ray",
+      "dyspnoea",
+      "bronchitis",
+      "lung cancer",
+      "smoking"
+    ],
+    "descriptions": {
+      "visit to Asia": "visiting Asian countries with high exposure to pollutants",
+      "tuberculosis": "tuberculosis",
+      "either tuberculosis or lung cancer": "tuberculosis or lung cancer",
+      "positive X-ray": "getting positve xray result",
+      "dyspnoea": "dyspnoea",
+      "bronchitis": "bronchitis",
+      "lung cancer": "lung cancer",
+      "smoking": "smoking habit"
+    },
+    "context": "model the possible respiratory problems someone can have who has recently visited Asia and is experiencing shortness of breath",
+    "ground_truth_edges": [
+      [
+        "visit to Asia",
+        "tuberculosis"
+      ],
+      [
+        "tuberculosis",
+        "either tuberculosis or lung cancer"
+      ],
+      [
+        "either tuberculosis or lung cancer",
+        "positive X-ray"
+      ],
+      [
+        "smoking",
+        "lung cancer"
+      ],
+      [
+        "smoking",
+        "bronchitis"
+      ],
+      [
+        "lung cancer",
+        "either tuberculosis or lung cancer"
+      ],
+      [
+        "either tuberculosis or lung cancer",
+        "dyspnoea"
+      ],
+      [
+        "bronchitis",
+        "dyspnoea"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 28,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "visit to Asia",
+            "tuberculosis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'tuberculosis'? (A: visit to Asia -> tuberculosis;  B: tuberculosis -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The causal effect of visiting Asia on tuberculosis is based on the fact that certain regions in Asia have higher prevalence rates of tuberculosis compared to other parts of the world. Traveling to these areas can increase the risk of exposure to Mycobacterium tuberculosis, the bacterium that causes tuberculosis, especially if the traveler comes into contact with infected individuals or environments. Therefore, visiting Asia can causally affect the likelihood of contracting tuberculosis due to increased exposure risk. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "visit to Asia",
+            "tuberculosis"
+          ],
+          "latency_sec": 1.84,
+          "usage": {
+            "prompt_tokens": 3884,
+            "completion_tokens": 99,
+            "total_tokens": 3983
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "visit to Asia",
+            "either tuberculosis or lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'either tuberculosis or lung cancer'? (A: visit to Asia -> either tuberculosis or lung cancer;  B: either tuberculosis or lung cancer -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The reasoning behind the causal effect of visiting Asia on either tuberculosis or lung cancer is based on the increased risk of exposure to certain infectious diseases and environmental factors in specific regions. Asia, particularly certain parts of it, has higher prevalence rates of tuberculosis due to factors like population density and healthcare access. Additionally, exposure to environmental pollutants or lifestyle factors in some areas could potentially increase the risk of lung cancer. Therefore, visiting Asia could increase the likelihood of contracting tuberculosis or being exposed to risk factors for lung cancer. Thus, the causal relationship is more likely to be from visiting Asia to either tuberculosis or lung cancer. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "visit to Asia",
+            "either tuberculosis or lung cancer"
+          ],
+          "latency_sec": 2.169,
+          "usage": {
+            "prompt_tokens": 3900,
+            "completion_tokens": 131,
+            "total_tokens": 4031
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "visit to Asia",
+            "positive X-ray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'positive X-ray'? (A: visit to Asia -> positive X-ray;  B: positive X-ray -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The causal relationship between visiting Asia and a positive X-ray result can be understood in terms of potential exposure to certain respiratory diseases that are more prevalent in specific regions. Visiting Asia might increase the likelihood of exposure to infectious agents or environmental factors that could lead to respiratory issues, which would then be detected through an X-ray. Therefore, the act of visiting Asia could causally affect the likelihood of having a positive X-ray result due to potential exposure to these factors. Thus, the causal direction is from \"visit to Asia\" to \"positive X-ray.\"\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "visit to Asia",
+            "positive X-ray"
+          ],
+          "latency_sec": 1.954,
+          "usage": {
+            "prompt_tokens": 3892,
+            "completion_tokens": 120,
+            "total_tokens": 4012
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "visit to Asia",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'dyspnoea'? (A: visit to Asia -> dyspnoea;  B: dyspnoea -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The causal relationship between visiting Asia and experiencing dyspnoea (shortness of breath) can be reasoned as follows: Visiting Asia could potentially expose an individual to different environmental factors, such as air pollution, allergens, or infectious agents, which might not be present in their home environment. These factors could lead to respiratory issues, including dyspnoea. Therefore, the act of visiting Asia could causally affect the likelihood of experiencing dyspnoea due to these environmental exposures. Thus, the more likely causal relationship is that visiting Asia affects dyspnoea.\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "visit to Asia",
+            "dyspnoea"
+          ],
+          "latency_sec": 1.823,
+          "usage": {
+            "prompt_tokens": 3896,
+            "completion_tokens": 125,
+            "total_tokens": 4021
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "visit to Asia",
+            "bronchitis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'bronchitis'? (A: visit to Asia -> bronchitis;  B: bronchitis -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The causal relationship between visiting Asia and bronchitis can be considered in terms of exposure to environmental factors or infectious agents that might be more prevalent in certain regions. Visiting Asia could potentially expose an individual to different air quality conditions, pollutants, or infectious agents that could increase the risk of developing respiratory issues such as bronchitis. Therefore, the act of visiting Asia could causally affect the likelihood of developing bronchitis due to these environmental or infectious exposures. Thus, the more likely cause-and-effect relationship is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "visit to Asia",
+            "bronchitis"
+          ],
+          "latency_sec": 2.148,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 105,
+            "total_tokens": 3993
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "visit to Asia",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'lung cancer'? (A: visit to Asia -> lung cancer;  B: lung cancer -> visit to Asia;  C: no causal relation)",
+          "response_raw": "The relationship between visiting Asia and lung cancer is not inherently causal. While visiting a region might expose someone to different environmental factors or lifestyle changes, there is no direct causal link between simply visiting Asia and developing lung cancer. Lung cancer is primarily caused by factors such as smoking, exposure to carcinogens, and genetic predispositions. Therefore, visiting Asia does not directly cause lung cancer, nor does having lung cancer affect one's decision to visit Asia. Thus, there is no direct causal relationship between these two nodes.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.135,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 111,
+            "total_tokens": 3999
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "visit to Asia",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'visit to Asia' and 'smoking'? (A: visit to Asia -> smoking;  B: smoking -> visit to Asia;  C: no causal relation)",
+          "response_raw": "In this scenario, the nodes \"visit to Asia\" and \"smoking\" are unlikely to have a direct causal relationship. Visiting Asia is a geographical factor, while smoking is a personal behavior. While there might be cultural or environmental factors in Asia that could influence smoking habits, the act of visiting Asia itself does not directly cause someone to start or stop smoking. Similarly, smoking does not influence whether someone visits Asia. Therefore, there is no direct causal relationship between these two nodes. The answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.011,
+          "usage": {
+            "prompt_tokens": 3884,
+            "completion_tokens": 105,
+            "total_tokens": 3989
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "tuberculosis",
+            "either tuberculosis or lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'either tuberculosis or lung cancer'? (A: tuberculosis -> either tuberculosis or lung cancer;  B: either tuberculosis or lung cancer -> tuberculosis;  C: no causal relation)",
+          "response_raw": "In the context of modeling respiratory problems, tuberculosis and lung cancer are distinct conditions that can both cause respiratory symptoms such as shortness of breath. However, they do not directly cause or affect each other. Tuberculosis is an infectious disease caused by the bacterium Mycobacterium tuberculosis, while lung cancer is a malignant tumor that can develop in the lungs. While both conditions can coexist in a patient, one does not causally affect the occurrence of the other. Therefore, there is no direct causal relationship between tuberculosis and lung cancer in terms of one causing the other.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.276,
+          "usage": {
+            "prompt_tokens": 3892,
+            "completion_tokens": 124,
+            "total_tokens": 4016
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "tuberculosis",
+            "positive X-ray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'positive X-ray'? (A: tuberculosis -> positive X-ray;  B: positive X-ray -> tuberculosis;  C: no causal relation)",
+          "response_raw": "The causal relationship between tuberculosis and a positive X-ray is that tuberculosis, a bacterial infection that primarily affects the lungs, can cause changes in lung tissue that are detectable on an X-ray. When someone has tuberculosis, the infection can lead to the formation of lesions or cavities in the lungs, which would be visible as abnormalities on an X-ray image. Therefore, the presence of tuberculosis can causally lead to a positive X-ray result, indicating the presence of these abnormalities. Thus, the causal direction is from tuberculosis to a positive X-ray. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "tuberculosis",
+            "positive X-ray"
+          ],
+          "latency_sec": 1.775,
+          "usage": {
+            "prompt_tokens": 3884,
+            "completion_tokens": 118,
+            "total_tokens": 4002
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "tuberculosis",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'dyspnoea'? (A: tuberculosis -> dyspnoea;  B: dyspnoea -> tuberculosis;  C: no causal relation)",
+          "response_raw": "Tuberculosis is a bacterial infection that primarily affects the lungs and can cause symptoms such as coughing, chest pain, and difficulty breathing. Dyspnoea, or shortness of breath, is a common symptom of tuberculosis due to the damage and inflammation in the lungs caused by the infection. Therefore, the presence of tuberculosis can lead to the development of dyspnoea as a symptom. This indicates a causal relationship where tuberculosis affects dyspnoea. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "tuberculosis",
+            "dyspnoea"
+          ],
+          "latency_sec": 1.809,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 101,
+            "total_tokens": 3989
+          }
+        },
+        {
+          "index": 10,
+          "pair": [
+            "tuberculosis",
+            "bronchitis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'bronchitis'? (A: tuberculosis -> bronchitis;  B: bronchitis -> tuberculosis;  C: no causal relation)",
+          "response_raw": "Tuberculosis and bronchitis are both respiratory conditions, but they are distinct diseases with different causes. Tuberculosis is an infectious disease caused by the bacterium Mycobacterium tuberculosis, while bronchitis is an inflammation of the bronchial tubes, often caused by viral infections or environmental factors like smoking. While both conditions can affect the respiratory system, they do not directly cause or affect each other. Tuberculosis does not cause bronchitis, nor does bronchitis cause tuberculosis. Therefore, there is no direct causal relationship between the two nodes in the context of a causal graph. Therefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 3.444,
+          "usage": {
+            "prompt_tokens": 3880,
+            "completion_tokens": 124,
+            "total_tokens": 4004
+          }
+        },
+        {
+          "index": 11,
+          "pair": [
+            "tuberculosis",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'lung cancer'? (A: tuberculosis -> lung cancer;  B: lung cancer -> tuberculosis;  C: no causal relation)",
+          "response_raw": "Tuberculosis (TB) and lung cancer are both serious conditions that affect the lungs, but they are distinct diseases with different causes. TB is an infectious disease caused by the bacterium Mycobacterium tuberculosis, while lung cancer is a malignant tumor that arises from the cells of the lung. Although there is some evidence suggesting that having a history of TB may increase the risk of developing lung cancer due to chronic inflammation and scarring in the lungs, the direct causal relationship is not well-established. Conversely, lung cancer does not cause TB, as TB is an infectious disease. Therefore, while there may be an association between the two conditions, there is no direct causal relationship where one directly causes the other. Thus, the most appropriate answer is that there is no direct causal relation between the nodes tuberculosis and lung cancer.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 5.558,
+          "usage": {
+            "prompt_tokens": 3880,
+            "completion_tokens": 168,
+            "total_tokens": 4048
+          }
+        },
+        {
+          "index": 12,
+          "pair": [
+            "tuberculosis",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'tuberculosis' and 'smoking'? (A: tuberculosis -> smoking;  B: smoking -> tuberculosis;  C: no causal relation)",
+          "response_raw": "Smoking is a known risk factor for various respiratory diseases, including tuberculosis (TB). Smoking can weaken the immune system and damage the lungs, making individuals more susceptible to infections like TB. While smoking does not directly cause TB, it increases the risk of developing active TB in individuals who are already infected with the TB bacteria. Therefore, the causal relationship is more likely to be from smoking to tuberculosis, as smoking can increase the likelihood of TB infection or progression from latent to active TB. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "tuberculosis"
+          ],
+          "latency_sec": 7.04,
+          "usage": {
+            "prompt_tokens": 3876,
+            "completion_tokens": 106,
+            "total_tokens": 3982
+          }
+        },
+        {
+          "index": 13,
+          "pair": [
+            "either tuberculosis or lung cancer",
+            "positive X-ray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'either tuberculosis or lung cancer' and 'positive X-ray'? (A: either tuberculosis or lung cancer -> positive X-ray;  B: positive X-ray -> either tuberculosis or lung cancer;  C: no causal relation)",
+          "response_raw": "The causal relationship between tuberculosis or lung cancer and a positive X-ray is that the presence of either tuberculosis or lung cancer can lead to changes in the lung tissue that are detectable on an X-ray. X-rays are diagnostic tools used to visualize the internal structures of the body, and they can reveal abnormalities such as masses, nodules, or infiltrates that are indicative of diseases like tuberculosis or lung cancer. Therefore, the presence of these diseases can causally lead to a positive X-ray result, as the X-ray is used to detect the manifestations of these conditions. Thus, the causal direction is from tuberculosis or lung cancer to a positive X-ray. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "either tuberculosis or lung cancer",
+            "positive X-ray"
+          ],
+          "latency_sec": 6.993,
+          "usage": {
+            "prompt_tokens": 3900,
+            "completion_tokens": 140,
+            "total_tokens": 4040
+          }
+        },
+        {
+          "index": 14,
+          "pair": [
+            "either tuberculosis or lung cancer",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'either tuberculosis or lung cancer' and 'dyspnoea'? (A: either tuberculosis or lung cancer -> dyspnoea;  B: dyspnoea -> either tuberculosis or lung cancer;  C: no causal relation)",
+          "response_raw": "Answer: Dyspnoea, or shortness of breath, is a common symptom associated with both tuberculosis and lung cancer. In the context of a causal graph modeling respiratory problems, tuberculosis or lung cancer would be considered potential causes of dyspnoea. Tuberculosis can cause lung damage and inflammation, leading to difficulty breathing, while lung cancer can obstruct airways or invade lung tissue, also resulting in shortness of breath. Therefore, the presence of either tuberculosis or lung cancer can causally affect the occurrence of dyspnoea. Thus, the more likely cause-and-effect relationship is that changing the state of either tuberculosis or lung cancer causally affects a change in the node dyspnoea. Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "either tuberculosis or lung cancer",
+            "dyspnoea"
+          ],
+          "latency_sec": 7.216,
+          "usage": {
+            "prompt_tokens": 3904,
+            "completion_tokens": 151,
+            "total_tokens": 4055
+          }
+        },
+        {
+          "index": 15,
+          "pair": [
+            "either tuberculosis or lung cancer",
+            "bronchitis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'either tuberculosis or lung cancer' and 'bronchitis'? (A: either tuberculosis or lung cancer -> bronchitis;  B: bronchitis -> either tuberculosis or lung cancer;  C: no causal relation)",
+          "response_raw": "In the context of respiratory problems, tuberculosis and lung cancer are distinct diseases that can independently cause symptoms such as shortness of breath, but they do not directly cause bronchitis. Bronchitis is an inflammation of the bronchial tubes, often caused by infections or irritants, and is not directly caused by tuberculosis or lung cancer. While these conditions can coexist or exacerbate each other's symptoms, there is no direct causal relationship where tuberculosis or lung cancer causes bronchitis, or vice versa. Therefore, the most appropriate answer is that there is no direct causal relation between tuberculosis or lung cancer and bronchitis.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 7.052,
+          "usage": {
+            "prompt_tokens": 3896,
+            "completion_tokens": 126,
+            "total_tokens": 4022
+          }
+        },
+        {
+          "index": 16,
+          "pair": [
+            "either tuberculosis or lung cancer",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'either tuberculosis or lung cancer' and 'lung cancer'? (A: either tuberculosis or lung cancer -> lung cancer;  B: lung cancer -> either tuberculosis or lung cancer;  C: no causal relation)",
+          "response_raw": "In the context of respiratory problems, tuberculosis and lung cancer are distinct conditions that can both affect the lungs, but they do not directly cause each other. Tuberculosis is an infectious disease caused by the bacterium Mycobacterium tuberculosis, while lung cancer is a malignant tumor that arises from the cells of the lung. Although both conditions can lead to similar symptoms such as shortness of breath, they are not causally related in the sense that one directly causes the other. Therefore, there is no direct causal relationship between tuberculosis or lung cancer and lung cancer itself. The correct answer is that there is no causal relation between these nodes.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 6.929,
+          "usage": {
+            "prompt_tokens": 3896,
+            "completion_tokens": 132,
+            "total_tokens": 4028
+          }
+        },
+        {
+          "index": 17,
+          "pair": [
+            "either tuberculosis or lung cancer",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'either tuberculosis or lung cancer' and 'smoking'? (A: either tuberculosis or lung cancer -> smoking;  B: smoking -> either tuberculosis or lung cancer;  C: no causal relation)",
+          "response_raw": "Smoking is a well-established risk factor for lung cancer, as it introduces carcinogens into the lungs that can lead to mutations and cancer development. Therefore, smoking causally affects the likelihood of developing lung cancer. However, smoking does not have a direct causal relationship with tuberculosis, which is an infectious disease caused by bacteria. While smoking can weaken the immune system and potentially increase susceptibility to infections, the direct causal link is more pronounced with lung cancer. Therefore, the causal relationship is more likely between smoking and lung cancer, not tuberculosis. Thus, the answer is:\n\n<Answer>B</Answer>",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "either tuberculosis or lung cancer"
+          ],
+          "latency_sec": 6.712,
+          "usage": {
+            "prompt_tokens": 3892,
+            "completion_tokens": 117,
+            "total_tokens": 4009
+          }
+        },
+        {
+          "index": 18,
+          "pair": [
+            "positive X-ray",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'positive X-ray' and 'dyspnoea'? (A: positive X-ray -> dyspnoea;  B: dyspnoea -> positive X-ray;  C: no causal relation)",
+          "response_raw": "In the context of modeling respiratory problems, a positive X-ray and dyspnoea (shortness of breath) are both indicators or symptoms of an underlying condition, such as a respiratory infection or lung disease. A positive X-ray is a diagnostic tool that can reveal abnormalities in the lungs, while dyspnoea is a symptom experienced by the patient. The presence of dyspnoea does not cause a positive X-ray result, nor does a positive X-ray cause dyspnoea. Instead, both are effects of the underlying condition. Therefore, there is no direct causal relationship between a positive X-ray and dyspnoea; they are both outcomes of the same underlying cause. Therefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 7.473,
+          "usage": {
+            "prompt_tokens": 3896,
+            "completion_tokens": 149,
+            "total_tokens": 4045
+          }
+        },
+        {
+          "index": 19,
+          "pair": [
+            "positive X-ray",
+            "bronchitis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'positive X-ray' and 'bronchitis'? (A: positive X-ray -> bronchitis;  B: bronchitis -> positive X-ray;  C: no causal relation)",
+          "response_raw": "In the context of modeling respiratory problems, a positive X-ray is typically used as a diagnostic tool to detect the presence of conditions like bronchitis. Bronchitis is an inflammation of the bronchial tubes, which can be identified through imaging techniques such as X-rays. Therefore, the presence of bronchitis can lead to a positive X-ray result, as the X-ray would show signs of inflammation or other abnormalities in the lungs. This indicates that bronchitis is the cause, and the positive X-ray is the effect. Thus, the causal relationship is that bronchitis affects the likelihood of having a positive X-ray result.\n\nTherefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "bronchitis",
+            "positive X-ray"
+          ],
+          "latency_sec": 6.979,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 134,
+            "total_tokens": 4022
+          }
+        },
+        {
+          "index": 20,
+          "pair": [
+            "positive X-ray",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'positive X-ray' and 'lung cancer'? (A: positive X-ray -> lung cancer;  B: lung cancer -> positive X-ray;  C: no causal relation)",
+          "response_raw": "The causal relationship between \"positive X-ray\" and \"lung cancer\" is that lung cancer can lead to a positive X-ray result. X-rays are diagnostic tools used to detect abnormalities in the lungs, such as tumors or lesions, which are indicative of lung cancer. Therefore, the presence of lung cancer increases the likelihood of a positive X-ray result. The X-ray itself does not cause lung cancer; rather, it is used to identify the presence of cancer. Thus, the causal direction is from lung cancer to a positive X-ray result. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "lung cancer",
+            "positive X-ray"
+          ],
+          "latency_sec": 6.664,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 119,
+            "total_tokens": 4007
+          }
+        },
+        {
+          "index": 21,
+          "pair": [
+            "positive X-ray",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'positive X-ray' and 'smoking'? (A: positive X-ray -> smoking;  B: smoking -> positive X-ray;  C: no causal relation)",
+          "response_raw": "Smoking is a known risk factor for various respiratory problems, including lung cancer and chronic obstructive pulmonary disease (COPD), which can lead to changes observable on an X-ray. Therefore, smoking can causally affect the likelihood of having a positive X-ray result, as smoking can cause lung damage or disease that would be detected through imaging. Thus, the causal relationship is more likely to be from smoking to a positive X-ray result. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "positive X-ray"
+          ],
+          "latency_sec": 7.471,
+          "usage": {
+            "prompt_tokens": 3884,
+            "completion_tokens": 97,
+            "total_tokens": 3981
+          }
+        },
+        {
+          "index": 22,
+          "pair": [
+            "dyspnoea",
+            "bronchitis"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'dyspnoea' and 'bronchitis'? (A: dyspnoea -> bronchitis;  B: bronchitis -> dyspnoea;  C: no causal relation)",
+          "response_raw": "Bronchitis is an inflammation of the bronchial tubes, which can lead to symptoms such as coughing, mucus production, and difficulty breathing. Dyspnoea, or shortness of breath, is a common symptom of bronchitis. Therefore, the presence of bronchitis can causally lead to dyspnoea as the inflammation and mucus in the airways make it harder for air to flow in and out of the lungs, causing shortness of breath. Thus, the causal relationship is more likely to be from bronchitis to dyspnoea. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "bronchitis",
+            "dyspnoea"
+          ],
+          "latency_sec": 6.446,
+          "usage": {
+            "prompt_tokens": 3892,
+            "completion_tokens": 122,
+            "total_tokens": 4014
+          }
+        },
+        {
+          "index": 23,
+          "pair": [
+            "dyspnoea",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'dyspnoea' and 'lung cancer'? (A: dyspnoea -> lung cancer;  B: lung cancer -> dyspnoea;  C: no causal relation)",
+          "response_raw": "Dyspnoea, or shortness of breath, is often a symptom of underlying conditions, including lung cancer. Lung cancer can cause dyspnoea by obstructing airways, causing fluid accumulation in the lungs, or affecting lung function. Therefore, the presence of lung cancer can lead to the development of dyspnoea. The causal relationship is more likely to be from lung cancer to dyspnoea, rather than the other way around. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "lung cancer",
+            "dyspnoea"
+          ],
+          "latency_sec": 6.897,
+          "usage": {
+            "prompt_tokens": 3892,
+            "completion_tokens": 102,
+            "total_tokens": 3994
+          }
+        },
+        {
+          "index": 24,
+          "pair": [
+            "dyspnoea",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'dyspnoea' and 'smoking'? (A: dyspnoea -> smoking;  B: smoking -> dyspnoea;  C: no causal relation)",
+          "response_raw": "Smoking is a well-known risk factor for respiratory problems, including dyspnoea (shortness of breath). Smoking introduces harmful substances into the respiratory system, which can lead to inflammation, damage to lung tissue, and reduced lung function. These effects can cause or exacerbate symptoms of dyspnoea. Therefore, the causal relationship is more likely to be from smoking to dyspnoea, as smoking can directly contribute to the development or worsening of respiratory symptoms. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "dyspnoea"
+          ],
+          "latency_sec": 7.027,
+          "usage": {
+            "prompt_tokens": 3888,
+            "completion_tokens": 104,
+            "total_tokens": 3992
+          }
+        },
+        {
+          "index": 25,
+          "pair": [
+            "bronchitis",
+            "lung cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'bronchitis' and 'lung cancer'? (A: bronchitis -> lung cancer;  B: lung cancer -> bronchitis;  C: no causal relation)",
+          "response_raw": "Bronchitis and lung cancer are both respiratory conditions, but they do not have a direct causal relationship with each other. Bronchitis is an inflammation of the bronchial tubes, often caused by infections or irritants, while lung cancer is a malignant growth of cells in the lungs. While chronic bronchitis can be a risk factor for developing lung cancer due to prolonged irritation and inflammation, it does not directly cause lung cancer. Similarly, having lung cancer does not directly cause bronchitis, although it can lead to symptoms that mimic bronchitis. Therefore, the most accurate representation is that there is no direct causal relation between bronchitis and lung cancer, but they may share common risk factors or symptoms. Therefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 7.597,
+          "usage": {
+            "prompt_tokens": 3884,
+            "completion_tokens": 150,
+            "total_tokens": 4034
+          }
+        },
+        {
+          "index": 26,
+          "pair": [
+            "bronchitis",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'bronchitis' and 'smoking'? (A: bronchitis -> smoking;  B: smoking -> bronchitis;  C: no causal relation)",
+          "response_raw": "Smoking is a well-known risk factor for developing bronchitis. Smoking damages the airways and lung tissue, leading to inflammation and increased mucus production, which are characteristic of bronchitis. Therefore, smoking can causally affect the likelihood of developing bronchitis. On the other hand, having bronchitis does not cause someone to start smoking. Therefore, the causal relationship is more likely from smoking to bronchitis. Therefore, the answer is <Answer>B</Answer>.",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "bronchitis"
+          ],
+          "latency_sec": 6.234,
+          "usage": {
+            "prompt_tokens": 3880,
+            "completion_tokens": 91,
+            "total_tokens": 3971
+          }
+        },
+        {
+          "index": 27,
+          "pair": [
+            "lung cancer",
+            "smoking"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'lung cancer' and 'smoking'? (A: lung cancer -> smoking;  B: smoking -> lung cancer;  C: no causal relation)",
+          "response_raw": "The causal relationship between smoking and lung cancer is well-established in medical research. Smoking is a major risk factor for lung cancer, as it introduces carcinogens into the lungs, which can lead to mutations in lung cells and eventually result in cancer. Therefore, changing the state of the node \"smoking\" (e.g., starting or quitting smoking) is likely to causally affect the state of the node \"lung cancer\" (e.g., increasing or decreasing the risk of developing lung cancer). There is no evidence to suggest that having lung cancer would causally affect smoking behavior in a direct manner. Therefore, the most likely cause-and-effect relationship is that smoking affects lung cancer.\n\n<Answer>B</Answer>",
+          "answer": "B",
+          "decision": "reverse",
+          "edge": [
+            "smoking",
+            "lung cancer"
+          ],
+          "latency_sec": 7.577,
+          "usage": {
+            "prompt_tokens": 3880,
+            "completion_tokens": 141,
+            "total_tokens": 4021
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "visit to Asia",
+        "tuberculosis"
+      ],
+      [
+        "visit to Asia",
+        "either tuberculosis or lung cancer"
+      ],
+      [
+        "visit to Asia",
+        "positive X-ray"
+      ],
+      [
+        "visit to Asia",
+        "dyspnoea"
+      ],
+      [
+        "visit to Asia",
+        "bronchitis"
+      ],
+      [
+        "tuberculosis",
+        "positive X-ray"
+      ],
+      [
+        "tuberculosis",
+        "dyspnoea"
+      ],
+      [
+        "smoking",
+        "tuberculosis"
+      ],
+      [
+        "either tuberculosis or lung cancer",
+        "positive X-ray"
+      ],
+      [
+        "either tuberculosis or lung cancer",
+        "dyspnoea"
+      ],
+      [
+        "smoking",
+        "either tuberculosis or lung cancer"
+      ],
+      [
+        "bronchitis",
+        "positive X-ray"
+      ],
+      [
+        "lung cancer",
+        "positive X-ray"
+      ],
+      [
+        "smoking",
+        "positive X-ray"
+      ],
+      [
+        "bronchitis",
+        "dyspnoea"
+      ],
+      [
+        "lung cancer",
+        "dyspnoea"
+      ],
+      [
+        "smoking",
+        "dyspnoea"
+      ],
+      [
+        "smoking",
+        "bronchitis"
+      ],
+      [
+        "smoking",
+        "lung cancer"
+      ]
+    ],
+    "order": [
+      "visit to Asia",
+      "smoking",
+      "tuberculosis",
+      "either tuberculosis or lung cancer",
+      "bronchitis",
+      "lung cancer",
+      "positive X-ray",
+      "dyspnoea"
+    ],
+    "metrics": {
+      "predicted_edges": 19,
+      "shd": 15,
+      "cycles": 0,
+      "topo_divergence": 1,
+      "f1": 0.4444
+    },
+    "elapsed_sec": 170.3
+  }
+}

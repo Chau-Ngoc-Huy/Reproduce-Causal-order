@@ -1,0 +1,449 @@
+{
+  "schema_version": "1.0",
+  "synthetic": false,
+  "run_id": "survey_pairwise_20260616_230650",
+  "strategy": "pairwise",
+  "graph": "survey",
+  "generated_at": "2026-06-16T23:06:50",
+  "config": {
+    "prompt_type": "cot",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 1
+  },
+  "graph_meta": {
+    "nodes": [
+      "Age",
+      "Sex",
+      "Education",
+      "Occupation",
+      "Residence",
+      "Travel"
+    ],
+    "descriptions": {
+      "Age": "Age of people using transport",
+      "Sex": "male or female",
+      "Education": "up to high school or university degree",
+      "Occupation": "employee or self-employed",
+      "Residence": "the size of the city the individual lives in, recorded as either small or big",
+      "Travel": "the means of transport favoured by the individual"
+    },
+    "context": "model a hypothetical survey whose aim is to investigate the usage patterns of different means of transport.",
+    "ground_truth_edges": [
+      [
+        "Age",
+        "Education"
+      ],
+      [
+        "Sex",
+        "Education"
+      ],
+      [
+        "Education",
+        "Occupation"
+      ],
+      [
+        "Education",
+        "Residence"
+      ],
+      [
+        "Occupation",
+        "Travel"
+      ],
+      [
+        "Residence",
+        "Travel"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 15,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "Age",
+            "Sex"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Age' and 'Sex'? (A: Age -> Sex;  B: Sex -> Age;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the nodes \"Age\" and \"Sex\" represent demographic characteristics of individuals. These characteristics are typically considered as independent variables in most studies, meaning they are not causally related to each other. Age is a measure of how long an individual has lived, while sex is a biological characteristic determined at birth. Neither of these variables causally affects the other; they are both inherent attributes of individuals. Therefore, there is no causal relationship between \"Age\" and \"Sex\" in this context.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 5.47,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 125,
+            "total_tokens": 3998
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "Age",
+            "Education"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Age' and 'Education'? (A: Age -> Education;  B: Education -> Age;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Age and Education can be considered. Typically, age is a factor that influences the level of education a person has attained. As people age, they progress through different educational stages, such as primary, secondary, and higher education. Therefore, age can be seen as a causal factor affecting education level. Conversely, education does not causally affect age, as age is a chronological measure that progresses independently of educational attainment. Therefore, the more likely cause-and-effect relationship is that age affects education.\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Age",
+            "Education"
+          ],
+          "latency_sec": 2.27,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 128,
+            "total_tokens": 4001
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "Age",
+            "Occupation"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Age' and 'Occupation'? (A: Age -> Occupation;  B: Occupation -> Age;  C: no causal relation)",
+          "response_raw": "In the context of a survey investigating usage patterns of different means of transport, the relationship between Age and Occupation is more likely to be that Age affects Occupation. This is because age often determines the stage of life a person is in, which in turn influences their occupation. For example, younger individuals might be students or early in their careers, while older individuals might be more established in their professions or retired. Therefore, age can causally influence the type of occupation a person has. Conversely, occupation does not causally affect a person's age. Therefore, the most plausible causal relationship is that Age affects Occupation.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Age",
+            "Occupation"
+          ],
+          "latency_sec": 2.462,
+          "usage": {
+            "prompt_tokens": 3877,
+            "completion_tokens": 129,
+            "total_tokens": 4006
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "Age",
+            "Residence"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Age' and 'Residence'? (A: Age -> Residence;  B: Residence -> Age;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Age and Residence is likely not directly causal. Age is a demographic factor that changes over time and is independent of one's place of residence. While residence might influence certain lifestyle choices or opportunities available to individuals of different ages, it does not directly cause a change in age. Similarly, age does not directly cause a change in residence, although it might influence decisions related to moving or choosing a place to live. Therefore, there is no direct causal relationship between Age and Residence in this context. The answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.564,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 125,
+            "total_tokens": 3998
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "Age",
+            "Travel"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Age' and 'Travel'? (A: Age -> Travel;  B: Travel -> Age;  C: no causal relation)",
+          "response_raw": "In a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Age and Travel is likely to be that Age affects Travel. This is because age can influence travel behavior and preferences. For example, younger individuals might prefer more active or adventurous travel options, while older individuals might opt for more comfortable or convenient modes of transport. Additionally, age can affect mobility, financial resources, and time availability, all of which can impact travel choices. Therefore, the causal relationship is more likely to be that changes in Age causally affect changes in Travel.\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Age",
+            "Travel"
+          ],
+          "latency_sec": 2.027,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 122,
+            "total_tokens": 3995
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "Sex",
+            "Education"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Sex' and 'Education'? (A: Sex -> Education;  B: Education -> Sex;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between \"Sex\" and \"Education\" is not typically causal. \"Sex\" is a biological characteristic, while \"Education\" is an outcome influenced by various social, economic, and personal factors. Generally, one's sex does not causally determine their level of education, nor does education change one's sex. Therefore, in this context, there is no direct causal relationship between these two nodes. They may be associated due to societal factors, but one does not cause the other.\n\nTherefore, the answer is <Answer>C</Answer>.",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.267,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 124,
+            "total_tokens": 3997
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "Sex",
+            "Occupation"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Sex' and 'Occupation'? (A: Sex -> Occupation;  B: Occupation -> Sex;  C: no causal relation)",
+          "response_raw": "In a hypothetical survey investigating the usage patterns of different means of transport, the relationship between \"Sex\" and \"Occupation\" is typically not causal in nature. \"Sex\" is a biological characteristic, while \"Occupation\" is a social role or job that a person holds. While there may be correlations between sex and occupation due to societal norms or biases, one does not directly cause the other. For example, certain occupations may have more individuals of a particular sex due to historical or cultural reasons, but changing one's sex does not directly cause a change in occupation, nor does changing one's occupation cause a change in sex. Therefore, the most appropriate answer is that there is no direct causal relation between the nodes \"Sex\" and \"Occupation.\"\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.194,
+          "usage": {
+            "prompt_tokens": 3877,
+            "completion_tokens": 152,
+            "total_tokens": 4029
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "Sex",
+            "Residence"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Sex' and 'Residence'? (A: Sex -> Residence;  B: Residence -> Sex;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the nodes \"Sex\" and \"Residence\" represent two distinct attributes of individuals. \"Sex\" refers to the biological classification of individuals as male or female, while \"Residence\" refers to the location or type of area where individuals live, such as urban or rural settings.\n\nThere is no inherent causal relationship between \"Sex\" and \"Residence\" in this context. The sex of an individual does not determine where they reside, nor does the place of residence determine an individual's sex. These are independent attributes that may be associated with different factors in the survey, but they do not causally influence each other.\n\nTherefore, the most appropriate answer is that there is no causal relation between the nodes \"Sex\" and \"Residence.\"\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.202,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 166,
+            "total_tokens": 4039
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "Sex",
+            "Travel"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Sex' and 'Travel'? (A: Sex -> Travel;  B: Travel -> Sex;  C: no causal relation)",
+          "response_raw": "In a hypothetical survey investigating the usage patterns of different means of transport, the relationship between \"Sex\" and \"Travel\" can be considered. \"Sex\" refers to the biological distinction between male and female, while \"Travel\" refers to the patterns or choices of transportation. It is plausible that \"Sex\" could influence \"Travel\" patterns due to societal norms, preferences, or roles that differ between genders. For example, men and women might have different preferences or constraints that affect their choice of transportation, such as safety concerns, cultural expectations, or economic factors. Therefore, it is more likely that changing the state of \"Sex\" could causally affect a change in \"Travel\" patterns. Thus, the answer is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Sex",
+            "Travel"
+          ],
+          "latency_sec": 2.028,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 150,
+            "total_tokens": 4023
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "Education",
+            "Occupation"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Education' and 'Occupation'? (A: Education -> Occupation;  B: Occupation -> Education;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Education and Occupation can be considered in terms of how education typically influences occupation. Generally, higher levels of education can lead to better job opportunities and higher-level occupations. Education provides the skills and qualifications necessary for certain occupations, and thus, it is reasonable to assume that changes in education levels can causally affect changes in occupation. Conversely, while occupation might influence further educational pursuits, the primary causal direction is typically from education to occupation. Therefore, the more likely cause-and-effect relationship is that changing the state of node Education causally affects a change in node Occupation.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Education",
+            "Occupation"
+          ],
+          "latency_sec": 1.959,
+          "usage": {
+            "prompt_tokens": 3877,
+            "completion_tokens": 139,
+            "total_tokens": 4016
+          }
+        },
+        {
+          "index": 10,
+          "pair": [
+            "Education",
+            "Residence"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Education' and 'Residence'? (A: Education -> Residence;  B: Residence -> Education;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Education and Residence can be considered. Typically, the level of education does not directly cause a change in one's place of residence, nor does the place of residence directly cause a change in one's level of education. However, both factors can be influenced by other variables such as socioeconomic status or employment opportunities. For instance, individuals with higher education levels might choose to live in urban areas with better job prospects, or people living in certain areas might have better access to educational institutions. Despite these associations, there is no direct causal relationship where changing one directly causes a change in the other. Therefore, the most appropriate answer is that there is no direct causal relation between Education and Residence.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 2.186,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 159,
+            "total_tokens": 4032
+          }
+        },
+        {
+          "index": 11,
+          "pair": [
+            "Education",
+            "Travel"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Education' and 'Travel'? (A: Education -> Travel;  B: Travel -> Education;  C: no causal relation)",
+          "response_raw": "In the context of a hypothetical survey investigating the usage patterns of different means of transport, the relationship between Education and Travel can be considered in terms of how education level might influence travel behavior. Generally, individuals with higher education levels may have different travel patterns due to factors such as income, job opportunities, and lifestyle choices. For example, higher education might lead to better job opportunities, which could increase the likelihood of traveling for work or leisure. Conversely, travel itself is unlikely to directly influence one's level of education. Therefore, the more plausible causal direction is that education affects travel behavior.\n\nTherefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Education",
+            "Travel"
+          ],
+          "latency_sec": 2.631,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 126,
+            "total_tokens": 3999
+          }
+        },
+        {
+          "index": 12,
+          "pair": [
+            "Occupation",
+            "Residence"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Occupation' and 'Residence'? (A: Occupation -> Residence;  B: Residence -> Occupation;  C: no causal relation)",
+          "response_raw": "In the context of a survey investigating usage patterns of different means of transport, the relationship between \"Occupation\" and \"Residence\" can be considered. Typically, the location of one's residence is often influenced by their occupation, as people tend to choose where to live based on proximity to their workplace, affordability, and lifestyle preferences related to their job. For instance, someone working in a city center might choose to live nearby to reduce commute time, while someone with a remote job might have more flexibility in choosing a residence. Therefore, it is more plausible that \"Occupation\" causally affects \"Residence\" rather than the other way around. \n\nThus, the more likely cause-and-effect relationship is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Occupation",
+            "Residence"
+          ],
+          "latency_sec": 6.849,
+          "usage": {
+            "prompt_tokens": 3877,
+            "completion_tokens": 143,
+            "total_tokens": 4020
+          }
+        },
+        {
+          "index": 13,
+          "pair": [
+            "Occupation",
+            "Travel"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Occupation' and 'Travel'? (A: Occupation -> Travel;  B: Travel -> Occupation;  C: no causal relation)",
+          "response_raw": "The causal relationship between Occupation and Travel is likely to be that Occupation affects Travel. Different occupations may require different travel patterns. For example, someone with a job that requires frequent travel might use different modes of transportation compared to someone who works from home. Occupation can influence the frequency, distance, and mode of travel due to job requirements, location, and work hours. Therefore, the causal direction is from Occupation to Travel.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Occupation",
+            "Travel"
+          ],
+          "latency_sec": 6.84,
+          "usage": {
+            "prompt_tokens": 3877,
+            "completion_tokens": 93,
+            "total_tokens": 3970
+          }
+        },
+        {
+          "index": 14,
+          "pair": [
+            "Residence",
+            "Travel"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "cot",
+          "question": "Which causal relationship is more likely between 'Residence' and 'Travel'? (A: Residence -> Travel;  B: Travel -> Residence;  C: no causal relation)",
+          "response_raw": "The causal relationship between \"Residence\" and \"Travel\" is likely to be that the location or type of residence influences travel patterns. For example, people living in urban areas might have different travel habits compared to those in rural areas due to the availability of public transport, proximity to work, or other amenities. Therefore, changing the state of the \"Residence\" node (e.g., moving from a rural to an urban area) is likely to causally affect the \"Travel\" node (e.g., increased use of public transport). Thus, the more plausible causal direction is from \"Residence\" to \"Travel\". Therefore, the answer is <Answer>A</Answer>.",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Residence",
+            "Travel"
+          ],
+          "latency_sec": 7.413,
+          "usage": {
+            "prompt_tokens": 3873,
+            "completion_tokens": 133,
+            "total_tokens": 4006
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "Age",
+        "Education"
+      ],
+      [
+        "Age",
+        "Occupation"
+      ],
+      [
+        "Age",
+        "Travel"
+      ],
+      [
+        "Sex",
+        "Travel"
+      ],
+      [
+        "Education",
+        "Occupation"
+      ],
+      [
+        "Education",
+        "Travel"
+      ],
+      [
+        "Occupation",
+        "Residence"
+      ],
+      [
+        "Occupation",
+        "Travel"
+      ],
+      [
+        "Residence",
+        "Travel"
+      ]
+    ],
+    "order": [
+      "Age",
+      "Sex",
+      "Education",
+      "Occupation",
+      "Residence",
+      "Travel"
+    ],
+    "metrics": {
+      "predicted_edges": 9,
+      "shd": 7,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 0.5333
+    },
+    "elapsed_sec": 67.1
+  }
+}

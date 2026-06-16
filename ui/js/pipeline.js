@@ -115,7 +115,8 @@
         b.addEventListener("click", () => {
           if (g === state.graph) return;
           state.graph = g; state.kind = pickKind(g, state.kind);
-          loadRun(); stop(); buildDatasetSeg(); buildMethodSeg(); go(0);
+          // keep the stage the user is on (both flows have the same count) rather than resetting to 1
+          loadRun(); stop(); buildDatasetSeg(); buildMethodSeg(); go(Math.min(stage, stages.length - 1));
         });
         dsSeg.appendChild(b);
       });
@@ -127,7 +128,8 @@
         b.textContent = C.methodLabel(kind);
         b.addEventListener("click", () => {
           if (kind === state.kind) return;
-          state.kind = kind; loadRun(); stop(); buildMethodSeg(); go(0);
+          // keep the current stage on method change instead of jumping back to stage 1
+          state.kind = kind; loadRun(); stop(); buildMethodSeg(); go(Math.min(stage, stages.length - 1));
         });
         mSeg.appendChild(b);
       });
@@ -209,6 +211,68 @@
       return `<span class="mono" style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--ink);color:#fff">${txt}</span>`;
     }
 
+    // ---- variable picker (shared by both "Ask the expert" stages) ----
+    // Show every variable as a toggle chip; the user picks exactly `k` of them
+    // (2 for pairwise, 3 for triplet, …) and the matching expert call opens.
+    // Clicking a (k+1)-th chip rolls off the oldest pick, so any combination is
+    // reachable with no "deselect first" step. opts:
+    //   k             → how many variables make one query
+    //   keyOf(item)   → the variable set of that query (array of node names)
+    //   initial       → variable set to preselect (e.g. the first query)
+    //   onSelect(item,i) — exactly k chosen and a query matches
+    //   onIncomplete(need) — fewer than k chosen
+    //   onNoMatch(set)  — k chosen but no expert call for that exact set
+    function buildVariablePicker(items, opts) {
+      const k = opts.k;
+      const keyStr = (arr) => arr.slice().sort().join("");
+      const byKey = {};
+      items.forEach((it, i) => { byKey[keyStr(opts.keyOf(it))] = i; });
+
+      const wrap = el("div", "var-picker");
+      const head = el("div", "var-picker-head");
+      const chipsRow = el("div", "var-chips");
+      wrap.append(head, chipsRow);
+
+      const selected = []; // node names, in click order (FIFO roll-off at > k)
+
+      const chipBtns = nodes.map((n) => {
+        const c = colors[n] || FALLBACK_COLOR;
+        const b = el("button", "var-chip"); b.type = "button"; b.dataset.node = n;
+        b.style.setProperty("--vc-border", c.border);
+        b.style.setProperty("--vc-ink", c.ink);
+        b.style.setProperty("--vc-soft", c.soft);
+        b.innerHTML = `<span class="dot" style="background:${c.solid}"></span>${C.shortName(n)}`;
+        b.addEventListener("click", () => {
+          const pos = selected.indexOf(n);
+          if (pos >= 0) selected.splice(pos, 1);
+          else { selected.push(n); if (selected.length > k) selected.shift(); }
+          update();
+        });
+        chipsRow.appendChild(b);
+        return b;
+      });
+
+      function update() {
+        chipBtns.forEach((b) => b.classList.toggle("on", selected.includes(b.dataset.node)));
+        const have = selected.length, full = have === k;
+        head.innerHTML =
+          `<span class="vp-label">Choose <b>${k}</b> variable${k > 1 ? "s" : ""} to open that expert call</span>` +
+          `<span class="vp-count${full ? " full" : ""}">${have} / ${k} selected</span>`;
+        if (full) {
+          const idx = byKey[keyStr(selected)];
+          if (idx === undefined) opts.onNoMatch(selected);
+          else opts.onSelect(items[idx], idx);
+        } else {
+          opts.onIncomplete(k - have);
+        }
+      }
+
+      (opts.initial || []).forEach((n) => { if (nodes.includes(n) && selected.length < k) selected.push(n); });
+      update();
+
+      return { el: wrap };
+    }
+
     // ===================== SUBGROUP FLOW =====================
 
     // ---------- STAGE 1: Decompose ----------
@@ -247,64 +311,87 @@
 
     // ---------- STAGE 2: Ask the expert (subgroup) ----------
     function renderAsk() {
-      const realQ = trace && trace.queries && trace.queries.length ? trace.queries[0] : null;
-      const sg = realQ ? realQ.subgroup : subgroups[0];
+      const qs = (trace && trace.queries) || [];
 
       const head = el("div");
       head.innerHTML = `<div class="stage-title">Ask the expert, one subgroup at a time</div>
         <div class="stage-sub">For each subgroup we prompt the LLM with chain-of-thought to recover the local causal
         sub-graph among just those ${k} variables. Local context lets it tell direct causes from indirect ones.${
-          realQ ? ` <b class="mono">Shown below: the actual call for subgroup 1 of ${subgroups.length}.</b>` : ""
+          qs.length ? ` <b class="mono">Pick any ${k} variables below to open that exact call.</b>` : ""
         }</div>`;
       canvas.appendChild(head);
 
+      if (!qs.length) { renderAskFallbackSubgroup(); return; }
+
+      const detail = el("div");
+      const picker = buildVariablePicker(qs, {
+        k,
+        keyOf: (q) => q.subgroup || [],
+        initial: (qs[0] && qs[0].subgroup) || [],
+        onSelect: (q) => askSubgroupDetail(detail, q),
+        onIncomplete: (need) => pickerHint(detail, `Select ${need} more variable${need > 1 ? "s" : ""} to open the matching expert call.`),
+        onNoMatch: () => pickerHint(detail, "No expert call was made for that exact combination of variables."),
+      });
+      canvas.append(picker.el, detail);
+    }
+
+    // render the prompt + recovered sub-graph for one selected subgroup query
+    function askSubgroupDetail(host, q) {
+      host.innerHTML = "";
+      const grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start";
+      host.appendChild(grid);
+
+      const prompt = el("div", "prompt-box fx");
+      prompt.innerHTML =
+        `<div><span class="role">user ›</span> ${trimQ(q.question)}</div>
+         <div style="margin-top:12px"><span class="role">assistant ›</span> ${q.response_raw || ""}</div>`;
+      grid.appendChild(prompt);
+      setTimeout(() => prompt.classList.add("in"), 40);
+
+      const out = el("div", "card fx"); out.style.padding = "20px";
+      out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">RECOVERED LOCAL SUB-GRAPH</div>`;
+      const chain = el("div"); chain.style.cssText = "display:flex;flex-direction:column;gap:10px";
+      const edges = q.edges || [];
+      if (edges.length) {
+        chain.innerHTML = edges.map(([a, b]) =>
+          `<span style="display:inline-flex;align-items:center;gap:8px">${ntok(a)}${arrow()}${ntok(b)}</span>`
+        ).join("");
+      } else {
+        chain.style.cssText = "display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px";
+        chain.innerHTML = ((q.isolated && q.isolated.length ? q.isolated : q.subgroup) || []).map(ntok).join("") +
+          `<span style="font-size:13px;color:var(--muted);margin-left:6px">no direct edges — isolated locally</span>`;
+      }
+      out.appendChild(chain);
+      const note = el("div"); note.style.cssText = "margin-top:16px;font-size:13px;color:var(--muted)";
+      note.innerHTML = `Repeated for all <b class="mono">${subgroups.length}</b> subgroups → ${subgroups.length} local sub-graphs to reconcile in the next step.`;
+      out.appendChild(note);
+      grid.appendChild(out);
+      setTimeout(() => out.classList.add("in"), 200);
+    }
+
+    // synthesized single-call view, used only when no real trace is loaded
+    function renderAskFallbackSubgroup() {
+      const sg = subgroups[0];
+      const lo = localOrder(sg);
       const grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start";
       canvas.appendChild(grid);
 
       const prompt = el("div", "prompt-box fx");
-      if (realQ) {
-        prompt.innerHTML =
-          `<div><span class="role">user ›</span> ${trimQ(realQ.question)}</div>
-           <div style="margin-top:12px"><span class="role">assistant ›</span> ${realQ.response_raw || ""}</div>`;
-      } else {
-        const lo = localOrder(sg);
-        prompt.innerHTML =
-          `<div><span class="role">system ›</span> You are an expert on ${(C.GRAPH_META[result.graph] || {}).label || result.graph}.</div>
-           <div style="margin-top:10px"><span class="role">user ›</span> Among
-           <span class="hl">${sg.map(C.shortName).join("</span>, <span class='hl'>")}</span>,
-           reason step by step, then give the causal order.</div>
-           <div style="margin-top:12px"><span class="role">assistant ›</span> Working through each pair…
-           the most upstream cause is <span class="hl2">${C.shortName(lo[0])}</span>. Order:
-           <span class="hl">${lo.map(C.shortName).join(" → ")}</span>.</div>`;
-      }
+      prompt.innerHTML =
+        `<div><span class="role">system ›</span> You are an expert on ${(C.GRAPH_META[result.graph] || {}).label || result.graph}.</div>
+         <div style="margin-top:10px"><span class="role">user ›</span> Among
+         <span class="hl">${sg.map(C.shortName).join("</span>, <span class='hl'>")}</span>,
+         reason step by step, then give the causal order.</div>
+         <div style="margin-top:12px"><span class="role">assistant ›</span> Working through each pair…
+         the most upstream cause is <span class="hl2">${C.shortName(lo[0])}</span>. Order:
+         <span class="hl">${lo.map(C.shortName).join(" → ")}</span>.</div>`;
       grid.appendChild(prompt);
       setTimeout(() => prompt.classList.add("in"), 120);
 
       const out = el("div", "card fx"); out.style.padding = "20px";
-      const chain = el("div"); chain.style.cssText = "display:flex;flex-direction:column;gap:10px";
-      if (realQ) {
-        out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">RECOVERED LOCAL SUB-GRAPH</div>`;
-        const edges = realQ.edges || [];
-        if (edges.length) {
-          chain.innerHTML = edges.map(([a, b]) =>
-            `<span style="display:inline-flex;align-items:center;gap:8px">${ntok(a)}${arrow()}${ntok(b)}</span>`
-          ).join("");
-        } else {
-          chain.style.flexDirection = "row";
-          chain.style.flexWrap = "wrap";
-          chain.style.alignItems = "center";
-          chain.innerHTML = (realQ.isolated || sg).map(ntok).join("") +
-            `<span style="font-size:13px;color:var(--muted);margin-left:6px">no direct edges — isolated locally</span>`;
-        }
-      } else {
-        const lo = localOrder(sg);
-        out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">RECOVERED LOCAL ORDER</div>`;
-        chain.style.flexDirection = "row";
-        chain.style.alignItems = "center";
-        chain.style.flexWrap = "wrap";
-        chain.style.gap = "8px";
-        chain.innerHTML = lo.map((n, i) => ntok(n) + (i < lo.length - 1 ? arrow() : "")).join("");
-      }
+      out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">RECOVERED LOCAL ORDER</div>`;
+      const chain = el("div"); chain.style.cssText = "display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px";
+      chain.innerHTML = lo.map((n, i) => ntok(n) + (i < lo.length - 1 ? arrow() : "")).join("");
       out.appendChild(chain);
       const note = el("div"); note.style.cssText = "margin-top:16px;font-size:13px;color:var(--muted)";
       note.innerHTML = `Repeated for all <b class="mono">${subgroups.length}</b> subgroups → ${subgroups.length} local sub-graphs to reconcile in the next step.`;
@@ -396,49 +483,83 @@
     // ---------- STAGE 2: Ask the expert (pairwise A/B/C) ----------
     function renderAskPairwise() {
       const qs = (trace && trace.queries) || [];
-      // prefer a query that yields a directed edge — more illustrative than "no relation"
-      const realQ = qs.find((q) => q.edge) || qs[0] || null;
-      const pair = realQ ? realQ.pair : (pairs[0] || nodes.slice(0, 2));
 
       const head = el("div");
       head.innerHTML = `<div class="stage-title">Ask the expert, one pair at a time</div>
         <div class="stage-sub">For each pair (A, B) the LLM picks one of three options — <b>A→B</b>, <b>B→A</b>, or
-        <b>no causal relation</b> — with chain-of-thought.${realQ ? ` <b class="mono">Shown below: an actual call.</b>` : ""}</div>`;
+        <b>no causal relation</b> — with chain-of-thought.${qs.length ? ` <b class="mono">Pick any 2 variables below to open that exact call.</b>` : ""}</div>`;
       canvas.appendChild(head);
 
+      if (!qs.length) { renderAskFallbackPairwise(); return; }
+
+      // default to the first call that yields a directed edge — more illustrative
+      const seed = qs.find((q) => q.edge) || qs[0];
+      const detail = el("div");
+      const picker = buildVariablePicker(qs, {
+        k: 2,
+        keyOf: (q) => q.pair || [],
+        initial: (seed && seed.pair) || [],
+        onSelect: (q) => askPairwiseDetail(detail, q),
+        onIncomplete: (need) => pickerHint(detail, `Select ${need} more variable${need > 1 ? "s" : ""} to open the matching expert call.`),
+        onNoMatch: () => pickerHint(detail, "No expert call was made for that exact pair of variables."),
+      });
+      canvas.append(picker.el, detail);
+    }
+
+    function pickerHint(host, msg) {
+      host.innerHTML = `<div class="picker-hint">${msg}</div>`;
+    }
+
+    // render the prompt + decision for one selected pair query
+    function askPairwiseDetail(host, q) {
+      host.innerHTML = "";
+      const grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start";
+      host.appendChild(grid);
+
+      const prompt = el("div", "prompt-box fx");
+      prompt.innerHTML =
+        `<div><span class="role">user ›</span> ${trimQ(q.question)}</div>
+         <div style="margin-top:12px"><span class="role">assistant ›</span> ${q.response_raw || ""}</div>`;
+      grid.appendChild(prompt);
+      setTimeout(() => prompt.classList.add("in"), 40);
+
+      const out = el("div", "card fx"); out.style.padding = "20px";
+      out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">DECISION</div>`;
+      const body = el("div"); body.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
+      if (q.edge && (q.decision === "forward" || q.decision === "reverse")) {
+        body.innerHTML = answerChip(`answer ${q.answer}`) + ntok(q.edge[0]) + arrow() + ntok(q.edge[1]);
+      } else {
+        body.innerHTML = answerChip(`answer ${q.answer}`) +
+          `<span style="font-size:13.5px">no causal edge between ${ntok(q.pair[0])} and ${ntok(q.pair[1])}</span>`;
+      }
+      out.appendChild(body);
+      const note = el("div"); note.style.cssText = "margin-top:16px;font-size:13px;color:var(--muted)";
+      note.innerHTML = `Repeated for all <b class="mono">${pairs.length}</b> pairs → the answers are assembled directly into one graph next.`;
+      out.appendChild(note);
+      grid.appendChild(out);
+      setTimeout(() => out.classList.add("in"), 200);
+    }
+
+    // synthesized single-call view, used only when no real trace is loaded
+    function renderAskFallbackPairwise() {
+      const pair = pairs[0] || nodes.slice(0, 2);
       const grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start";
       canvas.appendChild(grid);
 
       const prompt = el("div", "prompt-box fx");
-      if (realQ) {
-        prompt.innerHTML =
-          `<div><span class="role">user ›</span> ${trimQ(realQ.question)}</div>
-           <div style="margin-top:12px"><span class="role">assistant ›</span> ${realQ.response_raw || ""}</div>`;
-      } else {
-        prompt.innerHTML =
-          `<div><span class="role">system ›</span> You are an expert on ${(C.GRAPH_META[result.graph] || {}).label || result.graph}.</div>
-           <div style="margin-top:10px"><span class="role">user ›</span> Which is more likely between
-           <span class="hl">${C.shortName(pair[0])}</span> and <span class="hl">${C.shortName(pair[1])}</span>?
-           (A: ${C.shortName(pair[0])}→${C.shortName(pair[1])}; B: reverse; C: no relation)</div>
-           <div style="margin-top:12px"><span class="role">assistant ›</span> …reasoning step by step… answer <span class="hl2">A</span>.</div>`;
-      }
+      prompt.innerHTML =
+        `<div><span class="role">system ›</span> You are an expert on ${(C.GRAPH_META[result.graph] || {}).label || result.graph}.</div>
+         <div style="margin-top:10px"><span class="role">user ›</span> Which is more likely between
+         <span class="hl">${C.shortName(pair[0])}</span> and <span class="hl">${C.shortName(pair[1])}</span>?
+         (A: ${C.shortName(pair[0])}→${C.shortName(pair[1])}; B: reverse; C: no relation)</div>
+         <div style="margin-top:12px"><span class="role">assistant ›</span> …reasoning step by step… answer <span class="hl2">A</span>.</div>`;
       grid.appendChild(prompt);
       setTimeout(() => prompt.classList.add("in"), 120);
 
       const out = el("div", "card fx"); out.style.padding = "20px";
       out.innerHTML = `<div class="seg-label" style="margin-bottom:14px">DECISION</div>`;
-      const body = el("div");
-      const decision = realQ ? realQ.decision : "forward";
-      const edge = realQ ? realQ.edge : pair;
-      const answer = realQ ? realQ.answer : "A";
-      if (edge && (decision === "forward" || decision === "reverse")) {
-        body.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
-        body.innerHTML = answerChip(`answer ${answer}`) + ntok(edge[0]) + arrow() + ntok(edge[1]);
-      } else {
-        body.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
-        body.innerHTML = answerChip(`answer ${answer}`) +
-          `<span style="font-size:13.5px">no causal edge between ${ntok(pair[0])} and ${ntok(pair[1])}</span>`;
-      }
+      const body = el("div"); body.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
+      body.innerHTML = answerChip("answer A") + ntok(pair[0]) + arrow() + ntok(pair[1]);
       out.appendChild(body);
       const note = el("div"); note.style.cssText = "margin-top:16px;font-size:13px;color:var(--muted)";
       note.innerHTML = `Repeated for all <b class="mono">${pairs.length}</b> pairs → the answers are assembled directly into one graph next.`;

@@ -118,7 +118,7 @@
   <div class="wrap">
     <div class="eyebrow">Reproduction vs. paper</div>
     <h2 class="section-title">The published tables, beside ours</h2>
-    <p class="section-lead"><strong>Every experimental table in the paper</strong> (Tables 1–6 and appendix Tables A3, A5–A13, A15–A17) is transcribed faithfully below. Wherever we reproduced a run, our <strong>GPT-4o</strong> value sits <strong>beside</strong> the paper's number, shaded by how it compares. The paper uses GPT-3.5 / GPT-4 (and Phi-3 / Llama3 / human annotators), so absolute values differ by model — the test is whether the <em>method ordering and qualitative behaviour</em> reproduce. We reproduced <strong>pairwise (CoT) + triplet on Cancer and Earthquake only</strong>; everything else is left blank.</p>
+    <p class="section-lead"><strong>Every experimental table in the paper</strong> (Tables 1–6 and appendix Tables A3, A5–A13, A15–A17) is transcribed faithfully below. Wherever we reproduced a run, our <strong>GPT-4o</strong> value sits <strong>beside</strong> the paper's number, shaded by how it compares. The paper uses GPT-3.5 / GPT-4 (and Phi-3 / Llama3 / human annotators), so absolute values differ by model — the test is whether the <em>method ordering and qualitative behaviour</em> reproduce. We reproduced <strong>pairwise (CoT) + triplet on <span id="repro-list">the loaded datasets</span></strong>; everything else is left blank.</p>
 
     <div class="legend mt-m" style="margin-bottom:20px">
       <span class="item"><span class="dot" style="background:var(--c-correct)"></span>Ours does better</span>
@@ -127,9 +127,9 @@
       <span class="item"><span class="dot" style="background:var(--c-missing)"></span>Matches / not reproduced (blank)</span>
     </div>
 
-    <h3 style="font-size:22px;margin:34px 0 14px;letter-spacing:-.02em">Highlights — the four runs we reproduced</h3>
+    <h3 style="font-size:22px;margin:34px 0 6px;letter-spacing:-.02em">Highlights — the runs we reproduced</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:14px">Hover any row to see how our GPT-4o run compares to the paper for that dataset and method.</p>
     <div class="compare-pair" id="compare-pair"></div>
-    <div class="diff-grid mt-m" id="diff-grid"></div>
 
     <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">All published tables</h3>
     <p class="muted" style="font-size:13px;margin-bottom:18px">A green/red badge marks each table as reproduced (GPT-4o values appear beside the paper's) or paper-only (not yet run). In every cell, the small chip beside a paper number is our run; a “·” means the paper left that cell empty.</p>
