@@ -774,7 +774,11 @@
       }
       stop();
       const gi = stages.findIndex((s) => s.t === "Graph");
-      go(gi >= 0 ? gi : 0);
+      // This is fired from a Datasets link whose href="#pipeline" also drives
+      // the page router. Defer the Graph-stage jump to the next frame so the
+      // router has made the pipeline page visible first — vis-network must be
+      // built in a sized (non-display:none) container to lay out correctly.
+      requestAnimationFrame(() => go(gi >= 0 ? gi : 0));
     };
 
     buildDatasetSeg();

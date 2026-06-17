@@ -44,20 +44,42 @@
     return null;
   }
 
-  // ---------------- nav scroll-spy ----------------
-  function initNav() {
+  // ---------------- page router ----------------
+  // Each top-level <section class="page"> is its own "page": the router shows
+  // exactly one at a time, keyed off location.hash, so the nav links switch
+  // pages instead of scrolling one long document. All cross-section links use
+  // href="#id", so they flow through the same hashchange handler.
+  function initRouter() {
+    const DEFAULT = "home";
+    const pages = Array.from(document.querySelectorAll(".page"));
+    const ids = pages.map((p) => p.id);
     const links = Array.from(document.querySelectorAll(".nav-links a"));
-    const map = {};
-    links.forEach((a) => { const id = a.getAttribute("href").slice(1); if (id) map[id] = a; });
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          links.forEach((l) => l.classList.remove("active"));
-          if (map[e.target.id]) map[e.target.id].classList.add("active");
-        }
+
+    // Work that can only be done once a page is actually visible. Chart.js and
+    // vis-network measure 0px in a display:none container, so we build the
+    // charts the FIRST time the Results page is shown rather than at boot.
+    const onFirstShow = { results: initCharts };
+    const done = {};
+
+    function currentId() {
+      const h = (location.hash || "").replace(/^#/, "");
+      if (!h || h === "top") return DEFAULT;
+      return ids.includes(h) ? h : DEFAULT;
+    }
+
+    function show(id) {
+      pages.forEach((p) => p.classList.toggle("is-active", p.id === id));
+      links.forEach((a) => {
+        const target = a.getAttribute("href").replace(/^#/, "") || DEFAULT;
+        a.classList.toggle("active", target === id);
       });
-    }, { rootMargin: "-45% 0px -50% 0px" });
-    Object.keys(map).forEach((id) => { const s = document.getElementById(id); if (s) obs.observe(s); });
+      window.scrollTo(0, 0);
+      if (onFirstShow[id] && !done[id]) { done[id] = true; onFirstShow[id](); }
+      window.dispatchEvent(new Event("resize")); // nudge any responsive widget
+    }
+
+    window.addEventListener("hashchange", () => show(currentId()));
+    show(currentId());
   }
 
   // The graph explorer now lives inside the Pipeline as its "Graph" stage
@@ -497,13 +519,14 @@
 
   function boot() {
     augmentGraphMeta();
-    initNav();
     initTable();
     initComparePair();
     initPublishedTables();
-    initCharts();
     initPipeline();
     initCopy();
+    // initCharts() is deferred — the router builds the charts the first time
+    // the Results page is visible (Chart.js needs a sized, visible container).
+    initRouter(); // last: needs all pages mounted; sets the initial visible page
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

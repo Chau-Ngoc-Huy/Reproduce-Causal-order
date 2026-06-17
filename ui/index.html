@@ -14,7 +14,7 @@
 <!-- ================= NAV ================= -->
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="#top" style="text-decoration:none;color:inherit">
+    <a class="brand" href="#home" style="text-decoration:none;color:inherit">
       <svg class="glyph" viewBox="0 0 32 32" fill="none">
         <circle cx="6" cy="16" r="4" fill="#4f46e5"/>
         <circle cx="16" cy="7" r="4" fill="#0ea5b7"/>
@@ -24,8 +24,10 @@
       <span>Causal Order<small>Reproduction & analysis</small></span>
     </a>
     <nav class="nav-links">
+      <a href="#home">Home</a>
       <a href="#datasets">Datasets</a>
       <a href="#pipeline">Pipeline</a>
+      <a href="#prompts">Prompts</a>
       <a href="#results">Results</a>
       <a href="#comparison">vs. Paper</a>
     </nav>
@@ -35,7 +37,7 @@
 <a id="top"></a>
 
 <!-- ================= HERO ================= -->
-<section class="hero">
+<section id="home" class="hero page">
   <div class="hero-grid"></div>
   <div class="wrap hero-in">
     <div>
@@ -68,7 +70,7 @@
 </section>
 
 <!-- ================= DATASETS ================= -->
-<section id="datasets" class="band tint">
+<section id="datasets" class="band tint page">
   <div class="wrap">
     <div class="eyebrow">The benchmarks</div>
     <h2 class="section-title">Datasets in the source code</h2>
@@ -78,7 +80,7 @@
 </section>
 
 <!-- ================= PIPELINE ================= -->
-<section id="pipeline" class="band">
+<section id="pipeline" class="band page">
   <div class="wrap">
     <div class="eyebrow">Step by step</div>
     <h2 class="section-title">How the method works</h2>
@@ -87,8 +89,18 @@
   </div>
 </section>
 
+<!-- ================= PROMPTS ================= -->
+<section id="prompts" class="band tint page">
+  <div class="wrap">
+    <div class="eyebrow">The expert, verbatim</div>
+    <h2 class="section-title">Every prompt in the source code</h2>
+    <p class="section-lead">The whole method comes down to <em>what we ask the LLM</em>. These are the prompt-building functions in <code class="mono">causal_discovery/prompts/</code>, lifted straight from the source — system message and template, with <span class="ph">{placeholders}</span> shown where the run fills in nodes, context and the partial graph. Click any prompt to read it in full; the few-shot chain-of-thought ones are long on purpose.</p>
+    <div class="mt-l" id="prompts-root"></div>
+  </div>
+</section>
+
 <!-- ================= RESULTS ================= -->
-<section id="results" class="band">
+<section id="results" class="band page">
   <div class="wrap">
     <div class="eyebrow">Reproduction results</div>
     <h2 class="section-title">Every run, every metric</h2>
@@ -114,7 +126,7 @@
 </section>
 
 <!-- ================= COMPARISON / CLAIMS ================= -->
-<section id="comparison" class="band tint">
+<section id="comparison" class="band tint page">
   <div class="wrap">
     <div class="eyebrow">Reproduction vs. paper</div>
     <h2 class="section-title">The published tables, beside ours</h2>
@@ -161,11 +173,13 @@
 <script src="vendor/chart.umd.min.js"></script>
 <script src="data/traces_report.js"></script>
 <script src="data/paper_reference.js"></script>
+<script src="data/prompts.js"></script>
 <script src="js/core.js"></script>
 <script src="js/datasets.js"></script>
 <script src="js/datasets_view.js"></script>
 <script src="js/graph.js"></script>
 <script src="js/pipeline.js"></script>
+<script src="js/prompts_view.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
