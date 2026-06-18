@@ -46,79 +46,79 @@ SPECS = [
     # ---- pairwise (causal_discovery/prompts/pairwise.py) ----
     {
         "fn": P.cot_pairwise_prompt, "args": ("{X}", "{Y}", "{context}", "{nodes}"),
-        "category": "pairwise", "title": "Chain-of-thought pairwise",
+        "category": "pairwise", "title": "Pairwise chain-of-thought",
         "prompt_type": "cot", "active": True,
-        "usage": "Default pairwise expert query. Few-shot CoT (Cancer + heart-disease "
-                 "examples) then asks the direction for the real pair (X, Y).",
+        "usage": "Query expert pairwise mặc định. Few-shot CoT (ví dụ Cancer + "
+                 "heart-disease) rồi hỏi hướng cho pair thật (X, Y).",
     },
     {
         "fn": P.simple_pairwise_prompt, "args": ("{X}", "{Y}"),
-        "category": "pairwise", "title": "Simple pairwise",
+        "category": "pairwise", "title": "Pairwise đơn giản",
         "prompt_type": "simple", "active": True,
-        "usage": "Bare pairwise question for X vs Y, no graph context or examples.",
+        "usage": "Câu hỏi pairwise trần cho X vs Y, không có graph context hay ví dụ.",
     },
     {
         "fn": P.pairwise_with_context_prompt, "args": ("{X}", "{Y}", "{current_graph}"),
-        "category": "pairwise", "title": "Pairwise with partial-graph context",
+        "category": "pairwise", "title": "Pairwise kèm context của partial graph",
         "prompt_type": "context", "active": True,
-        "usage": "Adds the already-oriented part of the graph as context for the X–Y call.",
+        "usage": "Thêm phần graph đã được định hướng làm context cho lời gọi X–Y.",
     },
     {
         "fn": P.all_directed_edges_prompt, "args": ("{X}", "{Y}", "{directed_edges}"),
-        "category": "pairwise", "title": "Pairwise with all directed edges",
+        "category": "pairwise", "title": "Pairwise kèm toàn bộ directed edge",
         "prompt_type": "all_directed", "active": True,
-        "usage": "Supplies every edge already oriented in the skeleton as context.",
+        "usage": "Cung cấp mọi edge đã định hướng trong skeleton làm context.",
     },
     {
         "fn": P.markov_blanket_prompt, "args": ("{X}", "{Y}", "{X_edges}", "{Y_edges}"),
-        "category": "pairwise", "title": "Pairwise with Markov blanket",
+        "category": "pairwise", "title": "Pairwise kèm Markov blanket",
         "prompt_type": "markov_blanket", "active": True,
-        "usage": "Gives the neighbouring directed edges of X and Y as local context.",
+        "usage": "Đưa các directed edge lân cận của X và Y làm local context.",
     },
     {
         "fn": P.remove_edges_prompt, "args": ("{graph}",),
-        "category": "pairwise", "title": "Prune low-confidence edges",
+        "category": "pairwise", "title": "Cắt tỉa các edge độ tin cậy thấp",
         "prompt_type": None, "active": False,
-        "usage": "Helper that asks the LLM to drop weak edges from a dense DAG "
-                 "(node list hardcoded to the Child benchmark). Not wired into the runs.",
+        "usage": "Hàm phụ trợ yêu cầu LLM bỏ các edge yếu khỏi một DAG dày đặc "
+                 "(danh sách node hardcode theo benchmark Child). Không được nối vào các lần chạy.",
     },
 
     # ---- triplet / subgroup (causal_discovery/prompts/triplet.py) ----
     {
         "fn": T.generate_subgraph_prompt, "args": ("{nodes}", "{context}"),
-        "category": "triplet", "title": "Generate subgraph DAG",
+        "category": "triplet", "title": "Sinh subgraph DAG",
         "prompt_type": None, "active": True,
-        "usage": "Decompose step: asks for a DAG (list of edge tuples) over a subgroup "
-                 "of nodes. Used when the dataset ships no node descriptions.",
+        "usage": "Bước decompose: yêu cầu một DAG (danh sách tuple edge) trên một subgroup "
+                 "node. Dùng khi dataset không kèm mô tả node.",
     },
     {
         "fn": T.generate_subgraph_with_descr_prompt,
         "args": ("{nodes}", "{context}", "{descr_nodes}"),
-        "category": "triplet", "title": "Generate subgraph DAG (with descriptions)",
+        "category": "triplet", "title": "Sinh subgraph DAG (kèm mô tả)",
         "prompt_type": None, "active": True,
-        "usage": "Same as above but feeds each node's description to sharpen orientation. "
-                 "Used when the dataset provides descriptions.",
+        "usage": "Giống trên nhưng đưa thêm mô tả của mỗi node để định hướng sắc hơn. "
+                 "Dùng khi dataset có kèm mô tả.",
     },
     {
         "fn": T.cot_tiebreaker_prompt, "args": ("{X}", "{Y}", "{nodes}", "{context}"),
-        "category": "triplet", "title": "CoT tie-breaker",
+        "category": "triplet", "title": "Phá hòa bằng CoT",
         "prompt_type": None, "active": True,
-        "usage": "Vote/merge step: a few-shot CoT pairwise call that breaks ties when "
-                 "subgroup votes split evenly on an edge's direction.",
+        "usage": "Bước vote/merge: một lời gọi pairwise few-shot CoT để phá hòa khi "
+                 "vote của các subgroup chia đều về hướng của một edge.",
     },
     {
         "fn": T.generate_subgraph_original_prompt, "args": ("{nodes}",),
-        "category": "triplet", "title": "Generate subgraph DAG (original, no context)",
+        "category": "triplet", "title": "Sinh subgraph DAG (bản gốc, không context)",
         "prompt_type": None, "active": False,
-        "usage": "Original context-free variant of the subgraph prompt. Kept for "
-                 "reference; the strategy uses the context-aware versions instead.",
+        "usage": "Biến thể gốc không context của prompt subgraph. Giữ để tham khảo; "
+                 "strategy dùng các bản có context thay thế.",
     },
     {
         "fn": T.orient_edges_merge_prompt, "args": (_EDGE_PAIR,),
-        "category": "triplet", "title": "Orient a pair of edges (merge)",
+        "category": "triplet", "title": "Định hướng một cặp edge (merge)",
         "prompt_type": None, "active": False,
-        "usage": "Helper that orients two connected undirected edges at once "
-                 "(context hardcoded to congenital heart disease). Not wired into the runs.",
+        "usage": "Hàm phụ trợ định hướng hai undirected edge nối nhau cùng lúc "
+                 "(context hardcode theo congenital heart disease). Không được nối vào các lần chạy.",
     },
 ]
 

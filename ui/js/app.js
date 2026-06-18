@@ -29,6 +29,7 @@
   function paperRef(gk, kind) {
     for (const t of (PR.publishedTables || [])) {
       if (!t.reproduced) continue;
+      if (t.oursSource === "local") continue; // self-host tables aren't the GPT-4o baseline
       let vals = null;
       if (t.layout === "byMethod") {
         const m = t.methods.find((x) => x.kind === kind); if (!m) continue;
@@ -97,10 +98,15 @@
       const maxF1 = Math.max(...rs.map((r) => r.raw.metrics.f1));
       rs.forEach((r, i) => {
         const m = r.raw.metrics;
+        const u = r.usage || {};
         const chipCls = r._kind === "triplet" ? "tri" : r._kind === "quadruplet" ? "quad" : "pair";
+        // pairwise here is the chain-of-thought prompt, so flag it as such.
+        const methodLabel = r._kind === "pairwise" ? "Pairwise (CoT)" : r._kindLabel;
+        const time = u.total_time_sec != null ? C.fmt(u.total_time_sec, 1) : "—";
+        const tokens = u.total_tokens != null ? u.total_tokens.toLocaleString() : "—";
         rows.push(`<tr>
           <td>${i === 0 ? `<b>${(C.GRAPH_META[g] || {}).label || g}</b>` : ""}</td>
-          <td><span class="row-method"><span class="chip ${chipCls}">${r._kindLabel}</span></span></td>
+          <td><span class="row-method"><span class="chip ${chipCls}">${methodLabel}</span></span></td>
           <td class="num ${m.shd === minShd ? "best" : ""}">${m.shd}</td>
           <td class="num ${m.topo_divergence === minTopo ? "best" : ""}">${m.topo_divergence}</td>
           <td class="num">${C.fmt(m.precision, 2)}</td>
@@ -108,10 +114,87 @@
           <td class="num ${m.f1 === maxF1 ? "best" : ""}">${C.fmt(m.f1, 2)}</td>
           <td class="num">${m.n_pred_edges}</td>
           <td class="num">${m.cycles}</td>
+          <td class="num">${time}</td>
+          <td class="num">${tokens}</td>
         </tr>`);
       });
     });
     tbody.innerHTML = rows.join("");
+  }
+
+  // ---------------- self-hosted model tables (one per model) ----------------
+  // Build a metrics table per local model from window.LOCAL_MODELS (mirror of
+  // data/other_model/results_local.json): rows = dataset × method, best SHD /
+  // Dtop per dataset highlighted. Triplet rows that left residual cycles also
+  // show the cycle-removed (acyclic) value in muted parentheses.
+  function initLocalTables() {
+    const host = document.getElementById("local-metrics");
+    const LM = window.LOCAL_MODELS;
+    if (!host || !LM) return;
+
+    const MODELS = ["phi3:mini", "llama3:8b"];
+    const METHODS = [
+      { key: "pairwise_base", label: "Pairwise (Base)", chip: "pair" },
+      { key: "pairwise_cot", label: "Pairwise (CoT)", chip: "pair" },
+      { key: "triplet", label: "Triplet", chip: "tri" },
+    ];
+    const DATASETS = ["cancer", "earthquake", "survey", "asia", "child"];
+    const dsLabel = (k) => (C.GRAPH_META[k] || {}).label || (k[0].toUpperCase() + k.slice(1));
+    const dash = (v) => (v === null || v === undefined) ? "–" : String(v);
+
+    // effective metrics for a record: triplet reports the cycle-removed
+    // (acyclic) graph; pairwise base/CoT have no acyclic variant → raw.
+    const eff = (key, d) => {
+      const tri = key === "triplet";
+      return {
+        shd: tri && d.shd_acyclic != null ? d.shd_acyclic : d.shd,
+        dtop: tri && ("dtop_acyclic" in d) ? d.dtop_acyclic : d.dtop,
+        cycles: tri && d.cycles_acyclic != null ? d.cycles_acyclic : d.cycles,
+        predicted_edges: d.predicted_edges,
+        elapsed_s: d.elapsed_s,
+      };
+    };
+    const cards = MODELS.map((model) => {
+      let body = "";
+      DATASETS.forEach((ds) => {
+        const cells = METHODS.map((m) => {
+          const d = (LM[m.key + "_" + model] || {})[ds];
+          return d ? eff(m.key, d) : null;
+        });
+        const shds = cells.filter(Boolean).map((d) => d.shd).filter((v) => v != null);
+        const dtops = cells.filter(Boolean).map((d) => d.dtop).filter((v) => v != null);
+        const minShd = shds.length ? Math.min(...shds) : null;
+        const minDtop = dtops.length ? Math.min(...dtops) : null;
+        METHODS.forEach((m, i) => {
+          const d = cells[i];
+          if (!d) return;
+          body += `<tr>
+            <td>${i === 0 ? `<b>${dsLabel(ds)}</b>` : ""}</td>
+            <td><span class="row-method"><span class="chip ${m.chip}">${m.label}</span></span></td>
+            <td class="num ${d.shd === minShd ? "best" : ""}">${dash(d.shd)}</td>
+            <td class="num ${d.dtop != null && d.dtop === minDtop ? "best" : ""}">${dash(d.dtop)}</td>
+            <td class="num">${dash(d.cycles)}</td>
+            <td class="num">${d.predicted_edges}</td>
+            <td class="num">${C.fmt(d.elapsed_s, 1)}</td>
+          </tr>`;
+        });
+      });
+      return `<div class="cp-card">
+        <div class="cp-head">
+          <div><h4>${model}</h4><span class="cp-sub">Ollama self-host · base / CoT / triplet · 5 datasets</span></div>
+          <span class="cp-tag">self-host</span>
+        </div>
+        <div class="tbl-wrap" style="box-shadow:none;border-radius:0;border:0">
+          <table class="metrics">
+            <thead><tr><th>Dataset</th><th>Method</th><th>SHD</th><th>D<sub>top</sub></th><th>Cycles</th><th>Pred. edges</th><th>Time (s)</th></tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join("");
+
+    host.innerHTML = `<div class="card-grid">${cards}</div>` +
+      `<p class="muted mt-m" style="font-size:13px;line-height:1.55">Với <b>triplet</b>, số liệu là kết quả <b>sau khi gỡ chu trình</b> (acyclic) — đầu ra thực tế của phương pháp. D<sub>top</sub> hiển thị “–” khi đồ thị còn chu trình nên không tính được thứ tự topo (chỉ xảy ra ở pairwise base). Llama3 base/CoT trả về 0 cạnh parse được trên các đồ thị nhỏ, nên SHD chỉ đếm số cạnh thật bị thiếu.</p>`;
   }
 
   // ---------------- comparison: two published-style tables ----------------
@@ -282,9 +365,41 @@
     // so a run appears beside its row with NO edits to paper_reference.js).
     const rowKey = (row) => row.key || normGraphKey(row.dataset);
 
-    // our reproduced value for a (graph, method, metric), or null
-    function oursMetric(graphKey, kind, mk) {
+    // label for the model whose run we overlay beside this table's paper cells
+    const oursLabelOf = (t) => (t && t.oursLabel) || "GPT-4o";
+
+    // our self-hosted (Ollama) run for a (graph, "<method>_<model>", metric)
+    // pulled from window.LOCAL_MODELS. Used by Table A8 (Phi-3 / Llama3),
+    // where we reproduced the paper's own model family rather than GPT-4o.
+    function oursLocal(model, kind, graphKey, mk) {
+      const LM = window.LOCAL_MODELS;
+      if (!LM || !model || !kind || !graphKey) return null;
+      const d = (LM[kind + "_" + model] || {})[graphKey];
+      if (!d) return null;
+      // Triplet: report the cycle-removed (acyclic) graph — the method's actual
+      // output after the cycle remover, which is what the paper's triplet column
+      // reports. Pairwise base/CoT have no acyclic variant, so use raw.
+      const tri = kind === "triplet";
+      const shd = tri && d.shd_acyclic != null ? d.shd_acyclic : d.shd;
+      const dtop = tri && ("dtop_acyclic" in d) ? d.dtop_acyclic : d.dtop;
+      const cyc = tri && d.cycles_acyclic != null ? d.cycles_acyclic : d.cycles;
+      if (mk === "dtop") {
+        // null Dtop ⇒ cycles prevented a topological order (paper writes "-")
+        if (dtop === null || dtop === undefined) return { disp: "-", num: Infinity };
+        return { disp: String(dtop), num: dtop };
+      }
+      if (mk === "shd") return shd != null ? { disp: String(shd), num: shd } : null;
+      if (mk === "cycles") return cyc != null ? { disp: String(cyc), num: cyc } : null;
+      // isolated-node counts aren't recorded for the self-hosted runs
+      return null;
+    }
+
+    // our reproduced value for a (table, graph, method, metric), or null.
+    // `model` overrides t.oursModel — Table 2 carries a different model per
+    // column (Triplet Phi-3 vs Triplet Llama3), so each column passes its own.
+    function oursMetric(t, graphKey, kind, mk, model) {
       if (!graphKey || !kind) return null;
+      if (t && t.oursSource === "local") return oursLocal(model || t.oursModel, kind, graphKey, mk);
       const r = C.getResult(graphKey, kind);
       if (!r) return null;
       const m = r.raw.metrics;
@@ -309,20 +424,25 @@
     function cmpCls(paperStr, ours, mk) {
       if (!ours) return null;
       const p = paperNum(paperStr, mk), o = ours.num;
-      if (p === null) return "diverge";              // paper had no value, we produced one
+      if (p === null) return o === Infinity ? "match" : "diverge"; // both "-" tie; else we produced a value the paper didn't
       if (p === Infinity) return o < Infinity ? "better" : "match";
       if (o < p) return "better";
       if (o > p) return "worse";
       return "match";
     }
-    function valCell(paperStr, ours, mk) {
+    function valCell(paperStr, ours, mk, label, oursOnly) {
       const disp = (paperStr === "" || paperStr == null) ? "·" : paperStr;
       let html = `<span class="pv">${disp}</span>`;
-      if (ours) html += `<span class="ov cmp-${cmpCls(paperStr, ours, mk) || "match"}" title="our GPT-4o run">${ours.disp}</span>`;
+      if (ours) {
+        // datasets beyond the paper's table have no baseline to compare → neutral
+        const cls = oursOnly ? "match" : (cmpCls(paperStr, ours, mk) || "match");
+        html += `<span class="ov cmp-${cls}" title="our ${label || "GPT-4o"} run">${ours.disp}</span>`;
+      }
       return html;
     }
 
     function renderByMethod(t) {
+      const label = oursLabelOf(t);
       let thead = `<tr><th class="lft">Dataset</th><th class="lft">Metric</th>`;
       t.methods.forEach((m) => { thead += `<th>${m.label}${m.kind ? ` <span class="ours-flag">+ ours</span>` : ""}</th>`; });
       thead += `</tr>`;
@@ -334,8 +454,9 @@
           body += `<td class="lft met">${metricHead(mk, t.inPlain)}</td>`;
           t.methods.forEach((m) => {
             const paperStr = (row.vals[m.label] || {})[mk];
-            const ours = m.kind ? oursMetric(rowKey(row), m.kind, mk) : null;
-            body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
+            const ours = m.kind ? oursMetric(t, rowKey(row), m.kind, mk, m.oursModel) : null;
+            const cellLabel = m.oursModel ? m.oursModel + " self-host" : label;
+            body += `<td class="num">${valCell(paperStr, ours, mk, cellLabel, row.oursOnly)}</td>`;
           });
           body += `</tr>`;
         });
@@ -344,19 +465,20 @@
     }
 
     function renderByMetric(t) {
+      const label = oursLabelOf(t);
       const ncol = t.metrics.length + 1;
       let thead = `<tr><th class="lft">Dataset</th>`;
       t.metrics.forEach((mk) => (thead += `<th>${metricHead(mk, t.inPlain)}</th>`));
       thead += `</tr>`;
       let body = "";
       t.blocks.forEach((b) => {
-        body += `<tr class="blk"><td class="lft" colspan="${ncol}">${b.label}${b.kind ? ` <span class="ours-flag">+ ours (GPT-4o)</span>` : ""}</td></tr>`;
+        body += `<tr class="blk"><td class="lft" colspan="${ncol}">${b.label}${b.kind ? ` <span class="ours-flag">+ ours (${label})</span>` : ""}</td></tr>`;
         b.rows.forEach((row) => {
           body += `<tr><td class="lft ds">${row.dataset}</td>`;
           t.metrics.forEach((mk) => {
             const paperStr = (row.vals || {})[mk];
-            const ours = b.kind ? oursMetric(rowKey(row), b.kind, mk) : null;
-            body += `<td class="num">${valCell(paperStr, ours, mk)}</td>`;
+            const ours = b.kind ? oursMetric(t, rowKey(row), b.kind, mk) : null;
+            body += `<td class="num">${valCell(paperStr, ours, mk, label, row.oursOnly)}</td>`;
           });
           body += `</tr>`;
         });
@@ -378,7 +500,7 @@
 
     function tableCard(t) {
       const tag = t.reproduced
-        ? `<span class="rep-tag rep-yes">reproduced · GPT-4o beside</span>`
+        ? `<span class="rep-tag rep-yes">reproduced · ${oursLabelOf(t)} beside</span>`
         : `<span class="rep-tag rep-no">not yet reproduced · paper only</span>`;
       const inner = t.layout === "byMethod" ? renderByMethod(t)
         : t.layout === "byMetric" ? renderByMetric(t) : renderMatrix(t);
@@ -520,6 +642,7 @@
   function boot() {
     augmentGraphMeta();
     initTable();
+    initLocalTables();
     initComparePair();
     initPublishedTables();
     initPipeline();

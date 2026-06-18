@@ -18,7 +18,7 @@ from ..prompts.pairwise import (
     markov_blanket_prompt,
     cot_pairwise_prompt,
 )
-from ..utils.helpers import parse_answer_tag
+from ..utils.helpers import parse_answer_tag, prompt_text_from_messages
 from ..utils.llm_client import query_llm
 
 
@@ -48,12 +48,6 @@ def _build_messages(prompt_type, X, Y, context=None, nodes=None,
     else:
         available = ", ".join(PROMPT_TYPES.keys())
         raise ValueError(f"Unknown prompt_type '{prompt_type}'. Available: {available}")
-
-
-def _pairwise_question(X, Y):
-    """Short human-readable restatement of a pairwise query (for the trace)."""
-    return (f"Which causal relationship is more likely between '{X}' and '{Y}'? "
-            f"(A: {X} -> {Y};  B: {Y} -> {X};  C: no causal relation)")
 
 
 def run_pairwise_experiment(graph_config, prompt_type="cot", model="gpt-4o",
@@ -133,7 +127,7 @@ def run_pairwise_experiment(graph_config, prompt_type="cot", model="gpt-4o",
                         "pair": [X, Y],
                         "model": model,
                         "prompt_type": prompt_type,
-                        "question": _pairwise_question(X, Y),
+                        "question": prompt_text_from_messages(messages),
                         "response_raw": answer,
                         "answer": ans,
                         "decision": decision,

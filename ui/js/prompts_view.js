@@ -1,10 +1,22 @@
 /* ============================================================
-   prompts_view.js — renders the "Prompts" section: every
-   prompt-building function in causal_discovery/prompts/,
-   straight from window.PROMPTS (built by build_ui_prompts.py).
+   prompts_view.js — "Prompts" section.
+   Pick a prompt from a dropdown and read it. Organised by group
+   (Pairwise / Triplet) and by function:
+     · pairwise → only prompts that HAVE a prompt_type (the selectable
+       ones); identified by prompt_type, no function name / file shown.
+     · triplet  → the 3 active prompts, labelled by their pipeline role.
+   Data comes from window.PROMPTS (built by build_ui_prompts.py).
    ============================================================ */
 (function () {
-  const DATA = (window.PROMPTS && window.PROMPTS.prompts) || [];
+  const ALL = (window.PROMPTS && window.PROMPTS.prompts) || [];
+
+  // What each group shows:
+  //  pairwise → prompts that have a prompt_type (drops the unwired helper)
+  //  triplet  → the active prompts only (drops the reference-only helpers)
+  const LISTS = {
+    pairwise: ALL.filter((p) => p.category === "pairwise" && p.promptType),
+    triplet: ALL.filter((p) => p.category === "triplet" && p.active),
+  };
 
   function el(tag, cls, html) {
     const e = document.createElement(tag);
@@ -25,84 +37,104 @@
 
   const roleLabel = (r) => (r === "system" ? "system" : r === "user" ? "user" : "assistant");
 
+  // short pipeline-stage label for a triplet prompt — its "chức năng"
+  function tripletStage(p) {
+    if (/tiebreaker/.test(p.fn)) return "Vote / merge · phá hòa";
+    return "Phân rã · sinh subgraph DAG";
+  }
+
+  // short tag shown in the dropdown for a prompt: its prompt_type (pairwise)
+  // or pipeline role keyword (triplet).
+  function optionTag(cat, p) {
+    if (cat === "pairwise") return p.promptType;
+    return /tiebreaker/.test(p.fn) ? "phá hòa" : "phân rã";
+  }
+  function chevron() {
+    return `<svg class="pr-dd-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+  }
+
   function init() {
     const root = document.getElementById("prompts-root");
     if (!root) return;
-    if (!DATA.length) {
-      root.innerHTML = `<p class="muted">No prompts loaded. Run <code class="mono">python -m causal_discovery.build_ui_prompts</code>.</p>`;
+    if (!LISTS.pairwise.length && !LISTS.triplet.length) {
+      root.innerHTML = `<p class="muted">Chưa nạp prompt nào. Chạy <code class="mono">python -m causal_discovery.build_ui_prompts</code>.</p>`;
       return;
     }
 
-    let cat = "all";       // all | pairwise | triplet
-    let onlyActive = false;
-    let query = "";
+    let cat = LISTS.pairwise.length ? "pairwise" : "triplet";
+    let idx = 0;
 
-    // ---- summary strip ----
-    const nPair = DATA.filter((p) => p.category === "pairwise").length;
-    const nTrip = DATA.filter((p) => p.category === "triplet").length;
-    const nActive = DATA.filter((p) => p.active).length;
-    const strip = el("div", "stat-strip");
-    strip.style.cssText = "grid-template-columns:repeat(4,1fr);margin-bottom:26px";
-    strip.innerHTML = [
-      [DATA.length, "prompt builders in source"],
-      [nPair, "pairwise prompts"],
-      [nTrip, "triplet / subgroup prompts"],
-      [nActive, "wired into the runs"],
-    ].map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
-    root.appendChild(strip);
-
-    // ---- controls: category seg + active toggle + search ----
+    // ---- controls: group toggle + custom prompt dropdown ----
     const controls = el("div", "pr-controls");
     const seg = el("div", "seg");
-    [["all", `All ${DATA.length}`], ["pairwise", `Pairwise (${nPair})`], ["triplet", `Triplet (${nTrip})`]]
-      .forEach(([k, lab]) => {
-        const b = el("button", k === cat ? "on" : "", lab);
-        b.addEventListener("click", () => {
-          cat = k;
-          seg.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
-          render();
+
+    const dd = el("div", "pr-dd");
+    const ddBtn = el("button", "pr-dd-btn");
+    ddBtn.type = "button";
+    ddBtn.setAttribute("aria-haspopup", "listbox");
+    ddBtn.setAttribute("aria-expanded", "false");
+    const ddLabel = el("span", "pr-dd-label");
+    ddBtn.innerHTML = "";
+    ddBtn.append(ddLabel);
+    ddBtn.insertAdjacentHTML("beforeend", chevron());
+    const ddMenu = el("div", "pr-dd-menu");
+    ddMenu.setAttribute("role", "listbox");
+    dd.append(ddBtn, ddMenu);
+
+    const picker = el("div", "pr-picker");
+    picker.append(el("span", "seg-label", "Prompt"), dd);
+    controls.append(el("span", "seg-label", "Nhóm"), seg, picker);
+
+    const panel = el("div", "pr-panel");
+    root.append(controls, panel);
+
+    function buildSeg() {
+      seg.innerHTML = "";
+      [["pairwise", `Pairwise (${LISTS.pairwise.length})`], ["triplet", `Triplet (${LISTS.triplet.length})`]]
+        .forEach(([k, lab]) => {
+          const b = el("button", k === cat ? "on" : "", lab);
+          b.disabled = !LISTS[k].length;
+          b.addEventListener("click", () => { cat = k; idx = 0; buildSeg(); syncLabel(); closeDD(); render(); });
+          seg.appendChild(b);
         });
-        seg.appendChild(b);
-      });
-
-    const toggle = el("label", "pr-toggle");
-    toggle.innerHTML = `<input type="checkbox" /> Only those wired into the runs`;
-    toggle.querySelector("input").addEventListener("change", (e) => { onlyActive = e.target.checked; render(); });
-
-    const search = el("div", "pr-search");
-    search.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="text" placeholder="Search prompt text, name, parameter…" />`;
-    search.querySelector("input").addEventListener("input", (e) => { query = e.target.value.toLowerCase().trim(); render(); });
-
-    controls.append(seg, toggle, search);
-    root.appendChild(controls);
-
-    // ---- list ----
-    const list = el("div", "pr-list");
-    root.appendChild(list);
-
-    function matches(p) {
-      if (cat !== "all" && p.category !== cat) return false;
-      if (onlyActive && !p.active) return false;
-      if (query) {
-        const hay = (p.fn + " " + p.title + " " + p.usage + " " + (p.params || []).join(" ") + " " +
-          p.messages.map((m) => m.content).join(" ")).toLowerCase();
-        if (!hay.includes(query)) return false;
-      }
-      return true;
     }
 
-    function card(p) {
-      const c = el("div", "pr-card pr-" + p.category);
-      const params = (p.params || []).map((x) => `<code class="pr-param">${x}</code>`).join("");
-      const badges = [
-        `<span class="pr-badge cat-${p.category}">${p.category}</span>`,
-        p.promptType ? `<span class="pr-badge type">prompt_type="${p.promptType}"</span>` : "",
-        p.active
-          ? `<span class="pr-badge live">wired in</span>`
-          : `<span class="pr-badge legacy">reference only</span>`,
-        p.promptType === "cot" ? `<span class="pr-badge def">reproduction default</span>` : "",
-      ].join("");
+    // one option / the trigger label share the same chip + text markup
+    function optionInner(p) {
+      const tagCls = cat === "triplet" ? "pr-dd-tag tri" : "pr-dd-tag";
+      return `<span class="${tagCls}">${optionTag(cat, p)}</span><span class="pr-dd-text">${p.title}</span>`;
+    }
+    function syncLabel() {
+      const p = LISTS[cat][idx];
+      ddLabel.innerHTML = p ? optionInner(p) : "";
+    }
+    function buildMenu() {
+      ddMenu.innerHTML = LISTS[cat].map((p, i) =>
+        `<button class="pr-dd-opt${i === idx ? " sel" : ""}" type="button" role="option" data-i="${i}" aria-selected="${i === idx}">
+          ${optionInner(p)}
+          <svg class="pr-dd-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>`).join("");
+      ddMenu.querySelectorAll(".pr-dd-opt").forEach((b) => {
+        b.addEventListener("click", () => { idx = +b.dataset.i; closeDD(); syncLabel(); render(); });
+      });
+    }
+    function openDD() { buildMenu(); dd.classList.add("open"); ddBtn.setAttribute("aria-expanded", "true"); }
+    function closeDD() { dd.classList.remove("open"); ddBtn.setAttribute("aria-expanded", "false"); }
+    ddBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dd.classList.contains("open") ? closeDD() : openDD();
+    });
+    document.addEventListener("click", (e) => { if (!dd.contains(e.target)) closeDD(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDD(); });
+
+    function render() {
+      const p = LISTS[cat][idx];
+      if (!p) { panel.innerHTML = `<p class="muted">Không có prompt.</p>`; return; }
+
+      const badges = cat === "pairwise"
+        ? `<span class="pr-badge type">prompt_type="${p.promptType}"</span>` +
+          (p.promptType === "cot" ? `<span class="pr-badge def">mặc định khi tái lập</span>` : "")
+        : `<span class="pr-badge cat-triplet">${tripletStage(p)}</span>`;
 
       const msgs = p.messages.map((m) => `
         <div class="pr-msg pr-role-${m.role}">
@@ -110,59 +142,30 @@
           <pre class="pr-msg-body">${decorate(m.content)}</pre>
         </div>`).join("");
 
-      c.innerHTML = `
-        <button class="pr-head" aria-expanded="false">
-          <div class="pr-head-main">
-            <div class="pr-fn"><code>${p.fn}</code><span class="pr-badges">${badges}</span></div>
-            <div class="pr-title">${p.title}</div>
-            <div class="pr-doc">${p.doc || ""}</div>
-            <div class="pr-meta">
-              <span class="pr-file mono">${p.file}</span>
-              ${params ? `<span class="pr-params">(${params})</span>` : ""}
-            </div>
-            <div class="pr-usage"><b>In the pipeline:</b> ${p.usage}</div>
-          </div>
-          <svg class="pr-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="pr-body">
-          <div class="pr-body-bar">
-            <span class="pr-legend"><span class="ph">{placeholder}</span> = filled in at run time</span>
-            <button class="pr-copy" type="button">Copy prompt</button>
-          </div>
-          ${msgs}
-        </div>`;
+      panel.innerHTML = `
+        <div class="pr-panel-head">
+          <div class="pr-badges">${badges}</div>
+          <h3 class="pr-title">${p.title}</h3>
+          <div class="pr-usage"><b>Chức năng:</b> ${p.usage}</div>
+        </div>
+        <div class="pr-body-bar">
+          <span class="pr-legend"><span class="ph">{placeholder}</span> = điền lúc chạy</span>
+          <button class="pr-copy" type="button">Sao chép prompt</button>
+        </div>
+        ${msgs}`;
 
-      const head = c.querySelector(".pr-head");
-      const body = c.querySelector(".pr-body");
-      head.addEventListener("click", () => {
-        const open = c.classList.toggle("open");
-        head.setAttribute("aria-expanded", open ? "true" : "false");
-        body.style.maxHeight = open ? body.scrollHeight + "px" : "0px";
-      });
-
-      const copy = c.querySelector(".pr-copy");
-      copy.addEventListener("click", (e) => {
-        e.stopPropagation();
+      const copy = panel.querySelector(".pr-copy");
+      copy.addEventListener("click", () => {
         const text = p.messages.map((m) => `[${m.role}]\n${m.content}`).join("\n\n");
         navigator.clipboard.writeText(text).then(() => {
-          copy.textContent = "Copied ✓";
-          setTimeout(() => (copy.textContent = "Copy prompt"), 1400);
-        }).catch(() => { copy.textContent = "Copy failed"; });
+          copy.textContent = "Đã sao chép ✓";
+          setTimeout(() => (copy.textContent = "Sao chép prompt"), 1400);
+        }).catch(() => { copy.textContent = "Sao chép thất bại"; });
       });
-
-      return c;
     }
 
-    function render() {
-      list.innerHTML = "";
-      const shown = DATA.filter(matches);
-      if (!shown.length) {
-        list.appendChild(el("p", "muted", "No prompts match the current filter."));
-        return;
-      }
-      shown.forEach((p) => list.appendChild(card(p)));
-    }
-
+    buildSeg();
+    syncLabel();
     render();
   }
 

@@ -2,14 +2,14 @@
    Do not edit by hand — edit the prompt functions in
    causal_discovery/prompts/ and re-run the generator. */
 window.PROMPTS = {
-  "generated_at": "2026-06-17T18:53:49",
+  "generated_at": "2026-06-17T19:40:16",
   "prompts": [
     {
       "id": "cot_pairwise_prompt",
       "fn": "cot_pairwise_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Chain-of-thought pairwise",
+      "title": "Pairwise chain-of-thought",
       "doc": "Chain-of-thought pairwise prompt with few-shot examples from the Cancer\nand Coronary Heart Disease graphs.",
       "params": [
         "X",
@@ -19,7 +19,7 @@ window.PROMPTS = {
       ],
       "promptType": "cot",
       "active": true,
-      "usage": "Default pairwise expert query. Few-shot CoT (Cancer + heart-disease examples) then asks the direction for the real pair (X, Y).",
+      "usage": "Query expert pairwise mặc định. Few-shot CoT (ví dụ Cancer + heart-disease) rồi hỏi hướng cho pair thật (X, Y).",
       "messages": [
         {
           "role": "system",
@@ -36,7 +36,7 @@ window.PROMPTS = {
       "fn": "simple_pairwise_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Simple pairwise",
+      "title": "Pairwise đơn giản",
       "doc": "Basic pairwise prompt asking the LLM to identify the causal direction\nbetween two nodes X and Y, with no additional context.",
       "params": [
         "X",
@@ -44,7 +44,7 @@ window.PROMPTS = {
       ],
       "promptType": "simple",
       "active": true,
-      "usage": "Bare pairwise question for X vs Y, no graph context or examples.",
+      "usage": "Câu hỏi pairwise trần cho X vs Y, không có graph context hay ví dụ.",
       "messages": [
         {
           "role": "system",
@@ -61,7 +61,7 @@ window.PROMPTS = {
       "fn": "pairwise_with_context_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Pairwise with partial-graph context",
+      "title": "Pairwise kèm context của partial graph",
       "doc": "Pairwise prompt that provides the already-oriented part of the causal\ngraph as additional context.",
       "params": [
         "X",
@@ -70,7 +70,7 @@ window.PROMPTS = {
       ],
       "promptType": "context",
       "active": true,
-      "usage": "Adds the already-oriented part of the graph as context for the X–Y call.",
+      "usage": "Thêm phần graph đã được định hướng làm context cho lời gọi X–Y.",
       "messages": [
         {
           "role": "system",
@@ -87,7 +87,7 @@ window.PROMPTS = {
       "fn": "all_directed_edges_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Pairwise with all directed edges",
+      "title": "Pairwise kèm toàn bộ directed edge",
       "doc": "Pairwise prompt that provides the full set of already-directed edges\nfrom the skeleton as context.",
       "params": [
         "X",
@@ -96,7 +96,7 @@ window.PROMPTS = {
       ],
       "promptType": "all_directed",
       "active": true,
-      "usage": "Supplies every edge already oriented in the skeleton as context.",
+      "usage": "Cung cấp mọi edge đã định hướng trong skeleton làm context.",
       "messages": [
         {
           "role": "system",
@@ -113,7 +113,7 @@ window.PROMPTS = {
       "fn": "markov_blanket_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Pairwise with Markov blanket",
+      "title": "Pairwise kèm Markov blanket",
       "doc": "Pairwise prompt that provides the Markov blanket (neighbouring directed\nedges) of nodes X and Y as context.",
       "params": [
         "X",
@@ -123,7 +123,7 @@ window.PROMPTS = {
       ],
       "promptType": "markov_blanket",
       "active": true,
-      "usage": "Gives the neighbouring directed edges of X and Y as local context.",
+      "usage": "Đưa các directed edge lân cận của X và Y làm local context.",
       "messages": [
         {
           "role": "system",
@@ -140,14 +140,14 @@ window.PROMPTS = {
       "fn": "remove_edges_prompt",
       "file": "causal_discovery/prompts/pairwise.py",
       "category": "pairwise",
-      "title": "Prune low-confidence edges",
+      "title": "Cắt tỉa các edge độ tin cậy thấp",
       "doc": "Prompt asking the LLM to prune low-confidence edges from a dense DAG.",
       "params": [
         "graph"
       ],
       "promptType": null,
       "active": false,
-      "usage": "Helper that asks the LLM to drop weak edges from a dense DAG (node list hardcoded to the Child benchmark). Not wired into the runs.",
+      "usage": "Hàm phụ trợ yêu cầu LLM bỏ các edge yếu khỏi một DAG dày đặc (danh sách node hardcode theo benchmark Child). Không được nối vào các lần chạy.",
       "messages": [
         {
           "role": "system",
@@ -164,7 +164,7 @@ window.PROMPTS = {
       "fn": "generate_subgraph_prompt",
       "file": "causal_discovery/prompts/triplet.py",
       "category": "triplet",
-      "title": "Generate subgraph DAG",
+      "title": "Sinh subgraph DAG",
       "doc": "Prompt the LLM to identify causal relationships among a set of nodes\nand output a DAG as a list of directed edge tuples.",
       "params": [
         "nodes",
@@ -172,7 +172,7 @@ window.PROMPTS = {
       ],
       "promptType": null,
       "active": true,
-      "usage": "Decompose step: asks for a DAG (list of edge tuples) over a subgroup of nodes. Used when the dataset ships no node descriptions.",
+      "usage": "Bước decompose: yêu cầu một DAG (danh sách tuple edge) trên một subgroup node. Dùng khi dataset không kèm mô tả node.",
       "messages": [
         {
           "role": "system",
@@ -189,7 +189,7 @@ window.PROMPTS = {
       "fn": "generate_subgraph_with_descr_prompt",
       "file": "causal_discovery/prompts/triplet.py",
       "category": "triplet",
-      "title": "Generate subgraph DAG (with descriptions)",
+      "title": "Sinh subgraph DAG (kèm mô tả)",
       "doc": "Prompt the LLM to identify causal relationships among a set of nodes,\nusing node descriptions to improve orientation accuracy.",
       "params": [
         "nodes",
@@ -198,7 +198,7 @@ window.PROMPTS = {
       ],
       "promptType": null,
       "active": true,
-      "usage": "Same as above but feeds each node's description to sharpen orientation. Used when the dataset provides descriptions.",
+      "usage": "Giống trên nhưng đưa thêm mô tả của mỗi node để định hướng sắc hơn. Dùng khi dataset có kèm mô tả.",
       "messages": [
         {
           "role": "system",
@@ -215,7 +215,7 @@ window.PROMPTS = {
       "fn": "cot_tiebreaker_prompt",
       "file": "causal_discovery/prompts/triplet.py",
       "category": "triplet",
-      "title": "CoT tie-breaker",
+      "title": "Phá hòa bằng CoT",
       "doc": "Chain-of-thought few-shot prompt used as a tie-breaker in the triplet\nvoting merge step. Uses examples from Cancer and Coronary Heart Disease.",
       "params": [
         "X",
@@ -225,7 +225,7 @@ window.PROMPTS = {
       ],
       "promptType": null,
       "active": true,
-      "usage": "Vote/merge step: a few-shot CoT pairwise call that breaks ties when subgroup votes split evenly on an edge's direction.",
+      "usage": "Bước vote/merge: một lời gọi pairwise few-shot CoT để phá hòa khi vote của các subgroup chia đều về hướng của một edge.",
       "messages": [
         {
           "role": "system",
@@ -242,14 +242,14 @@ window.PROMPTS = {
       "fn": "generate_subgraph_original_prompt",
       "file": "causal_discovery/prompts/triplet.py",
       "category": "triplet",
-      "title": "Generate subgraph DAG (original, no context)",
+      "title": "Sinh subgraph DAG (bản gốc, không context)",
       "doc": "Original prompt (no context) asking the LLM to generate a DAG from nodes.",
       "params": [
         "nodes"
       ],
       "promptType": null,
       "active": false,
-      "usage": "Original context-free variant of the subgraph prompt. Kept for reference; the strategy uses the context-aware versions instead.",
+      "usage": "Biến thể gốc không context của prompt subgraph. Giữ để tham khảo; strategy dùng các bản có context thay thế.",
       "messages": [
         {
           "role": "system",
@@ -266,14 +266,14 @@ window.PROMPTS = {
       "fn": "orient_edges_merge_prompt",
       "file": "causal_discovery/prompts/triplet.py",
       "category": "triplet",
-      "title": "Orient a pair of edges (merge)",
+      "title": "Định hướng một cặp edge (merge)",
       "doc": "Prompt the LLM to orient a pair of connected undirected edges.",
       "params": [
         "edges"
       ],
       "promptType": null,
       "active": false,
-      "usage": "Helper that orients two connected undirected edges at once (context hardcoded to congenital heart disease). Not wired into the runs.",
+      "usage": "Hàm phụ trợ định hướng hai undirected edge nối nhau cùng lúc (context hardcode theo congenital heart disease). Không được nối vào các lần chạy.",
       "messages": [
         {
           "role": "system",

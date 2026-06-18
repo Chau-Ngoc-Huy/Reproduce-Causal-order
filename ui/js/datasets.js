@@ -9,10 +9,15 @@ window.DATASETS = [
     origin: "Classic Bayesian-network benchmark (Korb & Nicholson)",
     nodeCount: 5, edgeCount: 4, reproduced: true,
     context: "model the relation between various variables responsible for causing Cancer and its possible outcomes",
+    context_vn: "mô hình hóa mối quan hệ giữa các biến số gây ra ung thư và các kết cục có thể xảy ra",
     nodes: ["smoker", "pollution", "cancer", "xray", "dyspnoea"],
     descriptions: {
       smoker: "smoking habit", pollution: "exposure to pollutants", cancer: "cancer",
       xray: "getting positive xray result", dyspnoea: "dyspnoea",
+    },
+    descriptions_vn: {
+      smoker: "thói quen hút thuốc", pollution: "phơi nhiễm với các chất ô nhiễm", cancer: "ung thư",
+      xray: "có kết quả chụp X-quang dương tính", dyspnoea: "khó thở",
     },
   },
   {
@@ -33,6 +38,7 @@ window.DATASETS = [
     origin: "Lauritzen & Spiegelhalter (1988) — the canonical \u201cAsia\u201d network",
     nodeCount: 8, edgeCount: 8, reproduced: false,
     context: "model the possible respiratory problems someone can have who has recently visited Asia and is experiencing shortness of breath",
+    context_vn: "mô hình hóa các vấn đề hô hấp có thể gặp ở một người vừa đi đến châu Á và đang bị khó thở",
     nodes: [
       "visit to Asia", "tuberculosis", "either tuberculosis or lung cancer", "positive X-ray",
       "dyspnoea", "bronchitis", "lung cancer", "smoking",
@@ -43,12 +49,19 @@ window.DATASETS = [
       "positive X-ray": "getting positive xray result", dyspnoea: "dyspnoea", bronchitis: "bronchitis",
       "lung cancer": "lung cancer", smoking: "smoking habit",
     },
+    descriptions_vn: {
+      "visit to Asia": "đi đến các nước châu Á có mức độ phơi nhiễm cao với các chất ô nhiễm",
+      tuberculosis: "bệnh lao", "either tuberculosis or lung cancer": "mắc lao hoặc ung thư phổi",
+      "positive X-ray": "có kết quả chụp X-quang dương tính", dyspnoea: "khó thở", bronchitis: "viêm phế quản",
+      "lung cancer": "ung thư phổi", smoking: "thói quen hút thuốc",
+    },
   },
   {
     key: "child", label: "Child", domain: "Neonatology",
     origin: "Spiegelhalter et al. — congenital heart disease in newborns",
     nodeCount: 20, edgeCount: 25, reproduced: false,
     context: "model congenital heart disease in babies",
+    context_vn: "mô hình hóa bệnh tim bẩm sinh ở trẻ sơ sinh",
     nodes: [
       "BirthAsphyxia", "HypDistrib", "HypoxiaInO2", "CO2", "ChestXray", "Grunting", "LVHreport",
       "LowerBodyO2", "RUQO2", "CO2Report", "XrayReport", "Disease", "GruntingReport", "Age", "LVH",
@@ -69,6 +82,22 @@ window.DATASETS = [
       CardiacMixing: "mixing of oxygenated and deoxygenated blood",
       LungParench: "the state of the blood vessels in the lungs",
       LungFlow: "low blood flow in the lungs", Sick: "presence of an illness",
+    },
+    descriptions_vn: {
+      BirthAsphyxia: "thiếu oxy trong máu trong quá trình sinh của trẻ sơ sinh",
+      HypDistrib: "các vùng thiếu oxy phân bố đều khắp cơ thể",
+      HypoxiaInO2: "tình trạng thiếu oxy khi thở oxy", CO2: "nồng độ carbon dioxide trong cơ thể",
+      ChestXray: "chụp X-quang ngực", Grunting: "tiếng rên ở trẻ sơ sinh",
+      LVHreport: "báo cáo có phì đại thất trái",
+      LowerBodyO2: "nồng độ oxy ở phần dưới cơ thể",
+      RUQO2: "nồng độ oxy ở cơ tứ đầu đùi phải phía trên",
+      CO2Report: "tài liệu báo cáo nồng độ CO2 trong máu cao",
+      XrayReport: "phổi chứa quá nhiều máu", Disease: "bệnh methemoglobin huyết ở trẻ sơ sinh",
+      GruntingReport: "báo cáo về tiếng rên của trẻ sơ sinh", Age: "tuổi của trẻ sơ sinh khi phát bệnh",
+      LVH: "sự dày lên của thất trái", DuctFlow: "lưu lượng máu qua ống động mạch",
+      CardiacMixing: "sự pha trộn giữa máu giàu oxy và máu nghèo oxy",
+      LungParench: "tình trạng các mạch máu trong phổi",
+      LungFlow: "lưu lượng máu thấp trong phổi", Sick: "sự hiện diện của bệnh tật",
     },
   },
   {
@@ -93,11 +122,17 @@ window.DATASETS = [
     origin: "Pearl's classic burglary / earthquake alarm network",
     nodeCount: 5, edgeCount: 4, reproduced: false,
     context: "model factors influencing the probability of a burglary",
+    context_vn: "mô hình hóa các yếu tố ảnh hưởng đến xác suất xảy ra một vụ trộm",
     nodes: ["Burglary", "Earthquake", "Alarm", "JohnCalls", "Marycalls"],
     descriptions: {
       Burglary: "burglar entering", Earthquake: "earthquake hitting", Alarm: "home alarm going off in a house",
       JohnCalls: "first neighbor to call to inform the alarm sound",
       Marycalls: "second neighbor to call to inform the alarm sound",
+    },
+    descriptions_vn: {
+      Burglary: "kẻ trộm đột nhập", Earthquake: "động đất xảy ra", Alarm: "chuông báo động trong nhà kêu",
+      JohnCalls: "người hàng xóm đầu tiên gọi điện báo về tiếng chuông báo động",
+      Marycalls: "người hàng xóm thứ hai gọi điện báo về tiếng chuông báo động",
     },
   },
   {
@@ -105,12 +140,19 @@ window.DATASETS = [
     origin: "bnlearn \u201csurvey\u201d transport-usage network",
     nodeCount: 6, edgeCount: 6, reproduced: false,
     context: "model a hypothetical survey whose aim is to investigate the usage patterns of different means of transport.",
+    context_vn: "mô hình hóa một khảo sát giả định nhằm mục đích nghiên cứu thói quen sử dụng các phương tiện giao thông khác nhau.",
     nodes: ["Age", "Sex", "Education", "Occupation", "Residence", "Travel"],
     descriptions: {
       Age: "Age of people using transport", Sex: "male or female",
       Education: "up to high school or university degree", Occupation: "employee or self-employed",
       Residence: "the size of the city the individual lives in (small or big)",
       Travel: "the means of transport favoured by the individual",
+    },
+    descriptions_vn: {
+      Age: "tuổi của người sử dụng phương tiện giao thông", Sex: "nam hoặc nữ",
+      Education: "trình độ học vấn đến cấp trung học phổ thông hoặc bằng đại học", Occupation: "người làm công ăn lương hoặc tự kinh doanh",
+      Residence: "quy mô thành phố mà cá nhân sinh sống (nhỏ hoặc lớn)",
+      Travel: "phương tiện giao thông được cá nhân ưa chuộng",
     },
   },
   {

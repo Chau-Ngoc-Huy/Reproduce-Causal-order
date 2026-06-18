@@ -93,6 +93,48 @@ def _edgewise_dist(trace):
     return dist or None
 
 
+def _llm_queries(trace):
+    """Every individual LLM call in a trace, regardless of strategy.
+
+    Pairwise keeps its calls under ``stages.pairs.queries``; the subgroup
+    strategy spreads them across ``subgraph_queries`` and (when ties need
+    resolving) ``tiebreaker_queries``.
+    """
+    stages = trace.get("stages") or {}
+    if trace.get("strategy") == "pairwise":
+        return list((stages.get("pairs") or {}).get("queries") or [])
+    return list(stages.get("subgraph_queries") or []) + \
+        list(stages.get("tiebreaker_queries") or [])
+
+
+def _aggregate_usage(trace):
+    """Sum wall-clock latency and token usage across every LLM call.
+
+    Returns ``total_time_sec`` (sum of per-query ``latency_sec``),
+    ``total_tokens`` (sum of ``usage.total_tokens``) and ``n_queries``.
+    ``total_tokens`` is ``None`` when no query carries usage info, so the UI
+    can show "—" instead of a misleading 0 for older traces.
+    """
+    total_time = 0.0
+    total_tokens = 0
+    n_time = n_tokens = n = 0
+    for q in _llm_queries(trace):
+        n += 1
+        lat = q.get("latency_sec")
+        if isinstance(lat, (int, float)):
+            total_time += lat
+            n_time += 1
+        tok = (q.get("usage") or {}).get("total_tokens")
+        if isinstance(tok, (int, float)):
+            total_tokens += tok
+            n_tokens += 1
+    return {
+        "total_time_sec": round(total_time, 2) if n_time else None,
+        "total_tokens": int(total_tokens) if n_tokens else None,
+        "n_queries": n,
+    }
+
+
 def _trace_block(trace):
     """Slim, browser-ready replay data for the *Pipeline* view.
 
@@ -168,6 +210,7 @@ def convert_trace(trace, graph_override=None):
 
     record = build_result(partial, graph_override=graph_override or trace.get("graph"))
     record["source_file"] = None  # set by caller
+    record["usage"] = _aggregate_usage(trace)
     record["_trace"] = _trace_block(trace)
     return record
 

@@ -24,6 +24,18 @@ def parse_answer_tag(text):
     return None
 
 
+def prompt_text_from_messages(messages):
+    """Return the actual prompt text that was sent to the model.
+
+    The trace stores this string as a query's ``question`` so it matches the
+    real payload (``messages``) instead of a hand-written restatement. The
+    system message is just role-setting boilerplate, so only the non-system
+    message content is kept.
+    """
+    parts = [m.get("content", "") for m in messages if m.get("role") != "system"]
+    return "\n".join(parts).strip()
+
+
 def str_2_lst(str1):
     """
     Convert a string representation of a list of tuples into an actual list.

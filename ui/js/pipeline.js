@@ -202,10 +202,19 @@
       const ord = result.raw.order || nodes;
       return sg.slice().sort((a, b) => ord.indexOf(a) - ord.indexOf(b));
     }
-    // truncate a long prompt question for display
-    function trimQ(q) {
-      if (!q) return "";
-      return q.length > 220 ? q.slice(0, 217) + "…" : q;
+    // The question/response are the *actual* prompt + raw reply, so they carry
+    // literal <Answer> tags and CoT few-shot text. Escape them (otherwise the
+    // tags get parsed as HTML and vanish) and highlight the <Answer> markers.
+    function decorate(s) {
+      const esc = String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return esc.replace(/&lt;\/?Answer&gt;/g, (m) => `<span class="hl">${m}</span>`);
+    }
+    // Prompt panel shown for one query: the full prompt that was sent plus the
+    // model's raw reply, both scrollable since real prompts are long.
+    function promptBox(q) {
+      return `<div><span class="role">user ›</span> <span class="prompt-text">${decorate(q.question)}</span></div>
+         <div style="margin-top:12px"><span class="role">assistant ›</span> <span class="prompt-text">${decorate(q.response_raw)}</span></div>`;
     }
     function answerChip(txt) {
       return `<span class="mono" style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--ink);color:#fff">${txt}</span>`;
@@ -342,9 +351,7 @@
       host.appendChild(grid);
 
       const prompt = el("div", "prompt-box fx");
-      prompt.innerHTML =
-        `<div><span class="role">user ›</span> ${trimQ(q.question)}</div>
-         <div style="margin-top:12px"><span class="role">assistant ›</span> ${q.response_raw || ""}</div>`;
+      prompt.innerHTML = promptBox(q);
       grid.appendChild(prompt);
       setTimeout(() => prompt.classList.add("in"), 40);
 
@@ -405,39 +412,92 @@
       const head = el("div");
       head.innerHTML = `<div class="stage-title">Vote across subgroups</div>
         <div class="stage-sub">Every subgroup that contains a pair (A, B) casts a directed vote. We aggregate all votes for that pair:
-        the majority direction wins, and the spread (entropy) tells us how confident the expert was.</div>`;
+        the majority direction wins, and the spread (entropy) tells us how confident the expert was. Pairs that became an edge in
+        the final graph are <b>highlighted</b>; use <b>Show all pairs</b> to see every pair, including those that yielded no edge.</div>`;
       canvas.appendChild(head);
 
       const legend = el("div", "legend"); legend.style.marginBottom = "16px";
       legend.innerHTML = `
         <span class="item"><span class="dot" style="background:#4f46e5"></span>A → B</span>
         <span class="item"><span class="dot" style="background:#0ea5b7"></span>B → A</span>
-        <span class="item"><span class="dot" style="background:#cbd2de"></span>no edge</span>`;
+        <span class="item"><span class="dot" style="background:#cbd2de"></span>no edge (vote)</span>
+        <span class="item"><span class="dot" style="background:var(--c-correct);border-radius:3px"></span>became an edge (highlighted)</span>`;
       canvas.appendChild(legend);
+
+      // Map each unordered pair -> its final categorized edge. Predicted edges
+      // carry correct/reversed/extra; a missed ground-truth edge carries "missing".
+      const edgeByPair = {};
+      (result.raw.edges || []).forEach((e) => { edgeByPair[[e.from, e.to].slice().sort().join("")] = e; });
+      const isChosen = (c) => c === "correct" || c === "reversed" || c === "extra" || c === "uncertain";
+
+      const ewAll = (result.edgewise || []).slice().sort((a, b) => a.entropy - b.entropy);
+      const rowsData = ewAll.map((v) => {
+        const e = edgeByPair[[v.a, v.b].slice().sort().join("")];
+        const category = e ? e.category : "none";
+        return { v, e, category, chosen: isChosen(category) };
+      });
+      // chosen first, then missed GT edges, then plain "no edge" (entropy order kept within each group)
+      const rank = (r) => (r.chosen ? 0 : (r.category === "missing" ? 1 : 2));
+      rowsData.sort((a, b) => rank(a) - rank(b));
+      const primaryCount = rowsData.filter((r) => rank(r) < 2).length;
 
       const list = el("div", "vote-list");
       canvas.appendChild(list);
-      const ewAll = (result.edgewise || []).slice().sort((a, b) => a.entropy - b.entropy);
-      const cap = 14;
-      const ew = ewAll.slice(0, cap);
       const segColors = ["#4f46e5", "#0ea5b7", "#cbd2de"];
-      const rows = ew.map((v) => {
-        const item = el("div", "vote-item fx");
+
+      const allRows = rowsData.map((r) => {
+        const v = r.v;
+        const cat = C.EDGE_CAT[r.category] || null;
         const total = v.probs.reduce((s, x) => s + x, 0) || 1;
         const segs = v.probs.map((p, i) => {
           const pct = (p / total * 100);
           if (pct < 0.5) return "";
           return `<div class="vote-seg" style="background:${segColors[i]};width:${pct}%">${pct >= 16 ? Math.round(pct) + "%" : ""}</div>`;
         }).join("");
+
+        // outcome cell: edge direction (relative to the A·B order shown) + category
+        let outcome;
+        if (r.chosen && r.e) {
+          const dir = r.e.from === v.a ? "A→B" : "B→A";
+          outcome = `<span class="mono" style="font-size:11px;color:${cat.color}">${dir} · ${cat.label}</span>`;
+        } else if (r.category === "missing" && r.e) {
+          const dir = r.e.from === v.a ? "A⇢B" : "B⇢A";
+          outcome = `<span class="mono" style="font-size:11px;color:${C.EDGE_CAT.missing.color}">${dir} · missing</span>`;
+        } else {
+          outcome = `<span class="mono" style="font-size:11px;color:var(--muted)">no edge</span>`;
+        }
+
+        const item = el("div", "vote-item fx");
+        const accent = r.chosen ? (cat ? cat.color : "var(--c-correct)") : "transparent";
+        item.style.cssText = "grid-template-columns:170px 1fr auto;padding:6px 10px;border-radius:8px;" +
+          "border-left:3px solid " + accent + ";" + (r.chosen ? "background:var(--bg-tint);" : "opacity:.72;");
         item.innerHTML = `<div class="vote-pair">${C.shortName(v.a)} · ${C.shortName(v.b)}</div>
-          <div class="vote-track">${segs}</div>`;
+          <div class="vote-track">${segs}</div>
+          <div style="text-align:right;white-space:nowrap;padding-left:8px">${outcome}</div>`;
+        list.appendChild(item);
         return item;
       });
-      staged(list, rows, 80);
-      if (ewAll.length > cap) {
-        const more = el("div", "fx"); more.style.cssText = "font-size:12.5px;color:var(--muted);margin-top:6px";
-        more.innerHTML = `+ ${ewAll.length - cap} more pairs, sorted by confidence (lowest entropy first).`;
-        list.appendChild(more); setTimeout(() => more.classList.add("in"), 120 + rows.length * 80);
+
+      let expanded = primaryCount >= allRows.length;
+      function applyView() {
+        const limit = expanded ? allRows.length : primaryCount;
+        let shown = 0;
+        allRows.forEach((row, i) => {
+          const vis = i < limit;
+          row.style.display = vis ? "" : "none";
+          if (vis && !row.classList.contains("in")) setTimeout(((rw) => () => rw.classList.add("in"))(row), 60 + (shown++) * 55);
+        });
+      }
+      applyView();
+
+      const hidden = allRows.length - primaryCount;
+      if (hidden > 0) {
+        const btn = el("button", "btn btn-ghost");
+        btn.style.cssText = "align-self:flex-start;margin-top:10px;padding:7px 14px;font-size:12.5px";
+        const moreLbl = `Show all pairs (+${hidden} with no edge)`;
+        btn.textContent = moreLbl;
+        btn.addEventListener("click", () => { expanded = !expanded; btn.textContent = expanded ? "Show fewer" : moreLbl; applyView(); });
+        canvas.appendChild(btn);
       }
     }
 
@@ -517,9 +577,7 @@
       host.appendChild(grid);
 
       const prompt = el("div", "prompt-box fx");
-      prompt.innerHTML =
-        `<div><span class="role">user ›</span> ${trimQ(q.question)}</div>
-         <div style="margin-top:12px"><span class="role">assistant ›</span> ${q.response_raw || ""}</div>`;
+      prompt.innerHTML = promptBox(q);
       grid.appendChild(prompt);
       setTimeout(() => prompt.classList.add("in"), 40);
 
@@ -572,36 +630,114 @@
     function renderAssemble() {
       const head = el("div");
       head.innerHTML = `<div class="stage-title">Assemble the directed graph</div>
-        <div class="stage-sub">Each pair's answer contributes at most one directed edge. Collected together they form the predicted
-        graph directly — no voting. With only two variables in view, the expert can add shortcut edges it cannot rule out.</div>`;
+        <div class="stage-sub">Each pair's answer contributes at most one directed edge. Pairs the expert turned into
+        an edge are <b>highlighted</b>; pairs it judged to have no causal link (answer C) add nothing. Use
+        <b>Show all pairs</b> to see every C(n,2) query — including the ones that produced no edge.</div>`;
       canvas.appendChild(head);
 
       const legend = el("div", "legend"); legend.style.marginBottom = "16px";
       legend.innerHTML = ["correct", "reversed", "extra", "missing"].map((cat) => {
         const c = C.EDGE_CAT[cat];
         return `<span class="item"><span class="dot" style="background:${c.color}"></span>${c.label}</span>`;
-      }).join("");
+      }).join("") +
+        `<span class="item"><span class="dot" style="background:var(--muted)"></span>No edge (answer C)</span>`;
       canvas.appendChild(legend);
 
-      const edges = (result.raw.edges || []);
-      const cap = 18;
-      const shown = edges.slice(0, cap);
-      const list = el("div"); list.style.cssText = "display:flex;flex-direction:column;gap:8px";
+      // Map each unordered pair -> its categorized edge. Predicted edges carry
+      // correct/reversed/extra; a missed ground-truth edge carries "missing".
+      const edgeByPair = {};
+      (result.raw.edges || []).forEach((e) => { edgeByPair[[e.from, e.to].slice().sort().join("")] = e; });
+
+      // With a real trace we render *every* pair (so the rejected "answer C" pairs
+      // show too); otherwise fall back to the categorized edge list.
+      const qs = (trace && trace.queries) || [];
+      let rowsData;
+      if (qs.length) {
+        rowsData = qs.map((q) => {
+          const e = edgeByPair[q.pair.slice().sort().join("")];
+          const chosen = !!(q.edge && (q.decision === "forward" || q.decision === "reverse"));
+          return {
+            chosen,
+            category: chosen ? ((e && e.category) || "extra") : (e ? e.category : "none"),
+            edge: chosen ? q.edge : (e && e.category === "missing" ? [e.from, e.to] : null),
+            pair: q.pair,
+            answer: q.answer || (chosen ? null : "C"),
+          };
+        });
+      } else {
+        rowsData = (result.raw.edges || []).map((e) => ({
+          chosen: e.category !== "missing",
+          category: e.category,
+          edge: [e.from, e.to],
+          pair: [e.from, e.to],
+          answer: null,
+        }));
+      }
+
+      // chosen first, then missed GT edges, then plain "no edge" rejections
+      const rank = (r) => (r.chosen ? 0 : (r.category === "missing" ? 1 : 2));
+      rowsData.sort((a, b) => rank(a) - rank(b));
+      const primaryCount = rowsData.filter((r) => rank(r) < 2).length;  // chosen + missing
+
+      const list = el("div"); list.style.cssText = "display:flex;flex-direction:column;gap:6px";
       canvas.appendChild(list);
-      const rows = shown.map((e) => {
-        const cat = C.EDGE_CAT[e.category] || C.EDGE_CAT.correct;
+
+      const sepDash = `<span style="color:var(--muted);font-weight:700;font-size:15px;padding:0 2px">—</span>`;
+      const dashArrow = `<svg width="26" height="12" viewBox="0 0 26 12" fill="none" style="flex:none;opacity:.65"><path d="M0 6h22m0 0-5-4m5 4-5 4" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+      const allRows = rowsData.map((r) => {
+        const cat = C.EDGE_CAT[r.category] || null;
+        const accent = r.chosen ? (cat ? cat.color : "var(--c-correct)") : "transparent";
         const item = el("div");
-        item.style.cssText = "display:flex;align-items:center;gap:8px";
-        item.innerHTML =
-          `<span style="display:inline-flex;align-items:center;gap:8px">${ntok(e.from)}${arrow()}${ntok(e.to)}</span>` +
-          `<span class="mono" style="font-size:12px;color:${cat.color}">${cat.label}</span>`;
+        item.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;" +
+          "padding:7px 11px;border-radius:8px;border-left:3px solid " + accent + ";" +
+          (r.chosen ? "background:var(--bg-tint);" : "opacity:.7;");
+        let nodesHtml, labelHtml;
+        if (r.chosen) {
+          nodesHtml = ntok(r.edge[0]) + arrow() + ntok(r.edge[1]);
+          labelHtml = `<span class="mono" style="font-size:12px;color:${cat.color}">${cat.label}</span>`
+            + `<span class="mono" style="font-size:11px;color:var(--muted)">chosen${r.answer ? " · ans " + r.answer : ""}</span>`;
+        } else if (r.category === "missing" && r.edge) {
+          nodesHtml = ntok(r.edge[0]) + dashArrow + ntok(r.edge[1]);
+          labelHtml = `<span class="mono" style="font-size:12px;color:${C.EDGE_CAT.missing.color}">${C.EDGE_CAT.missing.label}</span>`
+            + `<span class="mono" style="font-size:11px;color:var(--muted)">not chosen · ans ${r.answer}</span>`;
+        } else {
+          nodesHtml = ntok(r.pair[0]) + sepDash + ntok(r.pair[1]);
+          labelHtml = `<span class="mono" style="font-size:12px;color:var(--muted)">no edge · ans ${r.answer}</span>`;
+        }
+        item.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">${nodesHtml}</span>`
+          + `<span style="display:inline-flex;align-items:center;gap:8px;flex:none">${labelHtml}</span>`;
+        item.classList.add("fx");
+        list.appendChild(item);
         return item;
       });
-      staged(list, rows, 60);
-      if (edges.length > cap) {
-        const more = el("div", "fx"); more.style.cssText = "font-size:12.5px;color:var(--muted);margin-top:6px";
-        more.innerHTML = `+ ${edges.length - cap} more edges.`;
-        list.appendChild(more); setTimeout(() => more.classList.add("in"), 120 + rows.length * 60);
+
+      let expanded = primaryCount >= allRows.length;
+      function applyView() {
+        const limit = expanded ? allRows.length : primaryCount;
+        let shown = 0;
+        allRows.forEach((row, i) => {
+          const vis = i < limit;
+          row.style.display = vis ? "" : "none";
+          if (vis && !row.classList.contains("in")) {
+            setTimeout(((rw) => () => rw.classList.add("in"))(row), 60 + (shown++) * 45);
+          }
+        });
+      }
+      applyView();
+
+      const hidden = allRows.length - primaryCount;
+      if (hidden > 0) {
+        const btn = el("button", "btn btn-ghost");
+        btn.style.cssText = "align-self:flex-start;margin-top:10px;padding:7px 14px;font-size:12.5px";
+        const moreLbl = `Show all pairs (+${hidden} with no edge)`;
+        btn.textContent = moreLbl;
+        btn.addEventListener("click", () => {
+          expanded = !expanded;
+          btn.textContent = expanded ? "Show fewer" : moreLbl;
+          applyView();
+        });
+        canvas.appendChild(btn);
       }
 
       // count summary
@@ -609,8 +745,12 @@
       const summary = el("div", "fx"); summary.style.cssText = "margin-top:16px;font-size:13px;color:var(--muted)";
       const parts = ["correct", "reversed", "extra", "missing"]
         .filter((c) => counts[c]).map((c) => `<b style="color:${C.EDGE_CAT[c].color}">${counts[c]}</b> ${c}`);
-      summary.innerHTML = `Predicted <b class="mono">${result.raw.metrics.n_pred_edges}</b> edges — ${parts.join(" · ")}. Next: read the order off this graph.`;
-      list.appendChild(summary); setTimeout(() => summary.classList.add("in"), 160 + rows.length * 60);
+      const noEdge = rowsData.filter((r) => !r.chosen && r.category !== "missing").length;
+      summary.innerHTML = `Predicted <b class="mono">${result.raw.metrics.n_pred_edges}</b> edges from `
+        + `<b class="mono">${rowsData.length}</b> pairs`
+        + (noEdge ? ` (<b class="mono">${noEdge}</b> answered “no edge”)` : "")
+        + ` — ${parts.join(" · ")}. Next: read the order off this graph.`;
+      canvas.appendChild(summary); setTimeout(() => summary.classList.add("in"), 220);
     }
 
     // ===================== SHARED: STAGE 4 & 5 =====================

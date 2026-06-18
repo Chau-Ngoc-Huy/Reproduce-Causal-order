@@ -1,0 +1,43 @@
+
+============================================================
+Graph: asia (8 nodes, 8 GT edges)
+Subgraph model (weak learner): gpt-4o-mini
+Expert model (tie-breaker):    gpt-4o
+============================================================
+
+Total triplets: 56
+Querying triplets:   0%|          | 0/56 [00:00<?, ?it/s]Querying triplets:   2%|▏         | 1/56 [00:07<07:18,  7.98s/it]Querying triplets:   4%|▎         | 2/56 [00:14<06:18,  7.02s/it]Querying triplets:   5%|▌         | 3/56 [00:20<05:47,  6.56s/it]Querying triplets:   7%|▋         | 4/56 [00:29<06:25,  7.41s/it]Querying triplets:   9%|▉         | 5/56 [00:35<05:57,  7.01s/it]Querying triplets:  11%|█         | 6/56 [00:41<05:31,  6.62s/it]Querying triplets:  12%|█▎        | 7/56 [00:46<05:09,  6.31s/it]Querying triplets:  14%|█▍        | 8/56 [00:52<04:48,  6.02s/it]Querying triplets:  16%|█▌        | 9/56 [00:58<04:39,  5.96s/it]Querying triplets:  18%|█▊        | 10/56 [01:05<04:54,  6.41s/it]Querying triplets:  20%|█▉        | 11/56 [01:11<04:39,  6.22s/it]Querying triplets:  21%|██▏       | 12/56 [01:22<05:40,  7.73s/it]Querying triplets:  23%|██▎       | 13/56 [01:28<05:04,  7.08s/it]Querying triplets:  25%|██▌       | 14/56 [01:36<05:14,  7.49s/it]Querying triplets:  27%|██▋       | 15/56 [01:42<04:45,  6.96s/it]Querying triplets:  29%|██▊       | 16/56 [01:49<04:38,  6.95s/it]Querying triplets:  30%|███       | 17/56 [01:55<04:27,  6.85s/it]Querying triplets:  32%|███▏      | 18/56 [02:02<04:20,  6.85s/it]Querying triplets:  34%|███▍      | 19/56 [02:07<03:53,  6.30s/it]Querying triplets:  36%|███▌      | 20/56 [02:12<03:34,  5.96s/it]Querying triplets:  38%|███▊      | 21/56 [02:20<03:45,  6.45s/it]Querying triplets:  39%|███▉      | 22/56 [02:27<03:44,  6.60s/it]Querying triplets:  41%|████      | 23/56 [02:35<03:52,  7.05s/it]Querying triplets:  43%|████▎     | 24/56 [02:48<04:41,  8.79s/it]Querying triplets:  45%|████▍     | 25/56 [02:55<04:18,  8.35s/it]Querying triplets:  46%|████▋     | 26/56 [03:02<03:53,  7.77s/it]Querying triplets:  48%|████▊     | 27/56 [03:07<03:25,  7.10s/it]Querying triplets:  50%|█████     | 28/56 [03:15<03:23,  7.27s/it]Querying triplets:  52%|█████▏    | 29/56 [03:23<03:25,  7.63s/it]Querying triplets:  54%|█████▎    | 30/56 [03:30<03:13,  7.45s/it]Querying triplets:  55%|█████▌    | 31/56 [03:40<03:24,  8.20s/it]Querying triplets:  57%|█████▋    | 32/56 [03:47<03:05,  7.71s/it]Querying triplets:  59%|█████▉    | 33/56 [03:53<02:47,  7.27s/it]Querying triplets:  61%|██████    | 34/56 [04:01<02:42,  7.37s/it]Querying triplets:  62%|██████▎   | 35/56 [04:07<02:29,  7.13s/it]Querying triplets:  64%|██████▍   | 36/56 [04:14<02:19,  6.98s/it]Querying triplets:  66%|██████▌   | 37/56 [04:26<02:40,  8.44s/it]Querying triplets:  68%|██████▊   | 38/56 [04:33<02:24,  8.03s/it]Querying triplets:  70%|██████▉   | 39/56 [04:40<02:11,  7.71s/it]Querying triplets:  71%|███████▏  | 40/56 [04:49<02:12,  8.31s/it]Querying triplets:  73%|███████▎  | 41/56 [04:57<02:00,  8.03s/it]Querying triplets:  75%|███████▌  | 42/56 [05:02<01:39,  7.13s/it]Querying triplets:  77%|███████▋  | 43/56 [05:08<01:28,  6.79s/it]Querying triplets:  79%|███████▊  | 44/56 [05:14<01:18,  6.56s/it]Querying triplets:  80%|████████  | 45/56 [05:21<01:13,  6.71s/it]Querying triplets:  82%|████████▏ | 46/56 [05:28<01:08,  6.89s/it]Querying triplets:  84%|████████▍ | 47/56 [05:34<00:58,  6.51s/it]Querying triplets:  86%|████████▌ | 48/56 [05:40<00:50,  6.26s/it]Querying triplets:  88%|████████▊ | 49/56 [05:46<00:44,  6.38s/it]Querying triplets:  89%|████████▉ | 50/56 [05:54<00:40,  6.71s/it]Querying triplets:  91%|█████████ | 51/56 [06:00<00:33,  6.69s/it]Querying triplets:  93%|█████████▎| 52/56 [06:07<00:26,  6.67s/it]Querying triplets:  95%|█████████▍| 53/56 [06:13<00:19,  6.39s/it]Querying triplets:  96%|█████████▋| 54/56 [06:20<00:13,  6.68s/it]Querying triplets:  98%|█████████▊| 55/56 [06:27<00:06,  6.65s/it]Querying triplets: 100%|██████████| 56/56 [06:34<00:00,  6.86s/it]Querying triplets: 100%|██████████| 56/56 [06:34<00:00,  7.04s/it]
+Merging (outer):   0%|          | 0/8 [00:00<?, ?it/s]
+Merging (inner):   0%|          | 0/7 [00:00<?, ?it/s][A
+Merging (inner):  57%|█████▋    | 4/7 [00:04<00:03,  1.00s/it][A
+                                                              [AMerging (outer):  12%|█▎        | 1/8 [00:04<00:28,  4.01s/it]
+Merging (inner):   0%|          | 0/6 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/5 [00:00<?, ?it/s][A
+Merging (inner): 100%|██████████| 5/5 [00:03<00:00,  1.46it/s][A
+                                                              [AMerging (outer):  38%|███▊      | 3/8 [00:07<00:11,  2.31s/it]
+Merging (inner):   0%|          | 0/4 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/3 [00:00<?, ?it/s][A
+Merging (inner):  33%|███▎      | 1/3 [00:03<00:07,  3.84s/it][A
+                                                              [AMerging (outer):  62%|██████▎   | 5/8 [00:11<00:06,  2.11s/it]
+Merging (inner):   0%|          | 0/2 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner):   0%|          | 0/1 [00:00<?, ?it/s][A
+                                                      [A
+Merging (inner): 0it [00:00, ?it/s][A
+                                   [AMerging (outer): 100%|██████████| 8/8 [00:11<00:00,  1.41s/it]
+
+--- Raw Triplet Merge Results ---
+Predicted edges: 9
+SHD: 9
+Connected nodes: 6, Isolated: 2
+Cycles: 0
+
+Edgewise distribution entries: 28
+Saved edgewise distribution to data/asia_triplet_edgewise.pkl
+Topological Divergence: 0
+Saved pipeline trace to data/asia_subgroup.trace.json
+
+============================================================
+Done.

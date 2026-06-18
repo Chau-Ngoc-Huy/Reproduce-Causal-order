@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -46,8 +46,8 @@
         <span class="pill">LLM causal discovery</span>
         <span class="pill">GPT-4o</span>
       </div>
-      <h1>The graph can be wrong.<br/>The <em style="font-style:normal;color:var(--accent)">order</em> still holds.</h1>
-      <p class="sub">A faithful reproduction of <strong>“Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference.”</strong> Watch the method work step by step, explore every recovered graph, and compare the numbers against the paper's claims.</p>
+      <h1>Graph có thể sai.<br/>Nhưng <em style="font-style:normal;color:var(--accent)">order</em> vẫn đúng.</h1>
+      <p class="sub">Một bản tái lập trung thực của <strong>“Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference.”</strong> Xem phương pháp vận hành từng bước, khám phá mọi recovered graph, và đối chiếu các con số với những gì paper khẳng định.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="#pipeline">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -64,7 +64,7 @@
       <div class="verdict-row"><span class="lab">Pairwise — order error</span><span class="val delta-good">0 ✓</span></div>
       <div class="verdict-row"><span class="lab">Triplet — graph error (SHD)</span><span class="val delta-good">0 ✓</span></div>
       <div class="verdict-row"><span class="lab">Triplet — order error</span><span class="val delta-good">0 ✓</span></div>
-      <p class="muted" style="font-size:12.5px;margin-top:14px;line-height:1.5">Even the corrupted pairwise graph yields a <b>perfect causal order</b> — the paper's central thesis, reproduced.</p>
+      <p class="muted" style="font-size:12.5px;margin-top:14px;line-height:1.5">Ngay cả graph pairwise bị sai lệch vẫn cho ra một <b>causal order hoàn hảo</b> — đúng luận điểm trung tâm của paper, đã được tái lập.</p>
     </div>
   </div>
 </section>
@@ -72,9 +72,9 @@
 <!-- ================= DATASETS ================= -->
 <section id="datasets" class="band tint page">
   <div class="wrap">
-    <div class="eyebrow">The benchmarks</div>
-    <h2 class="section-title">Datasets in the source code</h2>
-    <p class="section-lead">The repository defines <strong>11 benchmark causal graphs</strong> in <code class="mono">graphs/definitions.py</code> — each a set of variables, a ground-truth DAG, optional descriptions, and a prompt context. This reproduction runs the ones marked <em>Reproduced</em> below; the rest are ready to run. Click any card for its full variable list.</p>
+    <div class="eyebrow">Các bộ benchmark</div>
+    <h2 class="section-title">Datasets</h2>
+    <p class="section-lead">Repository định nghĩa <strong>11 benchmark causal graph</strong> trong <code class="mono">graphs/definitions.py</code> — mỗi cái gồm một tập biến, một ground-truth DAG, mô tả tùy chọn, và một prompt context. Bản tái lập này chạy những graph được đánh dấu <em>Đã tái lập</em> bên dưới; phần còn lại đã sẵn sàng để chạy. Bấm vào bất kỳ thẻ nào để xem danh sách biến đầy đủ.</p>
     <div class="mt-l" id="datasets-root"></div>
   </div>
 </section>
@@ -83,8 +83,8 @@
 <section id="pipeline" class="band page">
   <div class="wrap">
     <div class="eyebrow">Step by step</div>
-    <h2 class="section-title">How the method works</h2>
-    <p class="section-lead">Five conceptual stages — decompose / enumerate, ask the expert, vote / assemble, the recovered <strong>graph</strong> (predicted vs. ground truth, interactive), and the <strong>causal order</strong>. Pick a dataset and method, press play, or click a stage to jump. The final stage explains exactly how the causal order is computed.</p>
+    <h2 class="section-title">Pipeline</h2>
+    <p class="section-lead">Năm giai đoạn khái niệm — phân rã / liệt kê, hỏi expert, vote / lắp ráp, recovered <strong>graph</strong> (dự đoán so với ground truth, tương tác được), và <strong>causal order</strong>. Chọn một dataset và phương pháp, bấm play, hoặc bấm vào một giai đoạn để nhảy tới. Giai đoạn cuối giải thích chính xác cách causal order được tính.</p>
     <div class="mt-l" id="pipeline-root"></div>
   </div>
 </section>
@@ -93,8 +93,8 @@
 <section id="prompts" class="band tint page">
   <div class="wrap">
     <div class="eyebrow">The expert, verbatim</div>
-    <h2 class="section-title">Every prompt in the source code</h2>
-    <p class="section-lead">The whole method comes down to <em>what we ask the LLM</em>. These are the prompt-building functions in <code class="mono">causal_discovery/prompts/</code>, lifted straight from the source — system message and template, with <span class="ph">{placeholders}</span> shown where the run fills in nodes, context and the partial graph. Click any prompt to read it in full; the few-shot chain-of-thought ones are long on purpose.</p>
+    <h2 class="section-title">Prompts</h2>
+    <p class="section-lead">Toàn bộ phương pháp quy về <em>chúng ta hỏi LLM điều gì</em>. Đây là các hàm dựng prompt trong <code class="mono">causal_discovery/prompts/</code>, lấy thẳng từ source — system message và template, với các <span class="ph">{placeholders}</span> được hiển thị ở chỗ mỗi lần chạy sẽ điền vào nodes, context và partial graph. Bấm vào bất kỳ prompt nào để đọc đầy đủ; những prompt few-shot chain-of-thought dài là có chủ đích.</p>
     <div class="mt-l" id="prompts-root"></div>
   </div>
 </section>
@@ -103,8 +103,8 @@
 <section id="results" class="band page">
   <div class="wrap">
     <div class="eyebrow">Reproduction results</div>
-    <h2 class="section-title">Every run, every metric</h2>
-    <p class="section-lead"><span id="results-summary">Five runs across two benchmarks.</span> <b>SHD</b> = structural Hamming distance (edge errors). <b>Topo. div.</b> = topological divergence (order errors). Lower is better for both; best per dataset is highlighted.</p>
+    <h2 class="section-title">Results</h2>
+    <p class="section-lead"><span id="results-summary">Năm lần chạy trên hai benchmark.</span> <b>SHD</b> = structural Hamming distance (lỗi edge). <b>Topo. div.</b> = topological divergence (lỗi order). Cả hai đều càng thấp càng tốt; giá trị tốt nhất mỗi dataset được tô sáng.</p>
 
     <div class="tbl-wrap mt-l">
       <table class="metrics">
@@ -112,6 +112,7 @@
           <tr>
             <th>Dataset</th><th>Method</th><th>SHD</th><th>Topo. div.</th>
             <th>Prec.</th><th>Recall</th><th>F1</th><th>Pred. edges</th><th>Cycles</th>
+            <th>Time (s)</th><th>Tokens</th>
           </tr>
         </thead>
         <tbody id="metrics-tbody"></tbody>
@@ -122,6 +123,10 @@
       <div class="card"><div style="height:300px"><canvas id="chart-shd"></canvas></div></div>
       <div class="card"><div style="height:300px"><canvas id="chart-topo"></canvas></div></div>
     </div>
+
+    <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">Kết quả theo từng model self-host (Ollama)</h3>
+    <p class="section-lead">Năm dataset (Cancer, Earthquake, Survey, Asia, Child) chạy local qua Ollama với ba chiến lược <strong>base / CoT / triplet</strong> — số liệu thô lấy từ <code class="mono">data/other_model/results_local.json</code>. <b>SHD</b> và <b>D<sub>top</sub></b> càng thấp càng tốt; giá trị tốt nhất mỗi dataset được tô sáng.</p>
+    <div id="local-metrics" class="mt-m"></div>
   </div>
 </section>
 
@@ -129,8 +134,8 @@
 <section id="comparison" class="band tint page">
   <div class="wrap">
     <div class="eyebrow">Reproduction vs. paper</div>
-    <h2 class="section-title">The published tables, beside ours</h2>
-    <p class="section-lead"><strong>Every experimental table in the paper</strong> (Tables 1–6 and appendix Tables A3, A5–A13, A15–A17) is transcribed faithfully below. Wherever we reproduced a run, our <strong>GPT-4o</strong> value sits <strong>beside</strong> the paper's number, shaded by how it compares. The paper uses GPT-3.5 / GPT-4 (and Phi-3 / Llama3 / human annotators), so absolute values differ by model — the test is whether the <em>method ordering and qualitative behaviour</em> reproduce. We reproduced <strong>pairwise (CoT) + triplet on <span id="repro-list">the loaded datasets</span></strong>; everything else is left blank.</p>
+    <h2 class="section-title">Comparison</h2>
+    <p class="section-lead"><strong>Mọi bảng thực nghiệm trong paper</strong> (Bảng 1–6 và các bảng phụ lục A3, A5–A13, A15–A17) được chép lại trung thực bên dưới. Ở những chỗ chúng tôi đã tái lập một lần chạy, giá trị <strong>GPT-4o</strong> của chúng tôi nằm <strong>cạnh</strong> con số của paper, được tô màu theo mức so sánh. Paper dùng GPT-3.5 / GPT-4 (và Phi-3 / Llama3 / người chú thích), nên giá trị tuyệt đối khác nhau theo mô hình — phép thử ở đây là liệu <em>thứ tự giữa các phương pháp và hành vi định tính</em> có tái lập được hay không. Chúng tôi đã tái lập <strong>pairwise (CoT) + triplet trên <span id="repro-list">các dataset đã nạp</span></strong>; mọi thứ khác để trống. Riêng <strong>Bảng A8</strong>, chúng tôi tái lập đúng <em>cùng họ mô hình của paper</em> (Phi-3, Llama3) bằng cách self-host qua Ollama (<code class="mono">phi3:mini</code>, <code class="mono">llama3:8b</code>) trên 5 dataset (Cancer, Earthquake, Survey, Asia, Child) — vì cùng mô hình nên con số đặt cạnh đó so sánh trực tiếp được; ô màu xám là các dataset nằm ngoài bảng A8 gốc của paper.</p>
 
     <div class="legend mt-m" style="margin-bottom:20px">
       <span class="item"><span class="dot" style="background:var(--c-correct)"></span>Ours does better</span>
@@ -140,11 +145,11 @@
     </div>
 
     <h3 style="font-size:22px;margin:34px 0 6px;letter-spacing:-.02em">Highlights — the runs we reproduced</h3>
-    <p class="muted" style="font-size:13px;margin-bottom:14px">Hover any row to see how our GPT-4o run compares to the paper for that dataset and method.</p>
+    <p class="muted" style="font-size:13px;margin-bottom:14px">Di chuột vào bất kỳ hàng nào để xem lần chạy GPT-4o của chúng tôi so với paper cho dataset và phương pháp đó.</p>
     <div class="compare-pair" id="compare-pair"></div>
 
-    <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">All published tables</h3>
-    <p class="muted" style="font-size:13px;margin-bottom:18px">A green/red badge marks each table as reproduced (GPT-4o values appear beside the paper's) or paper-only (not yet run). In every cell, the small chip beside a paper number is our run; a “·” means the paper left that cell empty.</p>
+    <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">Tất cả các bảng đã công bố</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:18px">Một huy hiệu xanh/đỏ đánh dấu mỗi bảng là đã tái lập (giá trị GPT-4o hiện cạnh con số của paper) hay chỉ-có-paper (chưa chạy). Trong mỗi ô, chip nhỏ cạnh một con số của paper là lần chạy của chúng tôi; dấu “·” nghĩa là paper để trống ô đó.</p>
     <div id="all-paper-tables"></div>
   </div>
 </section>
@@ -160,7 +165,7 @@
         </svg>
         <span>Causal Order — Reproduction</span>
       </div>
-      <p>An independent reproduction for visualization &amp; analysis.<br/>Paper: <a href="https://arxiv.org/pdf/2310.15117" target="_blank" rel="noopener">Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference</a> · ICLR 2025.</p>
+      <p>Một bản tái lập độc lập phục vụ trực quan hóa &amp; phân tích.<br/>Paper: <a href="https://arxiv.org/pdf/2310.15117" target="_blank" rel="noopener">Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference</a> · ICLR 2025.</p>
     </div>
     <div style="text-align:right">
       <p class="mono" id="footer-benchmarks" style="font-size:12px">Benchmarks: Cancer<br/>Methods: pairwise · triplet<br/>Expert: GPT-4o (chain-of-thought)</p>
@@ -173,6 +178,7 @@
 <script src="vendor/chart.umd.min.js"></script>
 <script src="data/traces_report.js"></script>
 <script src="data/paper_reference.js"></script>
+<script src="data/local_models.js"></script>
 <script src="data/prompts.js"></script>
 <script src="js/core.js"></script>
 <script src="js/datasets.js"></script>

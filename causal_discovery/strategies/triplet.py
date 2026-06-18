@@ -22,22 +22,10 @@ from ..prompts.triplet import (
     generate_subgraph_with_descr_prompt,
     cot_tiebreaker_prompt,
 )
-from ..utils.helpers import parse_answer_tag, str_2_lst
+from ..utils.helpers import parse_answer_tag, str_2_lst, prompt_text_from_messages
 from ..utils.llm_client import query_llm
 from ..utils.cycle_remover import calculate_entropy
 from ..utils.trace import edges_from_dag_str
-
-
-def _subgraph_question(nodes, context):
-    """Short human-readable restatement of a subgraph query (for the trace)."""
-    return (f"Identify the causal DAG among {list(nodes)} to {context}. "
-            f"Output a list of directed-edge tuples inside <Answer></Answer>.")
-
-
-def _tiebreaker_question(X, Y):
-    """Short human-readable restatement of a tie-breaker query (for the trace)."""
-    return (f"Which causal relationship is more likely between '{X}' and '{Y}'? "
-            f"(A: {X} -> {Y};  B: {Y} -> {X};  C: no causal relation)")
 
 
 def generate_all_subgroups(nodes, subgroup_size=3):
@@ -51,13 +39,19 @@ def generate_all_triplets(nodes):
 
 
 def query_triplet_subgraph(triplet, context, descriptions,
-                           model="gpt-4o-mini", max_tokens=300, delay=12,
-                           return_meta=False):
+                           model="gpt-4o-mini", max_tokens=600, delay=12,
+                           return_meta=False, max_answer_retries=2):
     """
     Query the LLM to orient edges within a single triplet of nodes.
 
     Uses a weaker/cheaper model by default since the merge step aggregates
     many such responses via majority voting.
+
+    The model occasionally spends its whole token budget on prose reasoning
+    and gets truncated before emitting the ``<Answer>...</Answer>`` tag, which
+    yields a parsed result of ``None`` ("no answer"). To mitigate this we use
+    a generous ``max_tokens`` and re-query up to ``max_answer_retries`` times
+    when no tag is found.
 
     Args:
         triplet: tuple of 3 node names.
@@ -68,10 +62,14 @@ def query_triplet_subgraph(triplet, context, descriptions,
         delay: seconds to wait before the API call (rate limiting).
         return_meta: if True, also return the full raw response and call
             metadata for tracing.
+        max_answer_retries: extra re-queries when the response has no
+            ``<Answer>`` tag (0 disables retrying).
 
     Returns:
-        str: the parsed DAG string (content of <Answer> tag), or
-        ``(dag_str, raw_response, meta)`` when ``return_meta`` is True.
+        str: the parsed DAG string (content of <Answer> tag), or None if no
+        tag was produced after all retries. When ``return_meta`` is True,
+        returns ``(dag_str, raw_response, meta, question)`` (from the last
+        attempt), where ``question`` is the actual prompt text that was sent.
     """
     if descriptions:
         descr_sub = {k: descriptions[k] for k in triplet if k in descriptions}
@@ -80,16 +78,27 @@ def query_triplet_subgraph(triplet, context, descriptions,
     else:
         messages = generate_subgraph_prompt(
             nodes=list(triplet), context=context)
+    question = prompt_text_from_messages(messages)
 
-    time.sleep(delay)
-    if return_meta:
-        answer, meta = query_llm(messages, model=model,
-                                 max_completion_tokens=max_tokens,
-                                 return_meta=True)
-        return parse_answer_tag(answer), answer, meta
-    answer = query_llm(messages, model=model, max_completion_tokens=max_tokens)
-    dag_str = parse_answer_tag(answer)
-    return dag_str
+    answer, meta = None, None
+    for attempt in range(max_answer_retries + 1):
+        time.sleep(delay)
+        if return_meta:
+            answer, meta = query_llm(messages, model=model,
+                                     max_completion_tokens=max_tokens,
+                                     return_meta=True)
+        else:
+            answer = query_llm(messages, model=model,
+                               max_completion_tokens=max_tokens)
+        dag_str = parse_answer_tag(answer)
+        if dag_str is not None:
+            return (dag_str, answer, meta, question) if return_meta else dag_str
+        if attempt < max_answer_retries:
+            print(f"No <Answer> tag for triplet {triplet} "
+                  f"(attempt {attempt + 1}/{max_answer_retries + 1}), "
+                  f"retrying...")
+
+    return (None, answer, meta, question) if return_meta else None
 
 
 _KEY_TO_DIRECTION = {"A_2_B": "forward", "B_2_A": "reverse", "No_Conn": "none"}
@@ -258,7 +267,7 @@ def _tiebreaker_query(X, Y, nodes, context, model="gpt-4o", delay=12,
     record = {
         "pair": [X, Y],
         "model": model,
-        "question": _tiebreaker_question(X, Y),
+        "question": prompt_text_from_messages(messages),
         "response_raw": answer,
         "answer": ans,
         "decision": _KEY_TO_DIRECTION[key],
@@ -316,9 +325,9 @@ def run_triplet_experiment(graph_config, subgraph_model="gpt-4o-mini",
     subgraph_queries = []
 
     for idx, group in enumerate(tqdm(subgroup_list, desc=f"Querying {label}")):
-        raw, meta = None, None
+        raw, meta, question = None, None, None
         if collect_trace:
-            dag_str, raw, meta = query_triplet_subgraph(
+            dag_str, raw, meta, question = query_triplet_subgraph(
                 triplet=group, context=context, descriptions=descriptions,
                 model=subgraph_model, delay=delay, return_meta=True)
         else:
@@ -341,7 +350,7 @@ def run_triplet_experiment(graph_config, subgraph_model="gpt-4o-mini",
                 "index": idx,
                 "subgroup": list(group),
                 "model": subgraph_model,
-                "question": _subgraph_question(group, context),
+                "question": question,
                 "response_raw": raw,
                 "answer_tag": ds,
                 "edges": edges,
