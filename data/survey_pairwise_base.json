@@ -1,0 +1,62 @@
+{
+  "graph": "survey",
+  "method": "pairwise/simple (gpt-4o)",
+  "predicted_edges": [
+    [
+      "Age",
+      "Education"
+    ],
+    [
+      "Age",
+      "Occupation"
+    ],
+    [
+      "Age",
+      "Residence"
+    ],
+    [
+      "Age",
+      "Travel"
+    ],
+    [
+      "Sex",
+      "Education"
+    ],
+    [
+      "Sex",
+      "Occupation"
+    ],
+    [
+      "Sex",
+      "Residence"
+    ],
+    [
+      "Sex",
+      "Travel"
+    ],
+    [
+      "Education",
+      "Occupation"
+    ],
+    [
+      "Education",
+      "Residence"
+    ],
+    [
+      "Education",
+      "Travel"
+    ],
+    [
+      "Occupation",
+      "Residence"
+    ],
+    [
+      "Occupation",
+      "Travel"
+    ],
+    [
+      "Residence",
+      "Travel"
+    ]
+  ]
+}

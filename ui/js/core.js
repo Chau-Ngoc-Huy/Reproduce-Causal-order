@@ -10,19 +10,31 @@
   const RESULTS = (RD.results || []).slice();
 
   // ---- method classification -------------------------------
+  // Pairwise comes in two prompt variants (base/simple vs chain-of-thought).
+  // They are kept as DISTINCT kinds so both can coexist for the same graph
+  // (matching the paper's Table 3, which has a Base and a CoT column).
+  function pairwiseKind(r) {
+    const pt = (r._trace && r._trace.config && r._trace.config.prompt_type) ||
+      ((String(r.method || "").match(/pairwise\/([a-z_]+)/i) || [])[1] || "");
+    return /^(simple|base)$/i.test(pt) ? "pairwise_base" : "pairwise";
+  }
   function methodKind(r) {
-    if (r.flow && r.flow.strategy === "pairwise") return "pairwise";
+    if (r.flow && r.flow.strategy === "pairwise") return pairwiseKind(r);
     if (r.flow && r.flow.k === 4) return "quadruplet";
     if (r.flow && r.flow.k === 3) return "triplet";
     if (/quad/i.test(r.method)) return "quadruplet";
     if (/triplet/i.test(r.method)) return "triplet";
-    return "pairwise";
+    return pairwiseKind(r);
   }
   function methodLabel(kind) {
-    return { pairwise: "Pairwise", triplet: "Triplet", quadruplet: "Quadruplet" }[kind] || kind;
+    return {
+      pairwise_base: "Pairwise (Base)", pairwise: "Pairwise (CoT)",
+      triplet: "Triplet", quadruplet: "Quadruplet",
+    }[kind] || kind;
   }
   function methodSubtitle(r) {
     const k = methodKind(r);
+    if (k === "pairwise_base") return "GPT-4o · base prompt";
     if (k === "pairwise") return "GPT-4o · chain-of-thought";
     if (k === "triplet") return "C(n,3) subgroups · majority vote";
     return "C(n,4) subgroups · majority vote";
@@ -51,7 +63,7 @@
   };
 
   function resultsFor(graph) {
-    const order = { pairwise: 0, triplet: 1, quadruplet: 2 };
+    const order = { pairwise_base: 0, pairwise: 1, triplet: 2, quadruplet: 3 };
     return RESULTS.filter((r) => r.graph === graph)
       .sort((a, b) => order[a._kind] - order[b._kind]);
   }

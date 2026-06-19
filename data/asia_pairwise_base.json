@@ -1,0 +1,102 @@
+{
+  "graph": "asia",
+  "method": "pairwise/simple (gpt-4o)",
+  "predicted_edges": [
+    [
+      "visit to Asia",
+      "tuberculosis"
+    ],
+    [
+      "visit to Asia",
+      "either tuberculosis or lung cancer"
+    ],
+    [
+      "visit to Asia",
+      "positive X-ray"
+    ],
+    [
+      "visit to Asia",
+      "dyspnoea"
+    ],
+    [
+      "visit to Asia",
+      "bronchitis"
+    ],
+    [
+      "tuberculosis",
+      "either tuberculosis or lung cancer"
+    ],
+    [
+      "tuberculosis",
+      "positive X-ray"
+    ],
+    [
+      "tuberculosis",
+      "dyspnoea"
+    ],
+    [
+      "tuberculosis",
+      "bronchitis"
+    ],
+    [
+      "tuberculosis",
+      "lung cancer"
+    ],
+    [
+      "smoking",
+      "tuberculosis"
+    ],
+    [
+      "either tuberculosis or lung cancer",
+      "positive X-ray"
+    ],
+    [
+      "either tuberculosis or lung cancer",
+      "dyspnoea"
+    ],
+    [
+      "either tuberculosis or lung cancer",
+      "bronchitis"
+    ],
+    [
+      "lung cancer",
+      "either tuberculosis or lung cancer"
+    ],
+    [
+      "smoking",
+      "either tuberculosis or lung cancer"
+    ],
+    [
+      "bronchitis",
+      "positive X-ray"
+    ],
+    [
+      "lung cancer",
+      "positive X-ray"
+    ],
+    [
+      "smoking",
+      "positive X-ray"
+    ],
+    [
+      "bronchitis",
+      "dyspnoea"
+    ],
+    [
+      "lung cancer",
+      "dyspnoea"
+    ],
+    [
+      "smoking",
+      "dyspnoea"
+    ],
+    [
+      "smoking",
+      "bronchitis"
+    ],
+    [
+      "smoking",
+      "lung cancer"
+    ]
+  ]
+}

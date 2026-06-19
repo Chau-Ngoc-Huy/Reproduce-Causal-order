@@ -170,6 +170,9 @@ section { scroll-margin-top: 70px; }
 .verdict-row .val { font-family: var(--font-mono); font-weight: 600; font-size: 15px; }
 .delta-good { color: var(--c-correct); }
 .delta-bad  { color: var(--c-extra); }
+.verdict .paper-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.verdict .paper-links a { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.verdict .paper-links a:hover { text-decoration: underline; }
 
 @media (max-width: 920px){
   .hero-in { grid-template-columns: 1fr; gap: 40px; }
@@ -234,6 +237,9 @@ table.metrics td:first-child, table.metrics th:first-child { text-align: left; }
 table.metrics tbody tr:hover { background: var(--bg-tint); }
 table.metrics td.num { font-family: var(--font-mono); }
 table.metrics .best { color: var(--c-correct); font-weight: 700; }
+/* per-model Tokens sub-headers (split "Tokens" column) — keep model ids
+   readable (no uppercasing of "gpt-4o-mini") and visually secondary */
+table.metrics th.tok-model { text-transform: none; font-size: 11px; letter-spacing: 0; font-weight: 500; }
 
 /* comparison table */
 .th-sub { display: block; font-size: 9.5px; font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--faint); margin-top: 2px; }
@@ -257,11 +263,19 @@ td.cmp { white-space: nowrap; }
 .cp-paper .cp-head { background: var(--bg-tint); }
 .cp-ours .cp-head { background: var(--accent-wash); }
 .cp-head h4 { font-size: 16px; }
+/* number badge + model name on one compact row */
+.cp-head-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* sequential table number badge on the model cards (matches .pub-num) */
+.tbl-num { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-wash); padding: 3px 9px; border-radius: 999px; display: inline-block; flex: none; }
 .cp-sub { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
 .cp-tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 4px 9px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
 .cp-ours .cp-tag { background: var(--accent); color: #fff; border-color: var(--accent); }
 table.cp-table { min-width: 0; }
 table.cp-table th { background: transparent; }
+/* per-model assessment block under each results table */
+.model-note { padding: 14px 18px 16px; border-top: 1px solid var(--line-soft); background: var(--bg-tint); }
+.model-note-h { display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.model-note p { font-size: 13px; line-height: 1.6; color: var(--ink-2); margin: 0; }
 .cp-run { white-space: nowrap; }
 .cp-run .cp-g { font-weight: 700; margin-right: 8px; }
 .cp-cell { font-weight: 700; }
@@ -310,6 +324,55 @@ table.cp-table th { background: transparent; }
 .hl-tip.hl-worse   { border-left-color: var(--c-extra); }
 .hl-tip.hl-diverge { border-left-color: var(--c-reversed); }
 .hl-tip.hl-match   { border-left-color: var(--line); }
+
+/* ---------- per-cell paper-claim notes (Results tab) ---------- */
+.claim-lead { font-size: 13.5px; line-height: 1.6; color: var(--ink-2); margin: 22px 0 4px; }
+.claim-lead .note-hint {
+  border-bottom: 2px dotted var(--accent); color: var(--accent-ink); font-weight: 600;
+  padding-bottom: 1px;
+}
+/* the data points that carry a note: dotted underline + help cursor */
+td.has-note {
+  position: relative; cursor: help;
+  text-decoration: underline dotted var(--accent) 2px; text-underline-offset: 4px;
+}
+td.has-note::after {
+  content: ""; position: absolute; top: 4px; right: 4px;
+  width: 5px; height: 5px; border-radius: 999px; background: var(--accent); opacity: .7;
+}
+td.has-note:hover, td.has-note.note-active {
+  background: var(--accent-wash);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--accent-ink); font-weight: 700; border-radius: 4px;
+}
+
+/* the note tooltip reuses .hl-tip; recolor border by verdict + lay out body */
+.hl-tip.claim-ok      { border-left-color: var(--c-correct); }
+.hl-tip.claim-partial { border-left-color: var(--c-reversed); }
+.hl-tip.claim-no      { border-left-color: var(--c-missing); }
+.diff-badge.claim-b-ok      { background: var(--c-correct-w);  color: #15803d; }
+.diff-badge.claim-b-partial { background: var(--c-reversed-w); color: #b45309; }
+.diff-badge.claim-b-no      { background: var(--c-missing-w);  color: #475569; }
+.claim-tip .cell-note-text { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+
+/* ---------- graph hover tooltip (stage 4) ---------- */
+.gv-tip {
+  position: fixed; z-index: 1300; display: none;
+  max-width: 280px; min-width: 140px;
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius-s); box-shadow: var(--shadow-lg);
+  padding: 12px 14px; font-family: var(--font-sans); pointer-events: none;
+}
+.gv-tip-head { display: flex; align-items: center; gap: 8px; }
+.gv-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 0 3px rgba(13,22,44,.05); }
+.gv-name { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.3; word-break: break-word; }
+.gv-desc { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.gv-desc.gv-muted { color: var(--faint); font-style: italic; }
+.gv-meta { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-soft); font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.gv-meta b { color: var(--ink-2); font-weight: 700; }
+.gv-cat { margin-top: 9px; }
+.gv-chip { display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+
 .row-method { display: flex; align-items: center; gap: 9px; font-weight: 600; }
 .chip { font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--bg-sink); color: var(--ink-2); }
 .chip.tri { background: var(--accent-wash); color: var(--accent-ink); }
@@ -496,7 +559,10 @@ table.cp-table th { background: transparent; }
 
 /* ---------- every published table, with ours beside ---------- */
 #all-paper-tables { display: flex; flex-direction: column; gap: 22px; margin-top: 6px; }
-.pub-card { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); padding: 18px 20px 16px; }
+.pub-card { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); padding: 18px 20px 16px; overflow: hidden; }
+/* the per-table remark reuses the model cards' .model-note look exactly; pull it
+   full-bleed to the card edges (cancel the card padding) so it matches them. */
+.pub-card .model-note { margin: 16px -20px -16px; }
 .pub-card.is-repro { border-color: #bfe6cf; box-shadow: 0 0 0 1px var(--c-correct-w) inset, var(--shadow); }
 .pub-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
 .pub-head-l { min-width: 0; }
@@ -508,6 +574,9 @@ table.cp-table th { background: transparent; }
 .rep-no { background: var(--bg-sink); color: var(--muted); }
 .pub-scroll { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: var(--radius-s); }
 .pub-cap { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-top: 12px; }
+
+/* Results-section Table 3 / Table 2: give the two cards clear breathing room */
+#results-paper-tables { display: flex; flex-direction: column; gap: 30px; margin-top: 6px; }
 
 table.pubtbl { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
 table.pubtbl th, table.pubtbl td { padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft); white-space: nowrap; }
@@ -611,3 +680,22 @@ span.ph { color: var(--accent-ink); }
 @media (max-width: 640px) {
   .pr-picker { min-width: 0; width: 100%; }
 }
+
+/* ---- Stage-5 transparent debug walkthrough (pipeline.js buildDebug) ---- */
+.dbg-h { margin-bottom: 8px; }
+.dbg-p { font-size: 13.5px; line-height: 1.62; color: var(--ink-2); margin: 0 0 12px; }
+.dbg-mut { color: var(--muted); }
+.dbg-edges { display: flex; flex-wrap: wrap; gap: 8px; }
+.dbg-edge { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--line-soft);
+  border-radius: 999px; background: var(--bg-tint); font-size: 12.5px; }
+.dbg-tie { font-size: 10.5px; color: #8b5cf6; font-weight: 700; margin-left: 6px;
+  text-transform: uppercase; letter-spacing: .04em; }
+.dbg-ok { color: var(--c-correct); font-weight: 600; }
+.dbg-bad { color: var(--c-extra); font-weight: 600; }
+.dbg-tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 2px; }
+.dbg-tbl th { text-align: left; font-weight: 600; color: var(--muted); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); }
+.dbg-tbl td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.dbg-tbl td.ctr { text-align: center; font-variant-numeric: tabular-nums; }
+.dbg-tbl tbody tr:last-child td { border-bottom: 0; }
+.dbg-tbl tbody tr:hover { background: var(--bg-tint); }

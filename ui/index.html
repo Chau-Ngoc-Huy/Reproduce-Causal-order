@@ -26,8 +26,8 @@
     <nav class="nav-links">
       <a href="#home">Home</a>
       <a href="#datasets">Datasets</a>
-      <a href="#pipeline">Pipeline</a>
       <a href="#prompts">Prompts</a>
+      <a href="#pipeline">Pipeline</a>
       <a href="#results">Results</a>
       <a href="#comparison">vs. Paper</a>
     </nav>
@@ -42,7 +42,8 @@
   <div class="wrap hero-in">
     <div>
       <div class="tag-row">
-        <span class="pill solid">Reproduction study</span>
+        <span class="pill solid">ICLR 2025</span>
+        <span class="pill">Reproduction study</span>
         <span class="pill">LLM causal discovery</span>
         <span class="pill">GPT-4o</span>
       </div>
@@ -59,12 +60,17 @@
     </div>
 
     <div class="verdict">
-      <h4>Headline result · Cancer</h4>
-      <div class="verdict-row"><span class="lab">Pairwise — graph error (SHD)</span><span class="val">2</span></div>
-      <div class="verdict-row"><span class="lab">Pairwise — order error</span><span class="val delta-good">0 ✓</span></div>
-      <div class="verdict-row"><span class="lab">Triplet — graph error (SHD)</span><span class="val delta-good">0 ✓</span></div>
-      <div class="verdict-row"><span class="lab">Triplet — order error</span><span class="val delta-good">0 ✓</span></div>
-      <p class="muted" style="font-size:12.5px;margin-top:14px;line-height:1.5">Ngay cả graph pairwise bị sai lệch vẫn cho ra một <b>causal order hoàn hảo</b> — đúng luận điểm trung tâm của paper, đã được tái lập.</p>
+      <h4>Paper gốc · ICLR 2025</h4>
+      <div class="verdict-row"><span class="lab">Hội nghị</span><span class="val">ICLR 2025 · Poster</span></div>
+      <div class="verdict-row"><span class="lab">Xếp hạng (CORE)</span><span class="val delta-good">A★ · top-tier</span></div>
+      <div class="verdict-row"><span class="lab">Vị thế</span><span class="val">Top-3 hội nghị AI/ML</span></div>
+      <div class="verdict-row"><span class="lab">Đơn vị</span><span class="val">Microsoft Research · IIT&nbsp;Hyderabad</span></div>
+      <p class="muted" style="font-size:12.5px;margin-top:14px;line-height:1.5"><b>“Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference”</b> — Vashishtha et al. Công bố tại <b>ICLR 2025</b>, một trong ba hội nghị máy học hàng đầu thế giới (NeurIPS · ICML · ICLR).</p>
+      <div class="paper-links">
+        <a href="https://openreview.net/forum?id=9juyeCqL0u" target="_blank" rel="noopener">OpenReview ↗</a>
+        <a href="https://arxiv.org/abs/2310.15117" target="_blank" rel="noopener">arXiv ↗</a>
+        <a href="https://iclr.cc/virtual/2025/poster/30671" target="_blank" rel="noopener">ICLR poster ↗</a>
+      </div>
     </div>
   </div>
 </section>
@@ -104,29 +110,21 @@
   <div class="wrap">
     <div class="eyebrow">Reproduction results</div>
     <h2 class="section-title">Results</h2>
-    <p class="section-lead"><span id="results-summary">Năm lần chạy trên hai benchmark.</span> <b>SHD</b> = structural Hamming distance (lỗi edge). <b>Topo. div.</b> = topological divergence (lỗi order). Cả hai đều càng thấp càng tốt; giá trị tốt nhất mỗi dataset được tô sáng.</p>
+    <p class="section-lead"><span id="results-summary">Năm lần chạy trên hai benchmark.</span> Mỗi model một bảng, <strong>cùng định dạng</strong> (rows = dataset × method). <b>SHD</b> = structural Hamming distance (lỗi edge). <b>D<sub>top</sub></b> = topological divergence (lỗi order). Cả hai đều càng thấp càng tốt; giá trị tốt nhất mỗi dataset được tô sáng.</p>
 
-    <div class="tbl-wrap mt-l">
-      <table class="metrics">
-        <thead>
-          <tr>
-            <th>Dataset</th><th>Method</th><th>SHD</th><th>Topo. div.</th>
-            <th>Prec.</th><th>Recall</th><th>F1</th><th>Pred. edges</th><th>Cycles</th>
-            <th>Time (s)</th><th>Tokens</th>
-          </tr>
-        </thead>
-        <tbody id="metrics-tbody"></tbody>
-      </table>
+    <p class="claim-lead">Các ô <span class="note-hint">có gạch chân</span> trong bảng GPT-4o là <strong>điểm dữ liệu kiểm chứng kết luận của paper</strong> — di chuột vào từng ô để xem nhận xét (kết luận nào · verdict) ngay tại con số đó.</p>
+
+    <div id="model-results" class="mt-l"></div>
+
+    <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">So với những gì paper công bố — Bảng 4 &amp; Bảng 5</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:14px">Hai bảng chính của paper (Table 3 &amp; Table 2 trong paper gốc), rút gọn còn <strong>5 dataset chúng tôi chạy</strong> (Cancer, Earthquake, Survey, Asia, Child) và bỏ cột IN/TN. Trong mỗi ô, chip nhỏ cạnh con số của paper là lần chạy <strong>GPT-4o</strong> của chúng tôi; dấu “·” nghĩa là paper để trống ô đó.</p>
+    <div class="legend mt-m" style="margin-bottom:18px">
+      <span class="item"><span class="dot" style="background:var(--c-correct)"></span>Ours does better</span>
+      <span class="item"><span class="dot" style="background:var(--c-extra)"></span>Ours does worse</span>
+      <span class="item"><span class="dot" style="background:var(--c-reversed)"></span>Ours computes a valid value where the paper could not</span>
+      <span class="item"><span class="dot" style="background:var(--c-missing)"></span>Matches / not reproduced (blank)</span>
     </div>
-
-    <div class="card-grid cols-2 mt-l">
-      <div class="card"><div style="height:300px"><canvas id="chart-shd"></canvas></div></div>
-      <div class="card"><div style="height:300px"><canvas id="chart-topo"></canvas></div></div>
-    </div>
-
-    <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">Kết quả theo từng model self-host (Ollama)</h3>
-    <p class="section-lead">Năm dataset (Cancer, Earthquake, Survey, Asia, Child) chạy local qua Ollama với ba chiến lược <strong>base / CoT / triplet</strong> — số liệu thô lấy từ <code class="mono">data/other_model/results_local.json</code>. <b>SHD</b> và <b>D<sub>top</sub></b> càng thấp càng tốt; giá trị tốt nhất mỗi dataset được tô sáng.</p>
-    <div id="local-metrics" class="mt-m"></div>
+    <div id="results-paper-tables"></div>
   </div>
 </section>
 
@@ -149,7 +147,7 @@
     <div class="compare-pair" id="compare-pair"></div>
 
     <h3 style="font-size:22px;margin:48px 0 6px;letter-spacing:-.02em">Tất cả các bảng đã công bố</h3>
-    <p class="muted" style="font-size:13px;margin-bottom:18px">Một huy hiệu xanh/đỏ đánh dấu mỗi bảng là đã tái lập (giá trị GPT-4o hiện cạnh con số của paper) hay chỉ-có-paper (chưa chạy). Trong mỗi ô, chip nhỏ cạnh một con số của paper là lần chạy của chúng tôi; dấu “·” nghĩa là paper để trống ô đó.</p>
+    <p class="muted" style="font-size:13px;margin-bottom:18px">Một huy hiệu xanh/đỏ đánh dấu mỗi bảng là đã tái lập (giá trị GPT-4o hiện cạnh con số của paper) hay chỉ-có-paper (chưa chạy). Trong mỗi ô, chip nhỏ cạnh một con số của paper là lần chạy của chúng tôi; dấu “·” nghĩa là paper để trống ô đó. <strong>Bảng 3 và Bảng 2</strong> — hai bảng chính chúng tôi tái lập — đã được chuyển sang mục <a href="#results">Results</a> (rút gọn còn 5 dataset của chúng tôi).</p>
     <div id="all-paper-tables"></div>
   </div>
 </section>
@@ -175,7 +173,6 @@
 
 <!-- ================= SCRIPTS ================= -->
 <script src="vendor/vis-network.min.js"></script>
-<script src="vendor/chart.umd.min.js"></script>
 <script src="data/traces_report.js"></script>
 <script src="data/paper_reference.js"></script>
 <script src="data/local_models.js"></script>

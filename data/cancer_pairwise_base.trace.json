@@ -1,0 +1,331 @@
+{
+  "schema_version": "1.0",
+  "synthetic": false,
+  "run_id": "cancer_pairwise_20260619_163056",
+  "strategy": "pairwise",
+  "graph": "cancer",
+  "generated_at": "2026-06-19T16:30:56",
+  "config": {
+    "prompt_type": "simple",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 1
+  },
+  "graph_meta": {
+    "nodes": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "descriptions": {
+      "smoker": "smoking habit",
+      "pollution": "exposure to pollutants",
+      "cancer": "cancer",
+      "xray": "getting positive xray result",
+      "dyspnoea": "dyspnoea"
+    },
+    "context": "model the relation between various variables responsible for causing Cancer and its possible outcomes",
+    "ground_truth_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 10,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "smoker",
+            "pollution"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says smoker causally affects a change in another node which says pollution.\n\n            B. changing the state of node which says pollution causally affects a change in another node which says smoker.\n\n            C. There is no causal relationship between node smoker and pollution.\n\n            Make sure to first output a factually grounded reasoning for your answer. smoker and pollution are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between smoker and pollution.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables, and directed edges represent causal relationships between these variables. In this context, \"smoker\" and \"pollution\" are two nodes, and we are trying to determine the direction of causality, if any, between them.\n\n1. **Option A: Smoker → Pollution**\n   - This would imply that being a smoker causes an increase in pollution. While individual smokers do contribute to pollution (e.g., cigarette smoke), the overall impact of individual smoking on broader pollution levels is generally negligible compared to other sources like industrial emissions, vehicles, etc. Therefore, it is unlikely that smoking is a significant causal factor for pollution at a larger scale.\n\n2. **Option B: Pollution → Smoker**\n   - This suggests that increased pollution causes more people to become smokers. There is no strong evidence or logical basis to support the idea that pollution directly causes people to start smoking. Smoking is typically influenced by social, psychological, and economic factors rather than environmental pollution levels.\n\n3. **Option C: No causal relationship**\n   - Given the nature of the nodes and the typical factors influencing each, it is reasonable to conclude that there is no direct causal relationship between \"smoker\" and \"pollution\" in a broad sense. While they may be correlated due to other underlying factors (e.g., urban environments having both higher pollution and higher smoking rates), this does not imply direct causation.\n\nConsidering the above reasoning, the most plausible conclusion is that there is no direct causal relationship between the nodes \"smoker\" and \"pollution.\"\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 6.041,
+          "usage": {
+            "prompt_tokens": 221,
+            "completion_tokens": 322,
+            "total_tokens": 543
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "smoker",
+            "cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says smoker causally affects a change in another node which says cancer.\n\n            B. changing the state of node which says cancer causally affects a change in another node which says smoker.\n\n            C. There is no causal relationship between node smoker and cancer.\n\n            Make sure to first output a factually grounded reasoning for your answer. smoker and cancer are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between smoker and cancer.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In the context of causal reasoning, smoking is widely recognized as a significant risk factor for developing cancer, particularly lung cancer. This relationship is supported by extensive epidemiological studies and biological research. Smoking introduces carcinogens into the body, which can lead to mutations in cells and eventually result in cancer. Therefore, it is reasonable to infer that there is a causal relationship where smoking increases the risk of cancer.\n\nOn the other hand, having cancer does not cause someone to become a smoker. While a diagnosis of cancer might influence a person's behavior, such as prompting them to quit smoking, it does not causally lead to someone starting to smoke.\n\nGiven the nature of the causal graph being sparse and acyclic, and the well-established understanding of the relationship between smoking and cancer, the more likely causal direction is from smoking to cancer.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "smoker",
+            "cancer"
+          ],
+          "latency_sec": 7.525,
+          "usage": {
+            "prompt_tokens": 221,
+            "completion_tokens": 169,
+            "total_tokens": 390
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "smoker",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says smoker causally affects a change in another node which says xray.\n\n            B. changing the state of node which says xray causally affects a change in another node which says smoker.\n\n            C. There is no causal relationship between node smoker and xray.\n\n            Make sure to first output a factually grounded reasoning for your answer. smoker and xray are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between smoker and xray.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables, and directed edges represent causal relationships between these variables. In this context, we have two nodes: \"smoker\" and \"xray.\"\n\n1. **Reasoning for Option A**: If \"smoker\" causally affects \"xray,\" it implies that being a smoker increases the likelihood of changes observable in an x-ray, such as lung damage or other smoking-related health issues. This is a plausible causal relationship because smoking is known to cause changes in the lungs that can be detected through x-ray imaging.\n\n2. **Reasoning for Option B**: If \"xray\" causally affects \"smoker,\" it would imply that the results of an x-ray somehow influence whether a person becomes a smoker. This is less plausible because an x-ray is a diagnostic tool and does not influence a person's smoking behavior. The causal direction from x-ray to smoker does not make logical sense in this context.\n\n3. **Reasoning for Option C**: There is no causal relationship between \"smoker\" and \"xray\" if the two variables are independent or if there is no direct causal mechanism linking them. However, given the known effects of smoking on lung health, it is reasonable to expect some causal relationship where smoking affects x-ray results.\n\nConsidering the above reasoning, the most plausible causal relationship is that smoking affects x-ray results, not the other way around.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "smoker",
+            "xray"
+          ],
+          "latency_sec": 3.698,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 290,
+            "total_tokens": 516
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "smoker",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says smoker causally affects a change in another node which says dyspnoea.\n\n            B. changing the state of node which says dyspnoea causally affects a change in another node which says smoker.\n\n            C. There is no causal relationship between node smoker and dyspnoea.\n\n            Make sure to first output a factually grounded reasoning for your answer. smoker and dyspnoea are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between smoker and dyspnoea.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In the context of causal reasoning, we need to consider the typical relationships between smoking and dyspnoea (difficulty breathing). Smoking is a well-known risk factor for a variety of respiratory conditions, including chronic obstructive pulmonary disease (COPD), which can lead to symptoms such as dyspnoea. Therefore, it is reasonable to infer that smoking can causally affect the likelihood of experiencing dyspnoea.\n\nOn the other hand, dyspnoea is a symptom that can result from various underlying conditions, not just smoking-related diseases. While experiencing dyspnoea might lead someone to quit smoking, it is not typically considered a direct cause of smoking behavior. Therefore, the causal direction from dyspnoea to smoking is less plausible.\n\nGiven the sparse and acyclic nature of the causal graph, and the well-established medical understanding, the more likely causal relationship is that smoking affects dyspnoea.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "smoker",
+            "dyspnoea"
+          ],
+          "latency_sec": 3.283,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 189,
+            "total_tokens": 425
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "pollution",
+            "cancer"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says pollution causally affects a change in another node which says cancer.\n\n            B. changing the state of node which says cancer causally affects a change in another node which says pollution.\n\n            C. There is no causal relationship between node pollution and cancer.\n\n            Make sure to first output a factually grounded reasoning for your answer. pollution and cancer are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between pollution and cancer.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In considering the causal relationship between pollution and cancer, we need to evaluate the likely direction of causality based on known scientific and empirical evidence.\n\nPollution, particularly air pollution, is widely recognized as a significant environmental risk factor for cancer. Numerous studies have established that exposure to pollutants such as particulate matter, benzene, and other carcinogenic compounds can increase the risk of developing various types of cancer, including lung cancer. This suggests a causal pathway where pollution leads to an increased incidence of cancer.\n\nOn the other hand, it is not scientifically plausible for cancer to cause pollution. Cancer is a disease that affects individuals and does not have the capacity to influence environmental factors such as pollution levels. Therefore, the direction of causality from cancer to pollution does not make sense in this context.\n\nGiven the acyclic nature of the causal graph and the established scientific understanding, the more likely causal relationship is that pollution affects cancer, rather than the other way around.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "pollution",
+            "cancer"
+          ],
+          "latency_sec": 6.01,
+          "usage": {
+            "prompt_tokens": 221,
+            "completion_tokens": 194,
+            "total_tokens": 415
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "pollution",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says pollution causally affects a change in another node which says xray.\n\n            B. changing the state of node which says xray causally affects a change in another node which says pollution.\n\n            C. There is no causal relationship between node pollution and xray.\n\n            Make sure to first output a factually grounded reasoning for your answer. pollution and xray are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between pollution and xray.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between them. The problem presents two nodes: \"pollution\" and \"xray.\" We need to determine the direction of causality, if any, between these two nodes.\n\n1. **Pollution to Xray (Option A):** It is plausible that pollution could lead to health issues that necessitate medical imaging, such as an x-ray. For example, air pollution can cause respiratory problems, which might be diagnosed or monitored using x-rays. This suggests a potential causal pathway from pollution to xray.\n\n2. **Xray to Pollution (Option B):** It is unlikely that undergoing an x-ray would cause pollution. X-rays are diagnostic tools used in medical settings and do not have a direct impact on environmental pollution levels. Therefore, this direction of causality does not make logical sense.\n\n3. **No Causal Relationship (Option C):** While it is possible that there is no direct causal relationship between pollution and xray, the context provided suggests that if there is a relationship, it is more likely to be from pollution to xray rather than the reverse.\n\nGiven the reasoning above, the more plausible causal direction is from pollution to xray, as pollution can lead to health conditions that require x-ray diagnostics. Therefore, the most likely causal relationship is represented by Option A.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "pollution",
+            "xray"
+          ],
+          "latency_sec": 4.766,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 283,
+            "total_tokens": 509
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "pollution",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says pollution causally affects a change in another node which says dyspnoea.\n\n            B. changing the state of node which says dyspnoea causally affects a change in another node which says pollution.\n\n            C. There is no causal relationship between node pollution and dyspnoea.\n\n            Make sure to first output a factually grounded reasoning for your answer. pollution and dyspnoea are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between pollution and dyspnoea.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In causal reasoning, we often look for plausible cause-and-effect relationships based on known scientific or empirical evidence. In this case, we are considering the relationship between pollution and dyspnoea.\n\nPollution, particularly air pollution, is known to have adverse effects on respiratory health. It can lead to or exacerbate respiratory conditions such as asthma, bronchitis, and other forms of dyspnoea (difficulty breathing). This is because pollutants like particulate matter, nitrogen dioxide, and sulfur dioxide can irritate the airways and lungs, leading to inflammation and respiratory distress.\n\nOn the other hand, dyspnoea is a symptom or condition that results from various underlying causes, including environmental factors like pollution. It is less plausible to consider dyspnoea as a cause of pollution, as dyspnoea is a health condition and does not have the capacity to influence environmental factors.\n\nGiven this understanding, the more likely causal relationship is that pollution affects dyspnoea, rather than the other way around.\n\nTherefore, the direction of causality is more likely from pollution to dyspnoea.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "pollution",
+            "dyspnoea"
+          ],
+          "latency_sec": 2.756,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 225,
+            "total_tokens": 461
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "cancer",
+            "xray"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says cancer causally affects a change in another node which says xray.\n\n            B. changing the state of node which says xray causally affects a change in another node which says cancer.\n\n            C. There is no causal relationship between node cancer and xray.\n\n            Make sure to first output a factually grounded reasoning for your answer. cancer and xray are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between cancer and xray.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between them. In this context, \"cancer\" and \"xray\" are nodes, and we are considering the potential causal relationship between them.\n\n1. **Reasoning for Option A**: \n   - Cancer is a medical condition that can lead to observable changes in the body. An x-ray is a diagnostic tool used to detect such changes. Therefore, it is reasonable to assume that the presence of cancer could lead to changes in x-ray results. This suggests a causal direction from \"cancer\" to \"xray.\"\n\n2. **Reasoning for Option B**: \n   - An x-ray is a diagnostic procedure and does not cause cancer. While an x-ray can detect cancer, it does not influence the presence or absence of cancer itself. Therefore, it is unlikely that there is a causal direction from \"xray\" to \"cancer.\"\n\n3. **Reasoning for Option C**: \n   - Given the nature of the relationship between cancer and x-ray, it is unlikely that there is no causal relationship. The use of x-rays is specifically to detect conditions like cancer, suggesting a clear causal link from cancer to x-ray results.\n\nBased on the above reasoning, the most plausible causal relationship is that cancer affects x-ray results, not the other way around. Therefore, the direction of causality is from \"cancer\" to \"xray.\"\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "cancer",
+            "xray"
+          ],
+          "latency_sec": 4.107,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 300,
+            "total_tokens": 526
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "cancer",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says cancer causally affects a change in another node which says dyspnoea.\n\n            B. changing the state of node which says dyspnoea causally affects a change in another node which says cancer.\n\n            C. There is no causal relationship between node cancer and dyspnoea.\n\n            Make sure to first output a factually grounded reasoning for your answer. cancer and dyspnoea are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between cancer and dyspnoea.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In the context of causal reasoning, cancer and dyspnoea (difficulty breathing) are often related in medical scenarios. Cancer, particularly lung cancer, can lead to dyspnoea as a symptom. This is because tumors in the lungs can obstruct airways or affect lung function, leading to breathing difficulties. Therefore, it is more plausible that cancer causes dyspnoea rather than dyspnoea causing cancer. Dyspnoea is typically a symptom or result of an underlying condition, rather than a cause of cancer itself.\n\nGiven the sparse and acyclic nature of the causal graph, we should expect a direct causal relationship where cancer leads to dyspnoea, rather than the reverse or no relationship at all.\n\nTherefore, the more likely causal relationship is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "cancer",
+            "dyspnoea"
+          ],
+          "latency_sec": 2.581,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 160,
+            "total_tokens": 396
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "xray",
+            "dyspnoea"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says xray causally affects a change in another node which says dyspnoea.\n\n            B. changing the state of node which says dyspnoea causally affects a change in another node which says xray.\n\n            C. There is no causal relationship between node xray and dyspnoea.\n\n            Make sure to first output a factually grounded reasoning for your answer. xray and dyspnoea are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between xray and dyspnoea.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between these variables. In this context, \"xray\" likely refers to an X-ray test or result, and \"dyspnoea\" refers to difficulty in breathing or shortness of breath.\n\n1. **X-ray to Dyspnoea (Option A):** An X-ray is a diagnostic tool used to visualize the internal condition of the body, particularly the chest and lungs. It does not directly cause dyspnoea. Instead, it is used to detect conditions that might cause dyspnoea, such as pneumonia, lung tumors, or other respiratory issues. Therefore, it is unlikely that changing the state of the \"xray\" node would causally affect the \"dyspnoea\" node.\n\n2. **Dyspnoea to X-ray (Option B):** Dyspnoea is a symptom that often prompts further investigation, such as an X-ray, to determine the underlying cause. In this case, experiencing dyspnoea could lead to a decision to perform an X-ray. However, this is more of a diagnostic pathway rather than a direct causal effect.\n\n3. **No Direct Causal Relationship (Option C):** Given that an X-ray is a diagnostic tool and dyspnoea is a symptom, there is no direct causal relationship between the two. The relationship is more about diagnosis and investigation rather than causation. In a sparse and acyclic causal graph, it is reasonable to conclude that there is no direct causal edge between \"xray\" and \"dyspnoea.\"\n\nBased on this reasoning, the most appropriate choice is that there is no direct causal relationship between the nodes \"xray\" and \"dyspnoea.\"\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 4.191,
+          "usage": {
+            "prompt_tokens": 241,
+            "completion_tokens": 362,
+            "total_tokens": 603
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "smoker",
+        "cancer"
+      ],
+      [
+        "smoker",
+        "xray"
+      ],
+      [
+        "smoker",
+        "dyspnoea"
+      ],
+      [
+        "pollution",
+        "cancer"
+      ],
+      [
+        "pollution",
+        "xray"
+      ],
+      [
+        "pollution",
+        "dyspnoea"
+      ],
+      [
+        "cancer",
+        "xray"
+      ],
+      [
+        "cancer",
+        "dyspnoea"
+      ]
+    ],
+    "order": [
+      "smoker",
+      "pollution",
+      "cancer",
+      "xray",
+      "dyspnoea"
+    ],
+    "metrics": {
+      "predicted_edges": 8,
+      "shd": 4,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 0.6667
+    },
+    "elapsed_sec": 55.6
+  }
+}

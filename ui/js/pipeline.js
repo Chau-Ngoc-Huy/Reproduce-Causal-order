@@ -44,7 +44,7 @@
   function Pipeline(root) {
     // every run is walkable — pairwise, triplet and quadruplet — selected by a
     // Dataset + Method pair, exactly like the Graph explorer's controls.
-    const kindOrder = { pairwise: 0, triplet: 1, quadruplet: 2 };
+    const kindOrder = { pairwise_base: 0, pairwise: 1, triplet: 2, quadruplet: 3 };
     const GRAPHS = C.GRAPHS.filter((g) => C.resultsFor(g).length);
 
     function methodsFor(g) {
@@ -66,7 +66,7 @@
       result = C.getResult(state.graph, state.kind);
       nodes = result.nodes;
       colors = C.nodeColors(result.graph);
-      isPairwise = result._kind === "pairwise";
+      isPairwise = result._kind === "pairwise" || result._kind === "pairwise_base";
       stages = STAGE_DEFS[isPairwise ? "pairwise" : "subgroup"];
       // Prefer the real trace (built from *.trace.json) so the walkthrough
       // replays the actual run; otherwise enumerate combinatorially.
@@ -93,6 +93,7 @@
     // vis-network instances for the Graph stage; layout persists across visits
     let gNetA = null, gNetB = null, gLayout = "hier";
     function destroyGraphNets() {
+      if (window.GRAPHVIZ && window.GRAPHVIZ.hideTip) window.GRAPHVIZ.hideTip();
       if (gNetA) { try { gNetA.destroy(); } catch (e) {} gNetA = null; }
       if (gNetB) { try { gNetB.destroy(); } catch (e) {} gNetB = null; }
     }
@@ -830,16 +831,16 @@
     // ---------- STAGE 5: Causal order + HOW it is computed ----------
     function renderOrder() {
       const head = el("div");
-      head.innerHTML = `<div class="stage-title">Read off the causal order</div>
+      head.innerHTML = `<div class="stage-title">Đọc ra thứ tự nhân quả</div>
         <div class="stage-sub">${
           isPairwise
-            ? "The per-pair answers are turned into a single global ordering."
-            : "The aggregated votes are turned into a single global ordering."
-        } This — not the noisy graph — is the method's real output, and it stays correct even when individual edges are wrong.</div>`;
+            ? "Các câu trả lời theo từng cặp được gộp lại thành một thứ tự toàn cục duy nhất."
+            : "Các phiếu bầu đã tổng hợp được gộp lại thành một thứ tự toàn cục duy nhất."
+        } Đây — chứ không phải đồ thị nhiễu — mới là đầu ra thực sự của phương pháp, và nó vẫn đúng ngay cả khi một số cạnh bị sai.</div>`;
       canvas.appendChild(head);
 
       const order = result.raw.order || nodes;
-      const lab = el("div", "seg-label", "RECOVERED CAUSAL ORDER"); lab.style.marginBottom = "14px";
+      const lab = el("div", "seg-label", "THỨ TỰ NHÂN QUẢ KHÔI PHỤC ĐƯỢC"); lab.style.marginBottom = "14px";
       canvas.appendChild(lab);
 
       const chain = el("div"); chain.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
@@ -851,45 +852,136 @@
       });
       staged(chain, parts, 120);
 
-      // ---- HOW the causal order is computed (method-aware) ----
-      const howSteps = isPairwise ? [
-        howStep("A", "Ask each pair", `For every pair (A, B) the expert returns A→B, B→A, or no relation — at most one directed edge per answer.`),
-        howStep("B", "Assemble the graph", `Collect all per-pair answers into one directed graph. No aggregation is needed — each pair was asked exactly once.`),
-        howStep("C", "Break any cycles", `If contradictory answers create a cycle, the weakest edges on it are dropped until the graph is acyclic, so a valid order exists.`),
-        howStep("D", "Topologically sort", `A topological sort of the resulting DAG yields the global causal order shown above.`),
-      ] : [
-        howStep("A", "Tally directed votes", `For every pair (A, B), count how many subgroups put A before B versus B before A. This gives a weight <span class="mono">w(A→B)</span> and <span class="mono">w(B→A)</span>.`),
-        howStep("B", "Build a preference matrix", `Collect the winning direction of each pair into an <span class="mono">n × n</span> tournament. The margin <span class="mono">w(A→B) − w(B→A)</span> is the confidence in that pairwise direction.`),
-        howStep("C", "Resolve into a DAG", `Add edges strongest-margin first. If an edge would close a cycle, the lowest-confidence edge on that cycle is dropped — so the result is always acyclic and a valid order exists.`),
-        howStep("D", "Topologically sort", `A topological sort of that DAG yields the global causal order shown above. Ties (equal votes) are broken by total in-degree, putting upstream causes first.`),
-      ];
-
-      const how = el("div", "card fx order-how"); how.style.cssText = "margin-top:26px;padding:24px";
-      how.innerHTML = `
-        <div class="seg-label" style="margin-bottom:16px">HOW THE CAUSAL ORDER IS COMPUTED</div>
-        <div class="how-steps">${howSteps.join("")}</div>
-        <div class="how-formula">
-          <b>Why it is robust.</b> A spurious shortcut edge A→C (added because the expert can't see the mediator B) still respects
-          A&nbsp;before&nbsp;C — so it does <em>not</em> change the order. Only a <em>reversed</em> pair does. That is why the graph can be
-          wrong while the order stays right.
-          <div class="how-metric">
-            <span class="mono">D<sub>top</sub></span> = number of ground-truth edges whose direction the recovered order violates
-            <span class="how-arrow">→</span> here <b class="mono">${result.raw.metrics.topo_divergence}</b>${result.raw.metrics.topo_divergence === 0 ? " (a perfect order)" : ""}.
-          </div>
-        </div>`;
-      canvas.appendChild(how);
-      setTimeout(() => how.classList.add("in"), 60 + parts.length * 120);
+      // ---- Bản chạy DEBUG minh bạch: lấy số liệu thật của CHÍNH lần chạy này
+      //      và chạy lại từng bước của thuật toán cho tới thứ tự cuối cùng.
+      //      Mỗi khối = một bước thật, không phải mô tả lý thuyết. ----
+      buildDebug().forEach((html, i) => {
+        const c = el("div", "card fx"); c.style.cssText = "margin-top:18px;padding:22px 24px";
+        c.innerHTML = html;
+        canvas.appendChild(c);
+        setTimeout(() => c.classList.add("in"), 80 + parts.length * 120 + i * 80);
+      });
 
       // ---- metric readout ----
       const m = result.raw.metrics;
       const card = el("div", "card fx"); card.style.cssText = "margin-top:18px;padding:20px";
       card.innerHTML = `<div style="display:flex;gap:30px;flex-wrap:wrap">
-        ${mini("Topological divergence", m.topo_divergence, "order errors — lower is better; 0 = exactly right")}
-        ${mini("Structural Hamming Dist.", m.shd, "edge-level errors in the graph")}
-        ${mini("F1 (edges)", C.fmt(m.f1, 2), "precision / recall on predicted edges")}
+        ${mini("Độ lệch topo (D_top)", m.topo_divergence, "lỗi thứ tự — càng thấp càng tốt; 0 = đúng hoàn toàn")}
+        ${mini("Khoảng cách Hamming (SHD)", m.shd, "lỗi mức cạnh trong đồ thị")}
+        ${mini("F1 (cạnh)", C.fmt(m.f1, 2), "precision / recall trên các cạnh dự đoán")}
       </div>`;
       canvas.appendChild(card);
       setTimeout(() => card.classList.add("in"), 220 + parts.length * 120);
+
+      // Pull the predicted directed edges out of the result record (everything
+      // classified except the ground-truth edges we MISSED / unresolved ties).
+      function predEdges() {
+        return (result.raw.edges || [])
+          .filter((e) => e.category !== "missing" && e.category !== "uncertain")
+          .map((e) => [e.from, e.to]);
+      }
+
+      // Re-run the algorithm step by step on THIS run's real numbers and return
+      // an array of HTML blocks (one per step). Honest about cycles: a cyclic
+      // pairwise graph has no valid order, so it stops after the cycle check.
+      function buildDebug() {
+        const mono = (s) => `<span class="mono">${s}</span>`;
+        const eTxt = (a, b) => `${mono(a)}<span style="color:var(--faint);margin:0 4px">→</span>${mono(b)}`;
+        const tbl = (head, rows) =>
+          `<table class="dbg-tbl"><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>`;
+        const m = result.raw.metrics;
+        const edges = predEdges();
+        const blocks = [];
+
+        // BƯỚC 1 — đầu vào thô (TẤT CẢ các cặp, không chọn lọc)
+        if (isPairwise) {
+          const qs = (trace && trace.queries) || [];
+          const rows = qs.map((q) => {
+            const concl = q.edge ? eTxt(q.edge[0], q.edge[1]) : `<span class="dbg-mut">không có cạnh</span>`;
+            return `<tr><td>${mono(q.pair[0])}, ${mono(q.pair[1])}</td><td class="ctr"><b>${q.answer || "—"}</b></td><td>${concl}</td></tr>`;
+          }).join("");
+          blocks.push(`<div class="seg-label dbg-h">BƯỚC 1 · ĐẦU VÀO THÔ — ${qs.length} câu hỏi pairwise</div>
+            <p class="dbg-p">Mỗi cặp biến được hỏi đúng <b>một lần</b>. LLM đáp <b>A</b> (trái→phải), <b>B</b> (phải→trái) hoặc <b>C</b> (không quan hệ). A/B sinh một cạnh có hướng; C không sinh cạnh nào.</p>
+            ${tbl(["Cặp biến", "Đáp", "Suy ra cạnh"], rows)}`);
+        } else {
+          const vs = (trace && trace.votes) || [];
+          const rows = vs.map((v) => {
+            const c = v.counts || { forward: 0, reverse: 0, none: 0 };
+            const concl = v.winner === "forward" ? eTxt(v.pair[0], v.pair[1])
+              : v.winner === "reverse" ? eTxt(v.pair[1], v.pair[0])
+              : `<span class="dbg-mut">không có cạnh</span>`;
+            return `<tr><td>${mono(v.pair[0])}, ${mono(v.pair[1])}</td><td class="ctr">${c.forward}</td><td class="ctr">${c.reverse}</td><td class="ctr">${c.none}</td><td>${concl}${v.tie ? ` <span class="dbg-tie">hòa → expert</span>` : ""}</td></tr>`;
+          }).join("");
+          blocks.push(`<div class="seg-label dbg-h">BƯỚC 1 · ĐẦU VÀO THÔ — ${vs.length} cặp, gộp phiếu từ các nhóm con</div>
+            <p class="dbg-p">Mỗi cặp biến xuất hiện trong nhiều nhóm con (3 biến). Đếm số nhóm bầu <b>thuận</b> (trái→phải), <b>ngược</b> (phải→trái), <b>không nối</b>. Hướng nhiều phiếu nhất thắng; nếu hòa thì một expert mạnh hơn (GPT-4o) chốt.</p>
+            ${tbl(["Cặp biến", "Thuận", "Ngược", "Ko nối", "Hướng thắng"], rows)}`);
+        }
+
+        // BƯỚC 2 — đồ thị có hướng sau khi gộp
+        const chips = edges.map((e) => `<span class="dbg-edge">${eTxt(e[0], e[1])}</span>`).join("");
+        blocks.push(`<div class="seg-label dbg-h">BƯỚC 2 · ĐỒ THỊ CÓ HƯỚNG — ${edges.length} cạnh</div>
+          <p class="dbg-p">Gom mọi cạnh “thắng” thành một đồ thị có hướng (các cặp không có cạnh bị bỏ qua). Đây là đồ thị thô — có thể thừa cạnh, thậm chí có chu trình.</p>
+          <div class="dbg-edges">${chips || '<span class="dbg-mut">(không có cạnh)</span>'}</div>`);
+
+        // BƯỚC 3 — kiểm tra / gỡ chu trình
+        if (m.cycles === 0) {
+          blocks.push(`<div class="seg-label dbg-h">BƯỚC 3 · KIỂM TRA CHU TRÌNH — 0 chu trình ✓</div>
+            <p class="dbg-p">Đồ thị không có chu trình nên đã là <b>DAG</b> hợp lệ → bỏ qua bước gỡ chu trình, sang thẳng sắp xếp topo.</p>`);
+        } else if (isPairwise) {
+          blocks.push(`<div class="seg-label dbg-h">BƯỚC 3 · KIỂM TRA CHU TRÌNH — ${m.cycles.toLocaleString()} chu trình ✗</div>
+            <p class="dbg-p">Đồ thị pairwise có chu trình và <b>không</b> có bước gỡ chu trình (chính điều này khiến paper đề xuất triplet). Còn chu trình ⇒ <b>không tồn tại thứ tự topo hợp lệ</b>, nên <span class="mono">D_top</span> không tính được (paper ghi “–”). Đổi sang phương pháp <b>Triplet</b> ở trên để thấy thứ tự được khôi phục.</p>`);
+          return blocks;
+        } else {
+          const kept = ((result.acyclic && result.acyclic.edges) || []).filter((e) => e.category !== "missing").length;
+          blocks.push(`<div class="seg-label dbg-h">BƯỚC 3 · GỠ CHU TRÌNH (entropy) — ${m.cycles} chu trình</div>
+            <p class="dbg-p">Còn chu trình ⇒ chưa có thứ tự hợp lệ. Mỗi cạnh nhận trọng số <span class="mono">1 / entropy(phiếu)</span> (phiếu càng nhất trí → entropy càng thấp → trọng số càng cao). Nhị phân tìm ngưỡng để giữ <b>đồ thị con không chu trình lớn nhất</b> → còn <b>${kept}</b> cạnh. Các bước dưới chạy trên đồ thị đã gỡ chu trình này.</p>`);
+        }
+
+        // thứ tự + tập cạnh dùng để bóc topo
+        const order = result.raw.order || (result.acyclic && result.acyclic.order);
+        if (!order) return blocks;
+        const peelEdges = result.raw.order ? edges
+          : ((result.acyclic && result.acyclic.edges) || []).filter((e) => e.category !== "missing").map((e) => [e.from, e.to]);
+
+        // BƯỚC 4 — sắp xếp topo (Kahn), in-degree đếm ngược từng vòng
+        const indeg = {}, succ = {};
+        order.forEach((n) => { indeg[n] = 0; succ[n] = []; });
+        peelEdges.forEach((e) => { if (e[1] in indeg) indeg[e[1]]++; if (e[0] in succ) succ[e[0]].push(e[1]); });
+        const live = Object.assign({}, indeg);
+        const placed = new Set();
+        const roundRows = order.map((node, i) => {
+          const ready = order.filter((n) => !placed.has(n) && live[n] === 0);
+          placed.add(node);
+          const drops = succ[node].filter((t) => !placed.has(t)).map((t) => { live[t] -= 1; return `${mono(t)}→${live[t]}`; });
+          return `<tr><td class="ctr">${i + 1}</td><td>${ready.map(mono).join(", ")}</td><td><b>${mono(node)}</b></td><td>${drops.length ? drops.join(", ") : "—"}</td></tr>`;
+        }).join("");
+        const initRow = order.map((n) => `${mono(n)}=${indeg[n]}`).join(" &nbsp; ");
+        blocks.push(`<div class="seg-label dbg-h">BƯỚC 4 · SẮP XẾP TOPO — node hết “nguyên nhân” thì ra trước</div>
+          <p class="dbg-p"><b>in-degree</b> của một node = số mũi tên đi <i>vào</i> nó = số nguyên nhân trực tiếp. Lặp lại: node nào in-degree 0 (không còn nguyên nhân nào đứng chờ) thì đưa vào thứ tự, rồi xoá các mũi tên đi ra của nó ⇒ các node phía sau giảm in-degree. Nhiều node cùng sẵn sàng thì giữ thứ tự xuất hiện trong đồ thị.</p>
+          <p class="dbg-p">in-degree ban đầu: ${initRow}</p>
+          ${tbl(["Vòng", "Sẵn sàng (in-degree 0)", "Đưa vào", "in-degree còn lại sau khi xoá cạnh đi ra"], roundRows)}`);
+
+        // BƯỚC 5 — kết quả & chấm điểm D_top / SHD
+        const pos = {}; order.forEach((n, i) => pos[n] = i);
+        const gtRows = (result.ground_truth_edges || []).map((e) => {
+          const ia = pos[e[0]], ib = pos[e[1]];
+          const known = ia != null && ib != null;
+          const ok = known && ia < ib;
+          const tag = !known ? `<span class="dbg-mut">node cô lập (ngoài thứ tự)</span>`
+            : ok ? `<span class="dbg-ok">xuôi ✓</span>` : `<span class="dbg-bad">ngược ✗ — tính vào D_top</span>`;
+          return `<tr><td>${eTxt(e[0], e[1])}</td><td class="ctr">${known ? (ia + 1) + " → " + (ib + 1) : "–"}</td><td>${tag}</td></tr>`;
+        }).join("");
+        const chain = order.map((n, i) => `${mono(n)}${i < order.length - 1 ? '<span style="color:var(--faint)"> → </span>' : ""}`).join("");
+        const dtop = m.topo_divergence;
+        blocks.push(`<div class="seg-label dbg-h">BƯỚC 5 · KẾT QUẢ & CHẤM ĐIỂM</div>
+          <p class="dbg-p"><b>Thứ tự nhân quả cuối cùng:</b><br>${chain}</p>
+          <p class="dbg-p"><b>D_top</b> = số cạnh THẬT chạy <i>ngược</i> thứ tự này (nguyên nhân bị xếp sau hệ quả). Soi từng cạnh thật:</p>
+          ${tbl(["Cạnh thật", "Vị trí", "Đối chiếu thứ tự"], gtRows)}
+          <p class="dbg-p" style="margin-top:14px"><b>⇒ D_top = ${dtop}.</b> ${dtop === 0 ? "Mọi cạnh thật đều xuôi — thứ tự đúng hoàn toàn." : `Có ${dtop} cạnh ngược.`} &nbsp;·&nbsp; <b>SHD = ${m.shd}</b> đếm lỗi ở mức <i>cạnh</i> (cả cạnh thừa lẫn thiếu).${(m.shd > 0 && dtop === 0) ? ` Lưu ý: SHD = ${m.shd} &gt; 0 nhưng D_top = 0 — đồ thị có ${m.shd} lỗi cạnh mà <b>thứ tự vẫn đúng tuyệt đối</b>, đúng luận điểm cốt lõi của paper.` : ""}</p>`);
+
+        return blocks;
+      }
+
     }
 
     function howStep(k, t, body) {

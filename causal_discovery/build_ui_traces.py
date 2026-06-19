@@ -114,9 +114,16 @@ def _aggregate_usage(trace):
     ``total_tokens`` (sum of ``usage.total_tokens``) and ``n_queries``.
     ``total_tokens`` is ``None`` when no query carries usage info, so the UI
     can show "—" instead of a misleading 0 for older traces.
+
+    A single run may call more than one model — the triplet flow uses a cheap
+    ``subgraph_model`` plus an ``expert_model`` for tie-breaks — so we also
+    return ``tokens_by_model`` (a ``{model: tokens}`` map, dominant model first).
+    Combining those into one number would misstate per-model cost, so the UI
+    splits the Tokens column by model.
     """
     total_time = 0.0
     total_tokens = 0
+    by_model = {}
     n_time = n_tokens = n = 0
     for q in _llm_queries(trace):
         n += 1
@@ -128,9 +135,16 @@ def _aggregate_usage(trace):
         if isinstance(tok, (int, float)):
             total_tokens += tok
             n_tokens += 1
+            model = q.get("model") or "?"
+            by_model[model] = by_model.get(model, 0) + int(tok)
+    tokens_by_model = (
+        {m: by_model[m] for m in sorted(by_model, key=by_model.get, reverse=True)}
+        if by_model else None
+    )
     return {
         "total_time_sec": round(total_time, 2) if n_time else None,
         "total_tokens": int(total_tokens) if n_tokens else None,
+        "tokens_by_model": tokens_by_model,
         "n_queries": n,
     }
 

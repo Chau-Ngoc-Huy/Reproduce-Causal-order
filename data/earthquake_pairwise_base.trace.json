@@ -1,0 +1,331 @@
+{
+  "schema_version": "1.0",
+  "synthetic": false,
+  "run_id": "earthquake_pairwise_20260619_163212",
+  "strategy": "pairwise",
+  "graph": "earthquake",
+  "generated_at": "2026-06-19T16:32:12",
+  "config": {
+    "prompt_type": "simple",
+    "model": "gpt-4o",
+    "max_tokens": 400,
+    "delay": 1
+  },
+  "graph_meta": {
+    "nodes": [
+      "Burglary",
+      "Earthquake",
+      "Alarm",
+      "JohnCalls",
+      "Marycalls"
+    ],
+    "descriptions": {
+      "Burglary": "burglar entering",
+      "Earthquake": "earthquake hitting",
+      "Alarm": "home alarm going off in a house",
+      "JohnCalls": "first neighbor to call to inform the alarm sound",
+      "Marycalls": "second neighbor to call to inform the alarm sound"
+    },
+    "context": "model factors influencing the probability of a burglary",
+    "ground_truth_edges": [
+      [
+        "Burglary",
+        "Alarm"
+      ],
+      [
+        "Earthquake",
+        "Alarm"
+      ],
+      [
+        "Alarm",
+        "JohnCalls"
+      ],
+      [
+        "Alarm",
+        "Marycalls"
+      ]
+    ]
+  },
+  "stages": {
+    "pairs": {
+      "total": 10,
+      "queries": [
+        {
+          "index": 0,
+          "pair": [
+            "Burglary",
+            "Earthquake"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Burglary causally affects a change in another node which says Earthquake.\n\n            B. changing the state of node which says Earthquake causally affects a change in another node which says Burglary.\n\n            C. There is no causal relationship between node Burglary and Earthquake.\n\n            Make sure to first output a factually grounded reasoning for your answer. Burglary and Earthquake are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Burglary and Earthquake.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, the direction of causality is determined by the logical and empirical relationships between the nodes. In this case, we have two nodes: Burglary and Earthquake.\n\n1. **Burglary to Earthquake (A):** It is highly unlikely that a burglary would cause an earthquake. Burglary is a human action, typically involving theft or illegal entry, and does not have any physical impact on geological processes that could lead to an earthquake.\n\n2. **Earthquake to Burglary (B):** While an earthquake itself does not directly cause a burglary, it is conceivable that the chaos and disruption caused by an earthquake could create opportunities for burglaries to occur. However, this is more of an indirect relationship where the earthquake creates conditions that might increase the likelihood of burglary, rather than a direct causal effect.\n\n3. **No Causal Relationship (C):** Given the nature of the two events, it is most reasonable to conclude that there is no direct causal relationship between a burglary and an earthquake. They are typically independent events, with earthquakes being natural phenomena and burglaries being human actions.\n\nConsidering the above reasoning, the most appropriate conclusion is that there is no direct causal relationship between Burglary and Earthquake.\n\n<Answer>C</Answer>",
+          "answer": "C",
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 3.627,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 257,
+            "total_tokens": 493
+          }
+        },
+        {
+          "index": 1,
+          "pair": [
+            "Burglary",
+            "Alarm"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Burglary causally affects a change in another node which says Alarm.\n\n            B. changing the state of node which says Alarm causally affects a change in another node which says Burglary.\n\n            C. There is no causal relationship between node Burglary and Alarm.\n\n            Make sure to first output a factually grounded reasoning for your answer. Burglary and Alarm are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Burglary and Alarm.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between these nodes. In this scenario, we have two nodes: Burglary and Alarm. \n\nTypically, in real-world scenarios, a burglary is an event that can trigger an alarm. This suggests a causal relationship where a burglary (cause) leads to the alarm being triggered (effect). Therefore, it is more intuitive to assume that a change in the state of the Burglary node would causally affect the state of the Alarm node. \n\nOn the other hand, it is less plausible that an alarm being triggered would cause a burglary to occur. Alarms are usually a response to an event like a burglary, not a cause of it. \n\nGiven the sparse and acyclic nature of the causal graph, it is unlikely that there is no causal relationship between Burglary and Alarm, as these two events are commonly linked in real-world scenarios.\n\nTherefore, the more likely causal relationship is that a burglary causes the alarm to go off.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "Alarm"
+          ],
+          "latency_sec": 3.118,
+          "usage": {
+            "prompt_tokens": 231,
+            "completion_tokens": 212,
+            "total_tokens": 443
+          }
+        },
+        {
+          "index": 2,
+          "pair": [
+            "Burglary",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Burglary causally affects a change in another node which says JohnCalls.\n\n            B. changing the state of node which says JohnCalls causally affects a change in another node which says Burglary.\n\n            C. There is no causal relationship between node Burglary and JohnCalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Burglary and JohnCalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Burglary and JohnCalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between these nodes. In this scenario, we have two nodes: \"Burglary\" and \"JohnCalls.\" \n\nTo determine the direction of causality, we need to consider the logical relationship between these two events. Typically, a burglary might lead to John calling the authorities or someone else to report the incident. This suggests a causal relationship where a burglary (cause) leads to John making a call (effect). \n\nOn the other hand, it is less plausible that John making a call would cause a burglary to occur. Calls are usually responses to events, not causes of them. Therefore, the more likely causal direction is from \"Burglary\" to \"JohnCalls.\"\n\nGiven the sparse and acyclic nature of the causal graph, we should choose the most plausible direct causal relationship. In this case, it is reasonable to conclude that a burglary would lead to John calling, rather than the other way around.\n\nTherefore, the more likely cause-and-effect relationship is:\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "JohnCalls"
+          ],
+          "latency_sec": 3.524,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 217,
+            "total_tokens": 453
+          }
+        },
+        {
+          "index": 3,
+          "pair": [
+            "Burglary",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Burglary causally affects a change in another node which says Marycalls.\n\n            B. changing the state of node which says Marycalls causally affects a change in another node which says Burglary.\n\n            C. There is no causal relationship between node Burglary and Marycalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Burglary and Marycalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Burglary and Marycalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between these nodes. In this scenario, we have two nodes: \"Burglary\" and \"Marycalls.\"\n\n1. **Understanding the Scenario:**\n   - \"Burglary\" represents the event of a burglary occurring.\n   - \"Marycalls\" represents the event of Mary making a phone call, presumably to report a burglary.\n\n2. **Causal Reasoning:**\n   - It is reasonable to assume that if a burglary occurs, it might lead to Mary calling the authorities to report it. This suggests a causal relationship where \"Burglary\" affects \"Marycalls.\"\n   - Conversely, it is less intuitive to think that Mary making a call would cause a burglary to occur. Typically, a call is a response to an event, not a cause of it.\n\n3. **Sparse and Acyclic Graph:**\n   - The graph is described as sparse and acyclic, meaning it has few connections and no cycles. This supports the idea that there is a direct causal path from \"Burglary\" to \"Marycalls\" without feedback loops or complex interdependencies.\n\nBased on this reasoning, the more plausible causal direction is from \"Burglary\" to \"Marycalls.\"\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Burglary",
+            "Marycalls"
+          ],
+          "latency_sec": 5.342,
+          "usage": {
+            "prompt_tokens": 236,
+            "completion_tokens": 264,
+            "total_tokens": 500
+          }
+        },
+        {
+          "index": 4,
+          "pair": [
+            "Earthquake",
+            "Alarm"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Earthquake causally affects a change in another node which says Alarm.\n\n            B. changing the state of node which says Alarm causally affects a change in another node which says Earthquake.\n\n            C. There is no causal relationship between node Earthquake and Alarm.\n\n            Make sure to first output a factually grounded reasoning for your answer. Earthquake and Alarm are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Earthquake and Alarm.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, the direction of causality typically follows logical and real-world cause-and-effect relationships. In this scenario, we have two nodes: Earthquake and Alarm. \n\n1. Earthquake -> Alarm: It is reasonable to assume that an earthquake could trigger an alarm. This is because alarms are often designed to detect seismic activity and alert people to the occurrence of an earthquake. Therefore, an earthquake is a plausible cause for an alarm to go off.\n\n2. Alarm -> Earthquake: This direction is less plausible because an alarm sounding does not cause an earthquake. Alarms are reactive devices, meaning they respond to events rather than causing them.\n\nGiven the nature of causal graphs being sparse and acyclic, and considering the logical cause-and-effect relationship, the more likely causal direction is that an earthquake causes an alarm to sound.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Earthquake",
+            "Alarm"
+          ],
+          "latency_sec": 2.738,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 172,
+            "total_tokens": 398
+          }
+        },
+        {
+          "index": 5,
+          "pair": [
+            "Earthquake",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Earthquake causally affects a change in another node which says JohnCalls.\n\n            B. changing the state of node which says JohnCalls causally affects a change in another node which says Earthquake.\n\n            C. There is no causal relationship between node Earthquake and JohnCalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Earthquake and JohnCalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Earthquake and JohnCalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, the direction of causality typically follows logical cause-and-effect relationships. In this scenario, we have two nodes: Earthquake and JohnCalls. \n\n1. Earthquake is a natural event that can cause various effects, such as shaking buildings, triggering alarms, and prompting people to call emergency services or loved ones. Therefore, it is reasonable to assume that an earthquake could lead to John making a call, perhaps to report the earthquake or check on someone's safety.\n\n2. On the other hand, JohnCalls is an action taken by an individual, which is unlikely to cause an earthquake. Human actions, such as making a phone call, do not have the capability to trigger natural events like earthquakes.\n\nGiven these considerations, the more plausible causal relationship is that an earthquake could lead to John making a call, rather than the other way around. Therefore, the direction of causality is more likely from Earthquake to JohnCalls.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Earthquake",
+            "JohnCalls"
+          ],
+          "latency_sec": 3.182,
+          "usage": {
+            "prompt_tokens": 231,
+            "completion_tokens": 194,
+            "total_tokens": 425
+          }
+        },
+        {
+          "index": 6,
+          "pair": [
+            "Earthquake",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Earthquake causally affects a change in another node which says Marycalls.\n\n            B. changing the state of node which says Marycalls causally affects a change in another node which says Earthquake.\n\n            C. There is no causal relationship between node Earthquake and Marycalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Earthquake and Marycalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Earthquake and Marycalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, an earthquake is a natural event that can lead to various consequences, such as triggering alarms, causing structural damage, or prompting people to call others to inform them about the event. Therefore, it is reasonable to assume that an earthquake could cause Mary to call someone, as she might be reacting to the earthquake by reaching out to others for safety or to inform them about the situation.\n\nOn the other hand, Mary calling someone is unlikely to cause an earthquake, as earthquakes are natural phenomena that are not influenced by human actions like making a phone call.\n\nGiven the nature of causal relationships and the context provided, it is more plausible that an earthquake would cause Mary to call, rather than the other way around.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Earthquake",
+            "Marycalls"
+          ],
+          "latency_sec": 2.164,
+          "usage": {
+            "prompt_tokens": 231,
+            "completion_tokens": 150,
+            "total_tokens": 381
+          }
+        },
+        {
+          "index": 7,
+          "pair": [
+            "Alarm",
+            "JohnCalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Alarm causally affects a change in another node which says JohnCalls.\n\n            B. changing the state of node which says JohnCalls causally affects a change in another node which says Alarm.\n\n            C. There is no causal relationship between node Alarm and JohnCalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Alarm and JohnCalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Alarm and JohnCalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between them. In this scenario, we have two nodes: \"Alarm\" and \"JohnCalls.\" We need to determine the direction of causality between these two nodes.\n\n1. **Understanding the Scenario:**\n   - \"Alarm\" likely represents an event where an alarm goes off.\n   - \"JohnCalls\" likely represents an event where John makes a phone call, possibly in response to the alarm.\n\n2. **Causal Reasoning:**\n   - It is reasonable to assume that if an alarm goes off, it could prompt John to call, perhaps to check on the situation or to alert someone. This suggests a causal relationship where the alarm going off causes John to call.\n   - Conversely, it is less intuitive to think that John making a call would cause an alarm to go off. Typically, alarms are triggered by specific events or conditions, not by someone making a phone call.\n\n3. **Sparse and Acyclic Nature of the Graph:**\n   - The graph is described as sparse and acyclic, meaning it has few connections and no cycles. This supports the idea that there is a direct causal link from \"Alarm\" to \"JohnCalls\" without feedback loops or complex interdependencies.\n\nBased on this reasoning, the more plausible causal relationship is that the alarm going off causes John to call.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Alarm",
+            "JohnCalls"
+          ],
+          "latency_sec": 3.784,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 286,
+            "total_tokens": 512
+          }
+        },
+        {
+          "index": 8,
+          "pair": [
+            "Alarm",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says Alarm causally affects a change in another node which says Marycalls.\n\n            B. changing the state of node which says Marycalls causally affects a change in another node which says Alarm.\n\n            C. There is no causal relationship between node Alarm and Marycalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. Alarm and Marycalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between Alarm and Marycalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between these nodes. Given that the graph is sparse and acyclic, it means that not every pair of nodes is directly connected, and there are no cycles in the graph.\n\nIn this scenario, we have two nodes: \"Alarm\" and \"Marycalls.\" We need to determine the likely causal direction between these two nodes.\n\n1. **Alarm to Marycalls (Option A):** It is reasonable to assume that if an alarm goes off, it could cause Mary to call. This is a common scenario where an alarm (such as a fire alarm or a security alarm) triggers a response, such as a phone call to alert someone or seek help.\n\n2. **Marycalls to Alarm (Option B):** It is less intuitive to think that Mary making a call would cause an alarm to go off. Typically, alarms are designed to alert people to certain conditions, not to be triggered by phone calls.\n\n3. **No causal relationship (Option C):** While it's possible that there is no direct causal relationship between the two nodes, the scenario described suggests a plausible causal link from Alarm to Marycalls.\n\nGiven the typical understanding of how alarms and responses work, the more likely causal relationship is that an alarm going off causes Mary to call.\n\n<Answer>A</Answer>",
+          "answer": "A",
+          "decision": "forward",
+          "edge": [
+            "Alarm",
+            "Marycalls"
+          ],
+          "latency_sec": 4.37,
+          "usage": {
+            "prompt_tokens": 226,
+            "completion_tokens": 272,
+            "total_tokens": 498
+          }
+        },
+        {
+          "index": 9,
+          "pair": [
+            "JohnCalls",
+            "Marycalls"
+          ],
+          "model": "gpt-4o",
+          "prompt_type": "simple",
+          "question": "Which cause-and-effect relationship is more likely?\n\n            A. changing the state of node which says JohnCalls causally affects a change in another node which says Marycalls.\n\n            B. changing the state of node which says Marycalls causally affects a change in another node which says JohnCalls.\n\n            C. There is no causal relationship between node JohnCalls and Marycalls.\n\n            Make sure to first output a factually grounded reasoning for your answer. JohnCalls and Marycalls are nodes of a Causal Graph.\n            The causal graph is sparse and acyclic in nature. So option C could be chosen if there is some uncertainity about causal relationship between JohnCalls and Marycalls.\n            First give your reasoning and after that please make sure to provide your final answer within the tags <Answer>A/B/C</Answer>.\n            It is very important that you output your final answer between the tags like <Answer>A/B/C</Answer> otherwise your response will not be processed.",
+          "response_raw": "In a causal graph, nodes represent variables or events, and directed edges represent causal relationships between them. The problem involves determining the causal relationship between two nodes: JohnCalls and MaryCalls.\n\n1. **Understanding the Context**: \n   - JohnCalls and MaryCalls could represent events where John calls someone and Mary calls someone, respectively.\n   - The causal relationship could be direct (one event directly causes the other) or indirect (one event influences the other through a series of intermediate events).\n\n2. **Analyzing Possible Causal Directions**:\n   - **Option A**: JohnCalls → MaryCalls\n     - This suggests that when John makes a call, it causes Mary to make a call. This could happen if, for example, John calls Mary, prompting her to return the call or call someone else.\n   - **Option B**: MaryCalls → JohnCalls\n     - This suggests that when Mary makes a call, it causes John to make a call. This could occur if Mary calls John, prompting him to return the call or call someone else.\n   - **Option C**: No causal relationship\n     - This suggests that there is no direct causal link between JohnCalls and MaryCalls. They might be independent events or influenced by a common cause not represented in the graph.\n\n3. **Considering Sparsity and Acyclic Nature**:\n   - The graph is sparse, meaning it has relatively few edges compared to the number of nodes. This implies that not every pair of nodes is directly connected by a causal relationship.\n   - The graph is acyclic, meaning there are no cycles, so if there is a causal relationship, it must be unidirectional.\n\n4. **Evaluating the Likelihood**:\n   - Without additional context or data, it's challenging to definitively determine the causal direction. However, in many real-world scenarios, communication events like calls can be reciprocated, suggesting potential causal links in either direction.\n   - Given the sparse and ac",
+          "answer": null,
+          "decision": "none",
+          "edge": null,
+          "latency_sec": 19.531,
+          "usage": {
+            "prompt_tokens": 231,
+            "completion_tokens": 400,
+            "total_tokens": 631
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "predicted_edges": [
+      [
+        "Burglary",
+        "Alarm"
+      ],
+      [
+        "Burglary",
+        "JohnCalls"
+      ],
+      [
+        "Burglary",
+        "Marycalls"
+      ],
+      [
+        "Earthquake",
+        "Alarm"
+      ],
+      [
+        "Earthquake",
+        "JohnCalls"
+      ],
+      [
+        "Earthquake",
+        "Marycalls"
+      ],
+      [
+        "Alarm",
+        "JohnCalls"
+      ],
+      [
+        "Alarm",
+        "Marycalls"
+      ]
+    ],
+    "order": [
+      "Burglary",
+      "Earthquake",
+      "Alarm",
+      "JohnCalls",
+      "Marycalls"
+    ],
+    "metrics": {
+      "predicted_edges": 8,
+      "shd": 4,
+      "cycles": 0,
+      "topo_divergence": 0,
+      "f1": 0.6667
+    },
+    "elapsed_sec": 62.0
+  }
+}

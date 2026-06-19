@@ -56,10 +56,10 @@
     const ids = pages.map((p) => p.id);
     const links = Array.from(document.querySelectorAll(".nav-links a"));
 
-    // Work that can only be done once a page is actually visible. Chart.js and
-    // vis-network measure 0px in a display:none container, so we build the
-    // charts the FIRST time the Results page is shown rather than at boot.
-    const onFirstShow = { results: initCharts };
+    // Work that can only be done once a page is actually visible. vis-network
+    // (and similar widgets) measure 0px in a display:none container, so any
+    // such build is deferred to the FIRST time its page is shown.
+    const onFirstShow = {};
     const done = {};
 
     function currentId() {
@@ -86,115 +86,219 @@
   // The graph explorer now lives inside the Pipeline as its "Graph" stage
   // (see pipeline.js renderGraph); there is no separate explorer section.
 
-  // ---------------- metrics table ----------------
-  function initTable() {
-    const tbody = document.getElementById("metrics-tbody");
-    const rows = [];
-    C.GRAPHS.forEach((g) => {
-      const rs = C.resultsFor(g);
-      // find best (lowest) shd & topo per graph for highlight
-      const minShd = Math.min(...rs.map((r) => r.raw.metrics.shd));
-      const minTopo = Math.min(...rs.map((r) => r.raw.metrics.topo_divergence));
-      const maxF1 = Math.max(...rs.map((r) => r.raw.metrics.f1));
-      rs.forEach((r, i) => {
-        const m = r.raw.metrics;
-        const u = r.usage || {};
-        const chipCls = r._kind === "triplet" ? "tri" : r._kind === "quadruplet" ? "quad" : "pair";
-        // pairwise here is the chain-of-thought prompt, so flag it as such.
-        const methodLabel = r._kind === "pairwise" ? "Pairwise (CoT)" : r._kindLabel;
-        const time = u.total_time_sec != null ? C.fmt(u.total_time_sec, 1) : "—";
-        const tokens = u.total_tokens != null ? u.total_tokens.toLocaleString() : "—";
-        rows.push(`<tr>
-          <td>${i === 0 ? `<b>${(C.GRAPH_META[g] || {}).label || g}</b>` : ""}</td>
-          <td><span class="row-method"><span class="chip ${chipCls}">${methodLabel}</span></span></td>
-          <td class="num ${m.shd === minShd ? "best" : ""}">${m.shd}</td>
-          <td class="num ${m.topo_divergence === minTopo ? "best" : ""}">${m.topo_divergence}</td>
-          <td class="num">${C.fmt(m.precision, 2)}</td>
-          <td class="num">${C.fmt(m.recall, 2)}</td>
-          <td class="num ${m.f1 === maxF1 ? "best" : ""}">${C.fmt(m.f1, 2)}</td>
-          <td class="num">${m.n_pred_edges}</td>
-          <td class="num">${m.cycles}</td>
-          <td class="num">${time}</td>
-          <td class="num">${tokens}</td>
-        </tr>`);
+  // ---------------- per-model result tables ----------------
+  // One table per model, all in the SAME layout/columns so they read
+  // identically — we don't single out the hosted (GPT-4o) run vs the
+  // self-hosted Ollama ones. rows = dataset × method; best SHD / D_top per
+  // dataset highlighted. Triplet rows report the cycle-removed (acyclic) graph.
+  function initModelTables() {
+    const host = document.getElementById("model-results");
+    if (!host) return;
+    const dash = (v) => (v === null || v === undefined) ? "–" : String(v);
+    const dsLabel = (k) => (C.GRAPH_META[k] || {}).label || (k[0].toUpperCase() + k.slice(1));
+
+    // data-driven Vietnamese assessment shown under each table. Everything is
+    // derived from the same `rows` the table renders, so it stays accurate.
+    function summarize(rows) {
+      const flat = [];
+      rows.forEach((r) => r.methods.forEach((m) => flat.push({ ds: r.label, ...m })));
+      if (!flat.length) return "";
+      const labels = [...new Set(flat.map((m) => m.label))];
+      const meanShd = {};
+      labels.forEach((l) => {
+        const xs = flat.filter((m) => m.label === l && m.shd != null).map((m) => m.shd);
+        meanShd[l] = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
       });
+      const ranked = labels.filter((l) => meanShd[l] != null).sort((a, b) => meanShd[a] - meanShd[b]);
+      const best = ranked[0], worst = ranked[ranked.length - 1];
+      const dcells = flat.filter((m) => m.dtop != null);
+      const perfect = dcells.filter((m) => m.dtop === 0).length;
+      let hardest = null;
+      flat.forEach((m) => { if (m.shd != null && (!hardest || m.shd > hardest.shd)) hardest = m; });
+      const noEdge = flat.filter((m) => m.pred === 0).length;
+      // residual-cycle blow-ups in the displayed (non-acyclic) rows
+      const expl = {};
+      flat.forEach((m) => { if (m.cycles != null && m.cycles > 50) expl[m.ds] = Math.max(expl[m.ds] || 0, m.cycles); });
+      const explDs = Object.keys(expl);
+      const toks = flat.filter((m) => m.tokens != null).map((m) => m.tokens);
+      const totalTok = toks.length ? toks.reduce((a, b) => a + b, 0) : null;
+      // per-model cost: triplet calls a cheap subgraph model + an expert model,
+      // so report the split (dominant model first) rather than one lumped sum.
+      const byModel = {};
+      flat.forEach((m) => {
+        if (m.tokensByModel) Object.keys(m.tokensByModel)
+          .forEach((k) => { byModel[k] = (byModel[k] || 0) + m.tokensByModel[k]; });
+      });
+      const modelKeys = Object.keys(byModel).sort((a, b) => byModel[b] - byModel[a]);
+
+      const s = [`Trên <b>${rows.length} dataset</b> × ${labels.length} phương pháp.`];
+      if (best) {
+        let t = `<b>${best}</b> cho SHD trung bình thấp nhất (${meanShd[best].toFixed(1)}`;
+        if (worst && worst !== best) t += ` so với ${meanShd[worst].toFixed(1)} của ${worst}`;
+        s.push(t + ").");
+      }
+      if (dcells.length) s.push(`${perfect}/${dcells.length} lần chạy đạt D<sub>top</sub> = 0 — khôi phục đúng thứ tự nhân quả.`);
+      if (hardest) s.push(`Khó nhất là <b>${hardest.ds}</b> (SHD lên tới ${hardest.shd}).`);
+      if (explDs.length) {
+        const list = explDs.map((d) => `${d} (${expl[d].toLocaleString()} chu trình)`).join(", ");
+        s.push(`Pairwise sinh bùng nổ chu trình ở ${list} — chỉ triplet (sau khi gỡ chu trình) cho đồ thị acyclic.`);
+      }
+      if (noEdge >= Math.max(2, flat.length * 0.3)) {
+        s.push(`${noEdge}/${flat.length} lần chạy không trích được cạnh nào (Pred. edges = 0), nên SHD chủ yếu đếm số cạnh thật bị bỏ sót — cần đọc số liệu thận trọng.`);
+      }
+      if (totalTok != null && totalTok > 0) {
+        let t = `Tổng chi phí ~${totalTok.toLocaleString()} tokens`;
+        if (modelKeys.length > 1) {
+          t += ` (${modelKeys.map((k) => `${k}: ${byModel[k].toLocaleString()}`).join(", ")})`;
+        }
+        s.push(t + ".");
+      }
+      return s.join(" ");
+    }
+
+    // shared card renderer. `rows` = [{ label, methods: [{label, chip, shd,
+    // dtop, cycles, pred, time, tokens}] }]; any null metric renders as "–".
+    function modelCard(title, sub, rows, opts) {
+      // Tokens are split by model: a method may call more than one model (the
+      // triplet flow uses a cheap subgraph model + an expert tie-break model),
+      // so a single lumped count would misstate per-model cost. Collect every
+      // model that appears across this card's rows — dominant (most tokens)
+      // first — and give each its own Tokens sub-column. Cards with no token
+      // data (the self-hosted runs) keep one plain, blank Tokens column.
+      const tokTotal = {};
+      rows.forEach((row) => row.methods.forEach((m) => {
+        const tbm = m.tokensByModel;
+        if (tbm) Object.keys(tbm).forEach((k) => { tokTotal[k] = (tokTotal[k] || 0) + tbm[k]; });
+      }));
+      const tokModels = Object.keys(tokTotal).sort((a, b) => tokTotal[b] - tokTotal[a]);
+      const splitTokens = tokModels.length > 1;
+      const tokenCells = (m) => splitTokens
+        ? tokModels.map((mm) => {
+            const v = (m.tokensByModel || {})[mm];
+            return `<td class="num">${v != null ? v.toLocaleString() : "–"}</td>`;
+          }).join("")
+        : `<td class="num">${m.tokens != null ? m.tokens.toLocaleString() : "–"}</td>`;
+
+      const fixed = ["Dataset", "Method", "SHD", "D<sub>top</sub>", "Cycles", "Pred. edges", "Time (s)"];
+      const thead = splitTokens
+        ? `<tr>${fixed.map((c) => `<th rowspan="2">${c}</th>`).join("")}`
+            + `<th colspan="${tokModels.length}">Tokens</th></tr>`
+            + `<tr>${tokModels.map((mm) => `<th class="tok-model">${mm}</th>`).join("")}</tr>`
+        : `<tr>${fixed.map((c) => `<th>${c}</th>`).join("")}<th>Tokens</th></tr>`;
+
+      let body = "";
+      rows.forEach((row) => {
+        const ms = row.methods;
+        const shds = ms.map((m) => m.shd).filter((v) => v != null);
+        const dtops = ms.map((m) => m.dtop).filter((v) => v != null);
+        const minShd = shds.length ? Math.min(...shds) : null;
+        const minDtop = dtops.length ? Math.min(...dtops) : null;
+        ms.forEach((m, i) => {
+          // metric cell: tags the data point with its key so a per-cell paper
+          // note (CELL_NOTES) can attach a dotted underline + hover card to the
+          // exact number. Key = `${model}|${ds}|${mkey}|${col}`.
+          const cell = (col, val, extraCls) => {
+            const key = (row.dsKey && m.mkey) ? `${title}|${row.dsKey}|${m.mkey}|${col}` : null;
+            const noted = key && CELL_NOTES[key];
+            const cls = ["num", extraCls, noted ? "has-note" : ""].filter(Boolean).join(" ");
+            return `<td class="${cls}"${key ? ` data-cell="${key}"` : ""}>${dash(val)}</td>`;
+          };
+          body += `<tr>
+            <td>${i === 0 ? `<b>${row.label}</b>` : ""}</td>
+            <td><span class="row-method"><span class="chip ${m.chip}">${m.label}</span></span></td>
+            ${cell("shd", m.shd, m.shd != null && m.shd === minShd ? "best" : "")}
+            ${cell("dtop", m.dtop, m.dtop != null && m.dtop === minDtop ? "best" : "")}
+            ${cell("cycles", m.cycles)}
+            <td class="num">${dash(m.pred)}</td>
+            <td class="num">${m.time != null ? C.fmt(m.time, 1) : "–"}</td>
+            ${tokenCells(m)}
+          </tr>`;
+        });
+      });
+      opts = opts || {};
+      const note = opts.note != null ? opts.note : summarize(rows);
+      return `<div class="cp-card">
+        <div class="cp-head">
+          <div class="cp-head-l">${opts.num != null ? `<span class="tbl-num">Bảng ${opts.num}</span>` : ""}<h4>${title}</h4></div>
+        </div>
+        <div class="tbl-wrap" style="box-shadow:none;border-radius:0;border:0">
+          <table class="metrics">
+            <thead>${thead}</thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+        ${note ? `<div class="model-note"><span class="model-note-h">Nhận xét tổng quan</span><p>${note}</p></div>` : ""}
+      </div>`;
+    }
+
+    const cards = [];
+
+    // Per-table descriptions (the "Nhận xét tổng quan" of each card). Editable.
+    const NOTE_GPT4O = "So sánh tổng quan hai phương pháp <b>pairwise</b> và <b>triplet</b> trên toàn bộ dataset và mọi metric (model GPT-4o). Triplet nhìn chung cho SHD thấp hơn và tránh được chu trình so với pairwise, rõ nhất ở đồ thị lớn (Child). Giữa hai biến thể prompt của pairwise: <b>CoT</b> thường cho kết quả (SHD / D<sub>top</sub>) tốt hơn <b>Base</b> nhưng tốn nhiều token và thời gian hơn. Đáng chú ý: <b>D<sub>top</sub></b> ổn định hơn <b>SHD</b> — graph có thể sai nhiều (SHD cao) nhưng thứ tự nhân quả vẫn đúng (D<sub>top</sub>=0).";
+    const LOCAL_NOTES = {
+      "phi3:mini": "So sánh <b>pairwise</b> và <b>triplet</b> trên model nhỏ <b>phi3:mini</b>. Khác với GPT-4o (Bảng 1), ở model nhỏ này triplet <b>không còn vượt trội</b> pairwise — chỉ ngang hoặc nhỉnh hơn ở vài dataset và còn <b>thua</b> ở Earthquake. Lợi thế của triplet phụ thuộc vào năng lực của model nền.",
+      "llama3:8b": "So sánh <b>pairwise</b> và <b>triplet</b> trên model nhỏ <b>llama3:8b</b>. Tương tự phi3:mini, ở model nhỏ triplet <b>không hơn</b> pairwise — thậm chí còn thua ở vài dataset (Earthquake, Asia, Child).",
+    };
+
+    // GPT-4o — our hosted reproduction runs (data/*.trace.json).
+    // Dataset order is aligned to the small-model tables below (Bảng 2/3).
+    const RESULTS_ORDER = ["cancer", "earthquake", "survey", "asia", "child"];
+    const orderedGraphs = [...C.GRAPHS].sort((a, b) => {
+      const ia = RESULTS_ORDER.indexOf(a), ib = RESULTS_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
     });
-    tbody.innerHTML = rows.join("");
-  }
+    const gptRows = orderedGraphs.map((g) => ({
+      label: (C.GRAPH_META[g] || {}).label || g,
+      dsKey: g, // stable key for paper-claim cell cross-highlight
+      methods: C.resultsFor(g).map((r) => {
+        const m = r.raw.metrics, u = r.usage || {};
+        return {
+          // pairwise comes in two prompt variants (Base / CoT); _kindLabel
+          // already distinguishes them.
+          label: r._kindLabel,
+          mkey: r._kind, // 'pairwise_base' | 'pairwise' | 'triplet' | 'quadruplet'
+          chip: r._kind === "triplet" ? "tri" : r._kind === "quadruplet" ? "quad" : "pair",
+          shd: m.shd, dtop: m.topo_divergence, cycles: m.cycles, pred: m.n_pred_edges,
+          time: u.total_time_sec, tokens: u.total_tokens,
+          // a single run may call >1 model (triplet: cheap subgraph model +
+          // expert tie-break model); keep the per-model split so the Tokens
+          // column can show real per-model cost instead of a lumped total.
+          tokensByModel: u.tokens_by_model,
+        };
+      }),
+    })).filter((row) => row.methods.length);
+    if (gptRows.length) cards.push(modelCard("gpt-4o", "rows = dataset × method", gptRows, { num: cards.length + 1, note: NOTE_GPT4O }));
 
-  // ---------------- self-hosted model tables (one per model) ----------------
-  // Build a metrics table per local model from window.LOCAL_MODELS (mirror of
-  // data/other_model/results_local.json): rows = dataset × method, best SHD /
-  // Dtop per dataset highlighted. Triplet rows that left residual cycles also
-  // show the cycle-removed (acyclic) value in muted parentheses.
-  function initLocalTables() {
-    const host = document.getElementById("local-metrics");
-    const LM = window.LOCAL_MODELS;
-    if (!host || !LM) return;
-
-    const MODELS = ["phi3:mini", "llama3:8b"];
-    const METHODS = [
+    // self-hosted Ollama models (window.LOCAL_MODELS). triplet reports the
+    // cycle-removed (acyclic) graph; base/CoT have no acyclic variant → raw.
+    const LM = window.LOCAL_MODELS || {};
+    const LOCAL_METHODS = [
       { key: "pairwise_base", label: "Pairwise (Base)", chip: "pair" },
       { key: "pairwise_cot", label: "Pairwise (CoT)", chip: "pair" },
       { key: "triplet", label: "Triplet", chip: "tri" },
     ];
-    const DATASETS = ["cancer", "earthquake", "survey", "asia", "child"];
-    const dsLabel = (k) => (C.GRAPH_META[k] || {}).label || (k[0].toUpperCase() + k.slice(1));
-    const dash = (v) => (v === null || v === undefined) ? "–" : String(v);
-
-    // effective metrics for a record: triplet reports the cycle-removed
-    // (acyclic) graph; pairwise base/CoT have no acyclic variant → raw.
-    const eff = (key, d) => {
-      const tri = key === "triplet";
-      return {
-        shd: tri && d.shd_acyclic != null ? d.shd_acyclic : d.shd,
-        dtop: tri && ("dtop_acyclic" in d) ? d.dtop_acyclic : d.dtop,
-        cycles: tri && d.cycles_acyclic != null ? d.cycles_acyclic : d.cycles,
-        predicted_edges: d.predicted_edges,
-        elapsed_s: d.elapsed_s,
-      };
-    };
-    const cards = MODELS.map((model) => {
-      let body = "";
-      DATASETS.forEach((ds) => {
-        const cells = METHODS.map((m) => {
+    const LOCAL_DATASETS = ["cancer", "earthquake", "survey", "asia", "child"];
+    ["phi3:mini", "llama3:8b"].forEach((model) => {
+      const rows = LOCAL_DATASETS.map((ds) => ({
+        label: dsLabel(ds),
+        methods: LOCAL_METHODS.map((m) => {
           const d = (LM[m.key + "_" + model] || {})[ds];
-          return d ? eff(m.key, d) : null;
-        });
-        const shds = cells.filter(Boolean).map((d) => d.shd).filter((v) => v != null);
-        const dtops = cells.filter(Boolean).map((d) => d.dtop).filter((v) => v != null);
-        const minShd = shds.length ? Math.min(...shds) : null;
-        const minDtop = dtops.length ? Math.min(...dtops) : null;
-        METHODS.forEach((m, i) => {
-          const d = cells[i];
-          if (!d) return;
-          body += `<tr>
-            <td>${i === 0 ? `<b>${dsLabel(ds)}</b>` : ""}</td>
-            <td><span class="row-method"><span class="chip ${m.chip}">${m.label}</span></span></td>
-            <td class="num ${d.shd === minShd ? "best" : ""}">${dash(d.shd)}</td>
-            <td class="num ${d.dtop != null && d.dtop === minDtop ? "best" : ""}">${dash(d.dtop)}</td>
-            <td class="num">${dash(d.cycles)}</td>
-            <td class="num">${d.predicted_edges}</td>
-            <td class="num">${C.fmt(d.elapsed_s, 1)}</td>
-          </tr>`;
-        });
-      });
-      return `<div class="cp-card">
-        <div class="cp-head">
-          <div><h4>${model}</h4><span class="cp-sub">Ollama self-host · base / CoT / triplet · 5 datasets</span></div>
-          <span class="cp-tag">self-host</span>
-        </div>
-        <div class="tbl-wrap" style="box-shadow:none;border-radius:0;border:0">
-          <table class="metrics">
-            <thead><tr><th>Dataset</th><th>Method</th><th>SHD</th><th>D<sub>top</sub></th><th>Cycles</th><th>Pred. edges</th><th>Time (s)</th></tr></thead>
-            <tbody>${body}</tbody>
-          </table>
-        </div>
-      </div>`;
-    }).join("");
+          if (!d) return null;
+          const tri = m.key === "triplet";
+          return {
+            label: m.label, chip: m.chip,
+            shd: tri && d.shd_acyclic != null ? d.shd_acyclic : d.shd,
+            dtop: tri && ("dtop_acyclic" in d) ? d.dtop_acyclic : d.dtop,
+            cycles: tri && d.cycles_acyclic != null ? d.cycles_acyclic : d.cycles,
+            pred: d.predicted_edges, time: d.elapsed_s, tokens: d.total_tokens,
+          };
+        }).filter(Boolean),
+      })).filter((row) => row.methods.length);
+      if (rows.length) cards.push(modelCard(model, "rows = dataset × method", rows, { num: cards.length + 1, note: LOCAL_NOTES[model] }));
+    });
 
-    host.innerHTML = `<div class="card-grid">${cards}</div>` +
-      `<p class="muted mt-m" style="font-size:13px;line-height:1.55">Với <b>triplet</b>, số liệu là kết quả <b>sau khi gỡ chu trình</b> (acyclic) — đầu ra thực tế của phương pháp. D<sub>top</sub> hiển thị “–” khi đồ thị còn chu trình nên không tính được thứ tự topo (chỉ xảy ra ở pairwise base). Llama3 base/CoT trả về 0 cạnh parse được trên các đồ thị nhỏ, nên SHD chỉ đếm số cạnh thật bị thiếu.</p>`;
+    host.innerHTML = `<div class="card-grid">${cards.join("")}</div>` +
+      `<p class="muted mt-m" style="font-size:13px;line-height:1.55">Với <b>triplet</b>, số liệu là kết quả <b>sau khi gỡ chu trình</b> (acyclic) — đầu ra thực tế của phương pháp. D<sub>top</sub> hiển thị “–” khi đồ thị còn chu trình nên không tính được thứ tự topo. Ô “–” ở cột Tokens là khi run không ghi lại số token.</p>`;
   }
 
   // ---------------- comparison: two published-style tables ----------------
@@ -207,7 +311,7 @@
 
     const recs = [];
     C.GRAPHS.forEach((g) => {
-      ["pairwise", "triplet", "quadruplet"].forEach((kind) => {
+      ["pairwise_base", "pairwise", "triplet", "quadruplet"].forEach((kind) => {
         const r = C.getResult(g, kind);
         if (!r) return;
         const o = r.raw.metrics;
@@ -340,14 +444,98 @@
       <span class="dpill-v"><b class="dpill-paper">${paperVal === null || paperVal === undefined ? "—" : paperVal}</b>→<b class="dpill-ours">${ourVal === null || ourVal === undefined ? "—" : ourVal}</b></span></span>`;
   }
 
+  // ---------------- per-cell paper-claim notes (Results tab) ----------------
+  // The remarks live ON the data points of the gpt-4o table: each evidence cell
+  // gets a dotted underline and, on hover, a floating card tying THAT number to
+  // a paper conclusion (KL①–KL⑥) + verdict. Keyed by `${model}|${ds}|${mkey}|${col}`
+  // (col ∈ shd|dtop|cycles). Notes deliberately cite only real runs — never the
+  // synthetic Cancer triplet/CoT. CELL_NOTES is read by modelCard() (marks the
+  // cell) and by initCellNotes() (the hover handler below).
+  const CLAIM_VERDICT = {
+    ok:      { icon: "✓", tag: "Đã kiểm chứng" },
+    partial: { icon: "⚠", tag: "Đúng phần lớn" },
+    no:      { icon: "✗", tag: "Chưa kiểm chứng" },
+  };
+  const CELL_NOTES = {
+    // KL① — order ổn định hơn graph (graph sai nhưng D_top vẫn 0)
+    "gpt-4o|survey|pairwise_base|shd":  { no: "①", v: "ok", title: "Order ổn định hơn graph", text: "SHD=8 — đồ thị sai khoảng một nửa số cạnh. Nhưng xem ô D<sub>top</sub> ngay bên cạnh: thứ tự nhân quả vẫn đúng." },
+    "gpt-4o|survey|pairwise_base|dtop": { no: "①", v: "ok", title: "Order ổn định hơn graph", text: "D<sub>top</sub>=0 — thứ tự nhân quả khôi phục <b>đúng hoàn toàn</b> dù graph sai (SHD=8). Đây là luận điểm trung tâm của paper: order là interface ổn định hơn graph." },
+    "gpt-4o|asia|pairwise_base|shd":    { no: "①", v: "ok", title: "Order ổn định hơn graph", text: "SHD=16 — graph sai rất nhiều, vậy mà D<sub>top</sub> ngay bên cạnh vẫn = 0." },
+    "gpt-4o|asia|pairwise_base|dtop":   { no: "①", v: "ok", title: "Order ổn định hơn graph", text: "D<sub>top</sub>=0 dù SHD=16 — order đúng kể cả khi graph sai nặng." },
+    // KL② — pairwise sinh chu trình ở graph lớn
+    "gpt-4o|child|pairwise|cycles":     { no: "②", v: "ok", title: "Pairwise sinh chu trình ở graph lớn", text: "20.803 chu trình — pairwise trên graph lớn (Child) sinh vô số chu trình ⇒ D<sub>top</sub> không tính được (ô D<sub>top</sub> = –). Graph nhỏ với GPT-4o thì 0 chu trình." },
+    // KL③ — triplet > pairwise (SHD thấp hơn)
+    "gpt-4o|earthquake|triplet|shd":    { no: "③", v: "partial", title: "Triplet > pairwise", text: "SHD=2 — thấp hơn pairwise (4–5) trên cùng dataset. Triplet cho graph chính xác hơn." },
+    "gpt-4o|asia|triplet|shd":          { no: "③", v: "partial", title: "Triplet > pairwise", text: "SHD=9 — thấp hơn nhiều so với pairwise (15–16). Triplet thắng rõ ở graph này." },
+    "gpt-4o|child|triplet|shd":         { no: "③", v: "partial", title: "Triplet > pairwise", text: "SHD=41 so với 128 của pairwise — triplet giảm mạnh lỗi graph trên đồ thị lớn." },
+    "gpt-4o|survey|triplet|shd":        { no: "③", v: "partial", title: "Triplet > pairwise (ngoại lệ)", text: "Ngoại lệ: SHD=8 ≥ pairwise-CoT (SHD=6). Ở graph rất nhỏ, triplet không chắc thắng pairwise." },
+    // KL④ — triplet loại bỏ chu trình
+    "gpt-4o|child|triplet|cycles":      { no: "④", v: "ok", title: "Triplet loại bỏ chu trình", text: "0 chu trình so với 20.803 của pairwise — bước vote + entropy cycle-removal cho đồ thị acyclic, nhờ đó D<sub>top</sub> tính được." },
+    "gpt-4o|earthquake|triplet|cycles": { no: "④", v: "ok", title: "Triplet loại bỏ chu trình", text: "0 chu trình — mọi run triplet (gpt-4o-mini) đều acyclic." },
+    "gpt-4o|asia|triplet|cycles":       { no: "④", v: "ok", title: "Triplet loại bỏ chu trình", text: "0 chu trình — triplet giữ đồ thị acyclic." },
+    "gpt-4o|survey|triplet|cycles":     { no: "④", v: "ok", title: "Triplet loại bỏ chu trình", text: "0 chu trình — triplet acyclic." },
+    // KL⑤ — mô hình nhỏ + triplet > GPT-4 pairwise (đối chiếu ngay trong cột SHD của Child)
+    "gpt-4o|child|pairwise|shd":        { no: "⑤", v: "partial", title: "Mô hình nhỏ + triplet > GPT-4 pairwise", text: "Pairwise GPT-4o trên Child: SHD=128, 20.803 chu trình. Triplet (hàng dưới) chỉ SHD=41, 0 chu trình — và paper cho thấy triplet với mô hình nhỏ (Phi-3/Llama-3) còn vượt pairwise GPT-4." },
+  };
+
+  function initCellNotes() {
+    const host = document.getElementById("model-results");
+    if (!host) return;
+
+    let tip = document.getElementById("cell-note-tip");
+    if (!tip) { tip = document.createElement("div"); tip.id = "cell-note-tip"; document.body.appendChild(tip); }
+
+    function inner(n) {
+      const vd = CLAIM_VERDICT[n.v];
+      return `<div class="diff-top"><span class="diff-run">KL${n.no} · ${n.title}</span><span class="diff-badge claim-b-${n.v}">${vd.icon} ${vd.tag}</span></div>
+        <p class="cell-note-text">${n.text}</p>`;
+    }
+    function place(anchorEl) {
+      tip.style.visibility = "hidden";
+      tip.style.display = "block";
+      const r = anchorEl.getBoundingClientRect();
+      const t = tip.getBoundingClientRect();
+      let left = r.left + r.width / 2 - t.width / 2;
+      left = Math.max(12, Math.min(left, window.innerWidth - t.width - 12));
+      let top = r.bottom + 8;
+      if (top + t.height > window.innerHeight - 8) top = r.top - t.height - 8; // flip above
+      top = Math.max(8, top);
+      tip.style.left = left + "px";
+      tip.style.top = top + "px";
+      tip.style.visibility = "visible";
+    }
+    function show(td) {
+      const n = CELL_NOTES[td.dataset.cell];
+      if (!n) return;
+      tip.className = "hl-tip claim-tip claim-" + n.v;
+      tip.innerHTML = inner(n);
+      place(td);
+      td.classList.add("note-active");
+    }
+    function hide() {
+      tip.style.display = "none";
+      host.querySelectorAll("td.note-active").forEach((td) => td.classList.remove("note-active"));
+    }
+
+    // delegate: the tables are (re)rendered as innerHTML, so bind on the host.
+    host.addEventListener("mouseover", (e) => {
+      const td = e.target.closest("td.has-note");
+      if (td && host.contains(td)) show(td);
+    });
+    host.addEventListener("mouseout", (e) => {
+      const td = e.target.closest("td.has-note");
+      if (td) hide();
+    });
+  }
+
   // ---------------- every published table, with ours beside ----------------
   // Faithful transcription of every experimental table in the paper. For the
   // LLM causal-order tables we place OUR reproduced GPT-4o value beside the
   // paper's number wherever (dataset, method, metric) matches a loaded run;
   // everything we have not reproduced is left blank.
   function initPublishedTables() {
+    if (!PR.publishedTables) return;
     const host = document.getElementById("all-paper-tables");
-    if (!host || !PR.publishedTables) return;
 
     // keep the "we reproduced … on X, Y, Z" sentence in sync with loaded runs
     const reproEl = document.getElementById("repro-list");
@@ -364,6 +552,29 @@
     // Map a paper row to our internal graph id (auto from the dataset label,
     // so a run appears beside its row with NO edits to paper_reference.js).
     const rowKey = (row) => row.key || normGraphKey(row.dataset);
+
+    // Per-table "Nhận xét tổng quan" shown under Table 3 / Table 2 in the Results
+    // section (only there — the Comparison copies stay note-free). Same UI as the
+    // model cards' note. EDIT THE `text` BELOW to fill in your own remark.
+    const RESULTS_NOTES = {
+      t3: {
+        text: "So với những con số paper công bố (GPT-3.5-turbo), bản tái lập <b>GPT-4o</b> của nhóm cho kết quả <b>tốt hơn ở hầu hết dataset</b> — chỉ riêng <b>Child</b> là thua.",
+      },
+      t2: {
+        text: "Đúng như paper công bố: dùng <b>triplet với các model nhỏ</b> (Phi-3 / Llama3) cho kết quả tốt hơn <b>pairwise với model lớn</b> (GPT-4). Tuy nhiên, kết quả của <b>pairwise với các model nhỏ</b> cũng không tệ.",
+      },
+    };
+
+    // A trimmed copy of a byMethod table for the Results section: keep only the
+    // datasets we actually ran (C.GRAPHS = our 5) and drop the IN/TN column.
+    function trimForResults(t) {
+      if (!t) return null;
+      const rows = (t.rows || []).filter((r) => C.GRAPHS.includes(rowKey(r)));
+      const metrics = (t.metrics || []).filter((mk) => mk !== "in");
+      // viLabels: render the card's tag / "+ ours" flag in Vietnamese (only the
+      // Results-section copies; the Comparison-section tables stay as-is).
+      return Object.assign({}, t, { rows, metrics, resultsNote: RESULTS_NOTES[t.id] || null, viLabels: true });
+    }
 
     // label for the model whose run we overlay beside this table's paper cells
     const oursLabelOf = (t) => (t && t.oursLabel) || "GPT-4o";
@@ -397,13 +608,20 @@
     // our reproduced value for a (table, graph, method, metric), or null.
     // `model` overrides t.oursModel — Table 2 carries a different model per
     // column (Triplet Phi-3 vs Triplet Llama3), so each column passes its own.
-    function oursMetric(t, graphKey, kind, mk, model) {
+    function oursMetric(t, graphKey, kind, mk, model, sourceOverride) {
       if (!graphKey || !kind) return null;
-      if (t && t.oursSource === "local") return oursLocal(model || t.oursModel, kind, graphKey, mk);
+      // a method can opt out of the table's source: Table 2's "Pairwise GPT-4"
+      // column overlays our hosted GPT-4o run, not the self-hosted Ollama ones.
+      const src = sourceOverride || (t && t.oursSource);
+      if (src === "local") return oursLocal(model || t.oursModel, kind, graphKey, mk);
       const r = C.getResult(graphKey, kind);
       if (!r) return null;
       const m = r.raw.metrics;
-      if (mk === "dtop") return { disp: String(m.topo_divergence), num: m.topo_divergence };
+      if (mk === "dtop") {
+        // cycles ⇒ no topological order exists (the paper writes "-")
+        if (m.topo_divergence === null || m.topo_divergence === undefined) return { disp: "-", num: Infinity };
+        return { disp: String(m.topo_divergence), num: m.topo_divergence };
+      }
       if (mk === "shd") return { disp: String(m.shd), num: m.shd };
       if (mk === "cycles") return { disp: String(m.cycles), num: m.cycles };
       if (mk === "in") { const n = (r.nodes || []).length; return { disp: m.isolated + "/" + n, num: m.isolated }; }
@@ -444,7 +662,8 @@
     function renderByMethod(t) {
       const label = oursLabelOf(t);
       let thead = `<tr><th class="lft">Dataset</th><th class="lft">Metric</th>`;
-      t.methods.forEach((m) => { thead += `<th>${m.label}${m.kind ? ` <span class="ours-flag">+ ours</span>` : ""}</th>`; });
+      const oursFlag = t.viLabels ? "+ của ta" : "+ ours";
+      t.methods.forEach((m) => { thead += `<th>${m.label}${m.kind ? ` <span class="ours-flag">${oursFlag}</span>` : ""}</th>`; });
       thead += `</tr>`;
       let body = "";
       t.rows.forEach((row) => {
@@ -454,8 +673,9 @@
           body += `<td class="lft met">${metricHead(mk, t.inPlain)}</td>`;
           t.methods.forEach((m) => {
             const paperStr = (row.vals[m.label] || {})[mk];
-            const ours = m.kind ? oursMetric(t, rowKey(row), m.kind, mk, m.oursModel) : null;
-            const cellLabel = m.oursModel ? m.oursModel + " self-host" : label;
+            const ours = m.kind ? oursMetric(t, rowKey(row), m.kind, mk, m.oursModel, m.oursSource) : null;
+            const cellLabel = m.oursModel ? m.oursModel + " self-host"
+              : (m.oursSource && m.oursSource !== "local") ? "GPT-4o" : label;
             body += `<td class="num">${valCell(paperStr, ours, mk, cellLabel, row.oursOnly)}</td>`;
           });
           body += `</tr>`;
@@ -500,84 +720,40 @@
 
     function tableCard(t) {
       const tag = t.reproduced
-        ? `<span class="rep-tag rep-yes">reproduced · ${oursLabelOf(t)} beside</span>`
-        : `<span class="rep-tag rep-no">not yet reproduced · paper only</span>`;
+        ? `<span class="rep-tag rep-yes">${t.viLabels ? `đã tái lập · có ${oursLabelOf(t)} bên cạnh` : `reproduced · ${oursLabelOf(t)} beside`}</span>`
+        : `<span class="rep-tag rep-no">${t.viLabels ? "chưa tái lập · chỉ có paper" : "not yet reproduced · paper only"}</span>`;
       const inner = t.layout === "byMethod" ? renderByMethod(t)
         : t.layout === "byMetric" ? renderByMetric(t) : renderMatrix(t);
       return `<section class="pub-card${t.reproduced ? " is-repro" : ""}">
         <header class="pub-head">
-          <div class="pub-head-l"><span class="pub-num">${t.num}</span><h4>${t.title}</h4>
+          <div class="pub-head-l"><span class="pub-num">${t.seqNum != null ? "Bảng " + t.seqNum : t.num}</span><h4>${t.title}</h4>
             <p class="pub-exp">${t.expert}</p></div>
           ${tag}
         </header>
         <div class="pub-scroll">${inner}</div>
-        <p class="pub-cap">${t.caption}</p>
+        ${t.caption ? `<p class="pub-cap">${t.caption}</p>` : ""}
+        ${t.resultsNote ? `<div class="model-note"><span class="model-note-h">Nhận xét tổng quan</span><p>${t.resultsNote.text}</p></div>` : ""}
       </section>`;
     }
 
-    host.innerHTML = PR.publishedTables.map(tableCard).join("");
-  }
-  function initCharts() {
-    if (!window.Chart) return;
-    Chart.defaults.font.family = "Hanken Grotesk";
-    Chart.defaults.color = "#647089";
-
-    // SHD by method, grouped by graph
-    const byKind = { pairwise: [], triplet: [], quadruplet: [] };
-    const labels = [];
-    C.GRAPHS.forEach((g) => {
-      labels.push((C.GRAPH_META[g] || {}).label || g);
-      ["pairwise", "triplet", "quadruplet"].forEach((k) => {
-        const r = C.getResult(g, k);
-        byKind[k].push(r ? r.raw.metrics.shd : null);
-      });
-    });
-    const ds = [
-      { label: "Pairwise", data: byKind.pairwise, backgroundColor: "#e0457b" },
-      { label: "Triplet", data: byKind.triplet, backgroundColor: "#4f46e5" },
-      { label: "Quadruplet", data: byKind.quadruplet, backgroundColor: "#0ea5b7" },
-    ];
-    new Chart(document.getElementById("chart-shd"), {
-      type: "bar",
-      data: { labels, datasets: ds },
-      options: barOpts("Structural Hamming Distance  (lower = better)"),
-    });
-
-    // Topological divergence
-    const topoKind = { pairwise: [], triplet: [], quadruplet: [] };
-    C.GRAPHS.forEach((g) => {
-      ["pairwise", "triplet", "quadruplet"].forEach((k) => {
-        const r = C.getResult(g, k);
-        topoKind[k].push(r ? r.raw.metrics.topo_divergence : null);
-      });
-    });
-    new Chart(document.getElementById("chart-topo"), {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          { label: "Pairwise", data: topoKind.pairwise, backgroundColor: "#e0457b" },
-          { label: "Triplet", data: topoKind.triplet, backgroundColor: "#4f46e5" },
-          { label: "Quadruplet", data: topoKind.quadruplet, backgroundColor: "#0ea5b7" },
-        ],
-      },
-      options: barOpts("Topological divergence  (lower = better)"),
-    });
-  }
-
-  function barOpts(title) {
-    return {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: "bottom", labels: { boxWidth: 12, boxHeight: 12, usePointStyle: true, padding: 16, font: { size: 12.5 } } },
-        title: { display: true, text: title, color: "#0c1322", font: { size: 13.5, weight: "600" }, padding: { bottom: 14 } },
-        tooltip: { callbacks: { label: (c) => c.dataset.label + ": " + (c.raw === null ? "n/a" : c.raw) } },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 13, weight: "600" }, color: "#33405a" } },
-        y: { beginAtZero: true, grid: { color: "#eef1f6" }, border: { display: false }, ticks: { precision: 0 } },
-      },
-    };
+    // Table 3 and Table 2 are moved to the Results section, trimmed to our 5
+    // datasets and without the IN/TN column; the Comparison list shows the rest.
+    const MOVED = ["t3", "t2"];
+    if (host) {
+      host.innerHTML = PR.publishedTables
+        .filter((t) => !MOVED.includes(t.id))
+        .map(tableCard).join("");
+    }
+    const resHost = document.getElementById("results-paper-tables");
+    if (resHost) {
+      // continue the top-to-bottom table numbering after the model cards
+      const offset = document.querySelectorAll("#model-results .cp-card").length;
+      resHost.innerHTML = MOVED
+        .map((id) => trimForResults(PR.publishedTables.find((t) => t.id === id)))
+        .filter((t) => t && t.rows.length)
+        .map((t, i) => { t.seqNum = offset + i + 1; return t; })
+        .map(tableCard).join("");
+    }
   }
 
   // ---------------- pipeline ----------------
@@ -590,7 +766,7 @@
   // Keep the benchmark + method blurbs in sync with whatever is actually
   // loaded (data/*.trace.json), instead of hardcoding dataset names.
   function initCopy() {
-    const kinds = ["pairwise", "triplet", "quadruplet"]
+    const kinds = ["pairwise_base", "pairwise", "triplet", "quadruplet"]
       .filter((k) => C.RESULTS.some((r) => r._kind === k))
       .map((k) => C.methodLabel(k).toLowerCase());
     const methods = kinds.length ? kinds.join(", ") : "—";
@@ -641,14 +817,12 @@
 
   function boot() {
     augmentGraphMeta();
-    initTable();
-    initLocalTables();
+    initModelTables();
+    initCellNotes(); // after initModelTables: binds hover notes onto the gpt-4o cells
     initComparePair();
     initPublishedTables();
     initPipeline();
     initCopy();
-    // initCharts() is deferred — the router builds the charts the first time
-    // the Results page is visible (Chart.js needs a sized, visible container).
     initRouter(); // last: needs all pages mounted; sets the initial visible page
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

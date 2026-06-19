@@ -214,7 +214,12 @@ def compute_metrics(gt_edges, predicted, nodes):
     td = None
     if n_cycles == 0 and predicted:
         try:
-            td = topological_divergence(list(gt), list(pred))
+            # Use the ORIGINAL edge list (not list(set(...))): topological_divergence
+            # recomputes a topological order from this edge list, and set iteration
+            # order is hash-randomized — feeding a set makes D_top nondeterministic
+            # and inconsistent with the recovered order shown in the UI (raw.order,
+            # built from the same ordered list). Pass the list so both agree.
+            td = topological_divergence(list(gt), list(predicted))
         except Exception:
             td = None
 

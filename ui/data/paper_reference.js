@@ -13,8 +13,8 @@
    that exact (dataset, method, metric); cells we have not reproduced
    are left blank.
 
-   WHAT WE REPRODUCED:  GPT-4o, pairwise (chain-of-thought) + triplet,
-   on `cancer` and `earthquake` only.  The paper's main results use
+   WHAT WE REPRODUCED:  GPT-4o, pairwise (base + chain-of-thought) +
+   triplet, on `cancer`, `earthquake`, `survey` and `asia`.  The paper's main results use
    GPT-3.5-turbo / GPT-4 (and Phi-3 / Llama3 / human annotators), so
    absolute SHD / Dtop differ partly as a model effect.  The metric the
    paper calls Dtop (topological divergence) is exactly the
@@ -95,12 +95,12 @@ window.PAPER_REFERENCE = {
 
     /* ---- Table 3 — GPT-3.5-Turbo (main results) ---------- */
     {
-      id: "t3", num: "Table 3", title: "GPT-3.5-Turbo — base pairwise vs. CoT vs. triplet",
-      expert: "GPT-3.5-turbo (tie-break: GPT-4)",
-      caption: "The headline results table. Triplet consistently outperforms the best pairwise (CoT) and the base pairwise across all datasets and metrics. When cycles > 0 the order π̂ cannot be computed, so Dtop is shown as '-'. Our GPT-4o run is placed beside the CoT and triplet columns for the two datasets we reproduced.",
+      id: "t3", num: "Bảng 3", title: "GPT-3.5-Turbo — pairwise Base, CoT và triplet",
+      expert: "GPT-3.5-turbo (phân xử: GPT-4)",
+      caption: "",
       reproduced: true, layout: "byMethod",
       methods: [
-        { label: "Pairwise (Base)", kind: null },
+        { label: "Pairwise (Base)", kind: "pairwise_base" },
         { label: "Pairwise (CoT)", kind: "pairwise" },
         { label: "Triplet", kind: "triplet" },
       ],
@@ -119,13 +119,13 @@ window.PAPER_REFERENCE = {
 
     /* ---- Table 2 — small LMs vs. GPT-4 pairwise ---------- */
     {
-      id: "t2", num: "Table 2", title: "Triplet with Phi-3 / Llama3 vs. pairwise GPT-4",
-      expert: "Phi-3 (3.8B) · Llama3 (8B) · GPT-4 (tie-break)",
-      caption: "Triplet with significantly smaller models obtains lower SHD and Dtop than a pairwise prompt with GPT-4, while avoiding cycles. (Alzheimers SHD row is omitted in the paper.) Beside each of the two triplet columns we place our own self-hosted run (Ollama phi3:mini / llama3:8b), reported as the cycle-removed (acyclic) result, colored vs. the paper (green = lower/better, red = higher/worse). The GPT-4 pairwise column has no counterpart in our runs, so it is left as published. On Child the raw triplet left cycles, resolved to SHD 80 / Dtop 16 (Phi-3) and SHD 119 / Dtop 13 (Llama3).",
+      id: "t2", num: "Bảng 2", title: "Triplet (Phi-3 / Llama3) so với pairwise GPT-4",
+      expert: "Phi-3 (3.8B) · Llama3 (8B) · GPT-4 (phân xử)",
+      caption: "",
       reproduced: true, layout: "byMethod",
       oursSource: "local", oursLabel: "phi3:mini / llama3:8b self-host",
       methods: [
-        { label: "Pairwise GPT-4", kind: null },
+        { label: "Pairwise GPT-4", kind: "pairwise", oursSource: "gpt4o" },
         { label: "Triplet Phi-3", kind: "triplet", oursModel: "phi3:mini" },
         { label: "Triplet Llama3", kind: "triplet", oursModel: "llama3:8b" },
       ],

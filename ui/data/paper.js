@@ -11,7 +11,7 @@
 
 window.PAPER_META = {
   title: "Causal Order: The Key to Leveraging Imperfect Experts in Causal Inference",
-  venue: "Transactions on Machine Learning Research (TMLR)",
+  venue: "ICLR 2025 (Poster)",
   paperUrl: "https://openreview.net/pdf?id=9juyeCqL0u",
   arxivUrl: "https://arxiv.org/pdf/2310.15117",
   thesis:
